@@ -19,6 +19,7 @@ import ServiceDetail from "./pages/ServiceDetail";
 import NotFound from "./pages/NotFound";
 import EditCompany from "./pages/EditCompany";
 import EditService from "./pages/EditService";
+import SearchPage from "./pages/SearchPage";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,8 @@ const App = () => {
             }
           />
           <Route path="/my-services" element={<MyServices />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/service/:id" element={<ServiceDetail />} />
           <Route path="/services/:slug" element={<ServiceDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -11,7 +11,6 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [lastId, setLastId] = useState<number | undefined>();
   const navigate = useNavigate();
@@ -59,24 +58,8 @@ export default function Index() {
       return;
     }
 
-    setSearching(true);
-    setLoading(true); // Also set loading to true for better UX
-    try {
-      console.log('Searching feed with query:', searchQuery);
-      const response = await searchFeed(searchQuery, undefined, 10);
-      console.log('Search response:', response);
-      console.log('Search items count:', response.items.length);
-      setFeedItems(response.items);
-      setHasMore(response.has_more);
-      setLastId(response.next_page_info?.last_id);
-    } catch (error) {
-      console.error('Error searching feed:', error);
-      setFeedItems([]);
-      setHasMore(false);
-    } finally {
-      setSearching(false);
-      setLoading(false);
-    }
+    // Redirect to search page with query
+    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent) => {
@@ -90,16 +73,8 @@ export default function Index() {
     
     setLoading(true);
     try {
-      console.log('Loading more items...');
-      let response;
-      
-      if (searchQuery.trim()) {
-        console.log('Loading more search results...');
-        response = await searchFeed(searchQuery, lastId, 10);
-      } else {
-        console.log('Loading more feed items...');
-        response = await getFeed(lastId, 10);
-      }
+      console.log('Loading more feed items...');
+      const response = await getFeed(lastId, 10);
       
       console.log('Load more response:', response);
       console.log('Load more items count:', response.items.length);
@@ -129,14 +104,9 @@ export default function Index() {
             />
             <Button 
               onClick={handleSearch}
-              disabled={searching}
               className="absolute right-2 top-2 h-8 px-4 rounded-lg text-sm"
             >
-              {searching ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Buscar"
-              )}
+              Buscar
             </Button>
           </div>
         </div>
@@ -144,18 +114,14 @@ export default function Index() {
         {/* Feed Section */}
         <div className="px-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">
-              {searchQuery.trim() ? `Resultados para "${searchQuery}"` : "Feed"}
-            </h2>
-            {!searchQuery.trim() && (
-              <Button 
-                variant="ghost" 
-                onClick={() => navigate('/explore')}
-                className="text-sm text-primary"
-              >
-                Ver todos
-              </Button>
-            )}
+            <h2 className="text-xl font-semibold text-foreground">Feed</h2>
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/explore')}
+              className="text-sm text-primary"
+            >
+              Ver todos
+            </Button>
           </div>
           
           {loading && feedItems.length === 0 ? (
@@ -190,9 +156,7 @@ export default function Index() {
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {searchQuery.trim() ? "Nenhum resultado encontrado." : "Nenhum item disponível no momento."}
-              </p>
+              <p className="text-muted-foreground">Nenhum item disponível no momento.</p>
             </div>
           )}
         </div>

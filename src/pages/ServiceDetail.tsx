@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getService, Service } from "@/lib/api";
 
 const ServiceDetail = () => {
-  const { slug } = useParams();
+  const { id, slug } = useParams();
   const { toast } = useToast();
   const [service, setService] = useState<Service | null>(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -19,8 +19,9 @@ const ServiceDetail = () => {
   useEffect(() => {
     const fetchService = async () => {
       try {
-        if (slug) {
-          const serviceData = await getService(parseInt(slug));
+        const serviceId = id || slug;
+        if (serviceId) {
+          const serviceData = await getService(parseInt(serviceId));
           setService(serviceData);
         }
       } catch (error) {
@@ -35,7 +36,7 @@ const ServiceDetail = () => {
     };
 
     fetchService();
-  }, [slug, toast]);
+  }, [id, slug, toast]);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
