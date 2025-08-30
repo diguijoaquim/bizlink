@@ -226,8 +226,8 @@ export default function Profile() {
               <TabsTrigger value="portfolio" className="flex-1">Portfolio</TabsTrigger>
               <TabsTrigger value="my-services" className="flex-1">Meus Serviços</TabsTrigger>
             </TabsList>
-                          <TabsContent value="about" className="mt-4 w-full">
-                <div className="space-y-6 w-full">
+            <TabsContent value="about" className="mt-4 w-full">
+              <div className="space-y-6 w-full">
                 {/* Descrição da Empresa */}
                 {firstCompany?.description && (
                   <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
