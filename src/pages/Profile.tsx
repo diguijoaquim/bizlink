@@ -220,14 +220,15 @@ export default function Profile() {
         </div>
 
         {hasCompany ? (
-          <Tabs defaultValue="about" className="bizlink-animate-slide-up w-full">
-            <TabsList className="w-full">
-              <TabsTrigger value="about" className="flex-1">Sobre</TabsTrigger>
-              <TabsTrigger value="portfolio" className="flex-1">Portfolio</TabsTrigger>
-              <TabsTrigger value="my-services" className="flex-1">Meus Serviços</TabsTrigger>
-            </TabsList>
-            <TabsContent value="about" className="mt-4 w-full">
-              <div className="space-y-6 w-full">
+          <div className="w-full max-w-none -mx-4 px-4">
+            <Tabs defaultValue="about" className="bizlink-animate-slide-up w-full max-w-none">
+              <TabsList className="w-full max-w-none flex justify-between">
+                <TabsTrigger value="about" className="flex-1 min-w-0">Sobre</TabsTrigger>
+                <TabsTrigger value="portfolio" className="flex-1 min-w-0">Portfolio</TabsTrigger>
+                <TabsTrigger value="my-services" className="flex-1 min-w-0">Meus Serviços</TabsTrigger>
+              </TabsList>
+                          <TabsContent value="about" className="mt-4 w-full">
+                <div className="space-y-6 w-full">
                 {/* Descrição da Empresa */}
                 {firstCompany?.description && (
                   <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
@@ -513,6 +514,7 @@ export default function Profile() {
               </div>
             </TabsContent>
           </Tabs>
+          </div>
         ) : (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
             <p className="text-muted-foreground">Sugestão: clique em "Adicionar empresa" para começar.</p>
