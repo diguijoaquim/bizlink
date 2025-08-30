@@ -220,14 +220,14 @@ export default function Profile() {
         </div>
 
         {hasCompany ? (
-          <Tabs defaultValue="about" className="bizlink-animate-slide-up">
-            <TabsList>
-              <TabsTrigger value="about">Sobre</TabsTrigger>
-              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-              <TabsTrigger value="my-services">Meus Serviços</TabsTrigger>
+          <Tabs defaultValue="about" className="bizlink-animate-slide-up w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="about" className="flex-1">Sobre</TabsTrigger>
+              <TabsTrigger value="portfolio" className="flex-1">Portfolio</TabsTrigger>
+              <TabsTrigger value="my-services" className="flex-1">Meus Serviços</TabsTrigger>
             </TabsList>
-            <TabsContent value="about" className="mt-4">
-              <div className="space-y-6">
+                          <TabsContent value="about" className="mt-4 w-full">
+                <div className="space-y-6 w-full">
                 {/* Descrição da Empresa */}
                 {firstCompany?.description && (
                   <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
@@ -370,8 +370,8 @@ export default function Profile() {
                 </div>
               </div>
             </TabsContent>
-            <TabsContent value="portfolio" className="mt-4">
-              <div className="space-y-6">
+            <TabsContent value="portfolio" className="mt-4 w-full">
+              <div className="space-y-6 w-full">
                 {/* Cabeçalho do Portfolio */}
                 <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
                   <h3 className="text-lg font-semibold text-foreground mb-3">Portfolio da Empresa</h3>
@@ -463,8 +463,8 @@ export default function Profile() {
                 </div>
               </div>
             </TabsContent>
-            <TabsContent value="my-services" className="mt-4">
-              <div className="space-y-4">
+            <TabsContent value="my-services" className="mt-4 w-full">
+              <div className="space-y-4 w-full">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Meus Serviços</h3>
                   <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
