@@ -11,8 +11,10 @@
     "preview": "vite preview",
     "clear-cache": "node scripts/clear-cache.js",
     "clear-auth-cache": "node scripts/clear-auth-cache.js",
+    "build-vercel": "node scripts/build-vercel.js",
     "clean": "npm run clear-cache && npm install && npm run dev",
-    "clean-auth": "npm run clear-auth-cache && npm run dev"
+    "clean-auth": "npm run clear-auth-cache && npm run dev",
+    "deploy": "npm run build-vercel"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

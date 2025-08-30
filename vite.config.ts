@@ -43,6 +43,18 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: undefined,
+        // Força extensões corretas para Vercel
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.js') || assetInfo.name?.endsWith('.mjs')) {
+            return 'assets/[name]-[hash].js';
+          }
+          if (assetInfo.name?.endsWith('.css')) {
+            return 'assets/[name]-[hash].css';
+          }
+          return 'assets/[name]-[hash].[ext]';
+        }
       },
     },
   },
