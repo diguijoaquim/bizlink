@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
     headers: {
       'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
     },
   },
   plugins: [
