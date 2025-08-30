@@ -36,7 +36,7 @@ export default function Index() {
       }
     };
 
-    loadFeed();
+    loadFeed(); 
   }, []);
 
   const handleSearch = async () => {
