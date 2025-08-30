@@ -426,8 +426,89 @@ export async function searchFeed(query: string, lastId?: number, limit: number =
   if (lastId) params.append('last_id', lastId.toString());
   params.append('limit', limit.toString());
   
-  const response = await apiFetch(`/search/feed?${params.toString()}`);
-  return response;
+  console.log('Searching with params:', params.toString());
+  const response = await apiFetch(`/search/?${params.toString()}`);
+  console.log('Raw search response:', response);
+  
+  // Transform the search response to match FeedResponse format
+  if (response && response.results) {
+    console.log('Search results found:', response.results);
+    const items: FeedItem[] = [
+      ...response.results.services.map(service => ({
+        id: service.id,
+        type: 'service' as const,
+        title: service.title,
+        description: service.description,
+        price: service.price,
+        category: service.category,
+        tags: service.tags,
+        status: service.status,
+        company_id: service.company_id,
+        image_url: service.image_url,
+        views: service.views,
+        leads: service.leads,
+        likes: service.likes,
+        is_promoted: service.is_promoted,
+        created_at: service.created_at
+      })),
+      ...response.results.companies.map(company => ({
+        id: company.id,
+        type: 'company' as const,
+        name: company.name,
+        description: company.description,
+        logo_url: company.logo_url,
+        cover_url: company.cover_url,
+        province: company.province,
+        district: company.district,
+        address: company.address,
+        nationality: company.nationality,
+        website: company.website,
+        email: company.email,
+        whatsapp: company.whatsapp,
+        created_at: company.created_at
+      })),
+      ...response.results.users.map(user => ({
+        id: user.id,
+        type: 'user' as const,
+        full_name: user.full_name,
+        profile_photo_url: user.profile_photo_url,
+        cover_photo_url: user.cover_photo_url,
+        gender: user.gender,
+        created_at: user.created_at
+      })),
+      ...response.results.portfolios.map(portfolio => ({
+        id: portfolio.id,
+        type: 'portfolio' as const,
+        media_url: portfolio.media_url,
+        link: portfolio.link,
+        created_at: portfolio.created_at
+      }))
+    ];
+    
+    console.log('Transformed items:', items);
+    
+    return {
+      items,
+      total_returned: items.length,
+      has_more: items.length >= limit,
+      next_page_info: items.length >= limit ? { last_id: items[items.length - 1].id } : null,
+      summary: response.summary
+    };
+  }
+  
+  console.log('No search results found, returning empty response');
+  return {
+    items: [],
+    total_returned: 0,
+    has_more: false,
+    next_page_info: null,
+    summary: {
+      services_count: 0,
+      companies_count: 0,
+      users_count: 0,
+      portfolios_count: 0
+    }
+  };
 }
 
 // Regular Search API (structured by categories)

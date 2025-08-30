@@ -22,6 +22,7 @@ export default function Index() {
         console.log('Loading feed...');
         const response = await getFeed(undefined, 10);
         console.log('Feed loaded successfully:', response);
+        console.log('Feed items count:', response.items.length);
         setFeedItems(response.items);
         setHasMore(response.has_more);
         setLastId(response.next_page_info?.last_id);
@@ -59,9 +60,12 @@ export default function Index() {
     }
 
     setSearching(true);
+    setLoading(true); // Also set loading to true for better UX
     try {
       console.log('Searching feed with query:', searchQuery);
       const response = await searchFeed(searchQuery, undefined, 10);
+      console.log('Search response:', response);
+      console.log('Search items count:', response.items.length);
       setFeedItems(response.items);
       setHasMore(response.has_more);
       setLastId(response.next_page_info?.last_id);
@@ -71,6 +75,7 @@ export default function Index() {
       setHasMore(false);
     } finally {
       setSearching(false);
+      setLoading(false);
     }
   };
 
@@ -86,10 +91,18 @@ export default function Index() {
     setLoading(true);
     try {
       console.log('Loading more items...');
-      const response = searchQuery.trim() 
-        ? await searchFeed(searchQuery, lastId, 10)
-        : await getFeed(lastId, 10);
+      let response;
       
+      if (searchQuery.trim()) {
+        console.log('Loading more search results...');
+        response = await searchFeed(searchQuery, lastId, 10);
+      } else {
+        console.log('Loading more feed items...');
+        response = await getFeed(lastId, 10);
+      }
+      
+      console.log('Load more response:', response);
+      console.log('Load more items count:', response.items.length);
       setFeedItems(prev => [...prev, ...response.items]);
       setHasMore(response.has_more);
       setLastId(response.next_page_info?.last_id);
