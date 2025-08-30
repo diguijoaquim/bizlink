@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import "@/styles/tabs.css";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -220,14 +221,14 @@ export default function Profile() {
         </div>
 
         {hasCompany ? (
-          <div className="w-full max-w-none -mx-4 px-4">
-            <Tabs defaultValue="about" className="bizlink-animate-slide-up w-full max-w-none">
-              <TabsList className="w-full max-w-none flex justify-between">
-                <TabsTrigger value="about" className="flex-1 min-w-0">Sobre</TabsTrigger>
-                <TabsTrigger value="portfolio" className="flex-1 min-w-0">Portfolio</TabsTrigger>
-                <TabsTrigger value="my-services" className="flex-1 min-w-0">Meus Serviços</TabsTrigger>
+          <div className="profile-tabs-container">
+            <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
+              <TabsList className="profile-tabs-list">
+                <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
+                <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
+                <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
               </TabsList>
-                          <TabsContent value="about" className="mt-4 w-full">
+              <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
                 {/* Descrição da Empresa */}
                 {firstCompany?.description && (
@@ -371,7 +372,7 @@ export default function Profile() {
                 </div>
               </div>
             </TabsContent>
-            <TabsContent value="portfolio" className="mt-4 w-full">
+            <TabsContent value="portfolio" className="profile-tabs-content">
               <div className="space-y-6 w-full">
                 {/* Cabeçalho do Portfolio */}
                 <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
@@ -464,7 +465,7 @@ export default function Profile() {
                 </div>
               </div>
             </TabsContent>
-            <TabsContent value="my-services" className="mt-4 w-full">
+            <TabsContent value="my-services" className="profile-tabs-content">
               <div className="space-y-4 w-full">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Meus Serviços</h3>
