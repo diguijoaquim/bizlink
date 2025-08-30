@@ -11,9 +11,21 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
     headers: {
       'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Cache-Control': 'no-cache, no-store, must-revalidate, private',
       'Pragma': 'no-cache',
       'Expires': '0',
+      'Vary': 'Authorization, Accept-Encoding',
+    },
+    proxy: {
+      // Proxy para API com autenticação
+      '/api': {
+        target: 'https://bizlink-production.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      },
     },
   },
   plugins: [
@@ -36,5 +48,10 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: ['react', 'react-dom'],
+    exclude: ['@tanstack/react-query'],
+  },
+  define: {
+    __DEV__: mode === 'development',
+    __AUTH_ENABLED__: true,
   },
 }));

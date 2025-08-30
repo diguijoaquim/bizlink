@@ -45,6 +45,9 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
   // Add auth token if it exists
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+    // Headers específicos para usuários autenticados
+    headers.set("Cache-Control", "no-cache, no-store, must-revalidate, private");
+    headers.set("Pragma", "no-cache");
   }
   
   // Don't set Content-Type for FormData - let the browser set it with the boundary
