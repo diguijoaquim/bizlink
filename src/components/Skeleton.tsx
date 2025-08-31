@@ -62,3 +62,39 @@ export function FeedSkeleton() {
     </div>
   );
 }
+
+export function ProfileSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Header Skeleton */}
+      <div className="relative">
+        <div className="h-32 md:h-48 rounded-xl bg-muted" />
+        <div className="relative px-4 -mt-16 md:-mt-20">
+          <div className="flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-6">
+            <Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Skeleton */}
+      <div className="space-y-4">
+        <div className="flex space-x-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+        
+        {/* Content Skeleton */}
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    </div>
+  );
+}

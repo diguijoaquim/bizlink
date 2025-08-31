@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Search, MessageCircle, Bell, User, Menu, X } from "lucide-react";
+import { Home, Search, MessageCircle, Bell, Menu, X, Briefcase, Image, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
@@ -12,7 +12,7 @@ interface AppLayoutProps {
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Explorar", href: "/explore", icon: Search },
+  { name: "Vagas", href: "/jobs", icon: Briefcase },
   { name: "Mensagens", href: "/messages", icon: MessageCircle },
   { name: "Notificações", href: "/notifications", icon: Bell },
   { name: "Perfil", href: "/profile", icon: User },

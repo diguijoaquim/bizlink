@@ -1,14 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import "@/styles/tabs.css";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star } from "lucide-react";
-import { apiFetch, API_BASE_URL, deleteService, promoteService } from "@/lib/api";
+import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon } from "lucide-react";
+import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, type CompanyPortfolio } from "@/lib/api";
 import { ProfileServiceCard } from "@/components/ProfileServiceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useHome } from "@/contexts/HomeContext";
+import { ProfileSkeleton } from "@/components/Skeleton";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,13 +23,29 @@ export default function Profile() {
     loadServices: reloadServices,
     currentCompany 
   } = useHome();
-  
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  
+  // Portfolio state
+  const [portfolioItems, setPortfolioItems] = useState<CompanyPortfolio[]>([]);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+
+  // Verificar se o usuário precisa configurar o perfil
+  const needsProfileSetup = !user?.user_type || 
+    user.user_type === 'simple' && !user.full_name ||
+    !user?.province || 
+    !user?.district;
+
+  // Considerar perfil completo quando for empresa ou freelancer e possuir província e distrito
+  const isProfileComplete = (
+    (user?.user_type === 'company' && !!currentCompany?.province && !!currentCompany?.district) ||
+    (user?.user_type === 'freelancer' && !!user?.province && !!user?.district)
+  );
 
   const handleEditService = (serviceId: string) => {
     navigate(`/edit-service/${serviceId}`);
@@ -70,15 +87,72 @@ export default function Profile() {
     }
   };
 
+  // Portfolio functions
+  const loadPortfolio = async () => {
+    if (!currentCompany?.id) return;
+    
+    try {
+      setPortfolioLoading(true);
+      const items = await getCompanyPortfolio(currentCompany.id);
+      setPortfolioItems(items);
+    } catch (error) {
+      console.error('Error loading portfolio:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o portfólio",
+        variant: "destructive"
+      });
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
+  const handleDeletePortfolioItem = async (itemId: number) => {
+    try {
+      await deletePortfolioItem(itemId);
+      setPortfolioItems(portfolioItems.filter(item => item.id !== itemId));
+      toast({
+        title: "Sucesso",
+        description: "Item do portfólio deletado com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar o item",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-MZ', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  // Load portfolio when company is available
+  useEffect(() => {
+    if (currentCompany?.id) {
+      loadPortfolio();
+    }
+  }, [currentCompany?.id]);
+
+  // Redirecionar para configuração de perfil se necessário
+  // Removido redirecionamento automático para configuração de perfil
+  // Mantemos apenas um aviso visual com opção de ir para configuração
+
   if (userLoading) {
     return (
       <AppLayout>
-        <p>Carregando...</p>
+        <ProfileSkeleton />
       </AppLayout>
     );
   }
 
   const firstCompany = currentCompany;
+  
   const toAbsolute = (url?: string) => {
     if (!url) return undefined;
     return url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
@@ -188,8 +262,10 @@ export default function Profile() {
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 mr-1" />
                         <span>
-                          {firstCompany?.district || "—"}
-                          {firstCompany?.province ? `, ${firstCompany.province}` : ""}
+                          {user?.user_type === 'company' ? 
+                            `${firstCompany?.district || "—"}${firstCompany?.province ? `, ${firstCompany.province}` : ""}` :
+                            `${user?.district || "—"}${user?.province ? `, ${user.province}` : ""}`
+                          }
                         </span>
                       </div>
                       {firstCompany?.nuit && (
@@ -199,28 +275,59 @@ export default function Profile() {
                       )}
                     </div>
                   </div>
-                  {!hasCompany ? (
-                    <Button 
-                      onClick={() => navigate('/create-company')} 
-                      className="bg-gradient-primary text-white border-0"
-                    >
-                      Adicionar empresa
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => navigate('/edit-company')} 
-                      className="bg-gradient-primary text-white border-0"
-                    >
-                      Editar empresa
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!hasCompany ? (
+                      <Button 
+                        onClick={() => navigate('/create-company')} 
+                        className="bg-gradient-primary text-white border-0"
+                      >
+                        Adicionar empresa
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => navigate('/edit-company')} 
+                        className="bg-gradient-primary text-white border-0"
+                      >
+                        Editar empresa
+                      </Button>
+                    )}
+                    {isProfileComplete && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => navigate('/profile-setup')} 
+                        aria-label="Editar Perfil"
+                        title="Editar Perfil"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {hasCompany ? (
+        {/* Aviso de configuração de perfil (sem redirecionamento automático) */}
+        {!userLoading && user && !isProfileComplete && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              Seu perfil não está completo. Complete as informações para aproveitar todas as funcionalidades.
+            </p>
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => navigate('/profile-setup')}
+                className="bg-gradient-primary text-white border-0"
+              >
+                Configurar Perfil
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Renderização condicional baseada no tipo de usuário */}
+        {user?.user_type === 'company' && hasCompany ? (
           <div className="profile-tabs-container">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
               <TabsList className="profile-tabs-list">
@@ -376,93 +483,159 @@ export default function Profile() {
               <div className="space-y-6 w-full">
                 {/* Cabeçalho do Portfolio */}
                 <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                  <h3 className="text-lg font-semibold text-foreground mb-3">Portfolio da Empresa</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Apresente os seus melhores trabalhos e projetos para impressionar potenciais clientes.
-                  </p>
+                 <h3>Portfolio da Empresa</h3>
                 </div>
+
+                {/* Loading State */}
+                {portfolioLoading && portfolioItems.length === 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border animate-pulse">
+                        <div className="aspect-video bg-muted rounded-lg mb-4"></div>
+                        <div className="h-4 bg-muted rounded mb-2"></div>
+                        <div className="h-3 bg-muted rounded mb-3"></div>
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Grid de Projetos */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Projeto 1 - Placeholder */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
-                    <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center">
-                      <div className="text-center">
-                        <Building2 className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Imagem do Projeto</p>
-                      </div>
-                    </div>
-                    <h4 className="font-semibold text-foreground mb-2">Nome do Projeto</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Descrição breve do projeto e dos resultados alcançados.
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Categoria</span>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Design</span>
-                    </div>
-                  </div>
-
-                  {/* Projeto 2 - Placeholder */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
-                    <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center">
-                      <div className="text-center">
-                        <Building2 className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Imagem do Projeto</p>
-                      </div>
-                    </div>
-                    <h4 className="font-semibold text-foreground mb-2">Outro Projeto</h4>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Exemplo de outro projeto realizado com sucesso para um cliente.
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Categoria</span>
-                      <span className="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded-full">Desenvolvimento</span>
-                    </div>
-                  </div>
-
-                  {/* Botão Adicionar Projeto */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border-2 border-dashed border-border hover:border-primary/30 transition-colors group cursor-pointer">
-                    <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                          <span className="text-2xl text-primary">+</span>
+                {portfolioItems.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Projetos Existentes */}
+                    {portfolioItems.map((item) => (
+                      <div key={item.id} className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
+                        {/* Imagem/Mídia do Projeto */}
+                        <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                          {item.media_url ? (
+                            <img
+                              src={item.media_url}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center">
+                              <ImageIcon className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">Sem Imagem</p>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm text-primary font-medium">Adicionar Projeto</p>
+                        
+                        {/* Informações do Projeto */}
+                        <h4 className="font-semibold text-foreground mb-2">{item.title}</h4>
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                        
+                        {/* Metadados */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(item.created_at)}
+                          </div>
+                          {item.link && (
+                            <a
+                              href={item.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Ver projeto
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Ações */}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/portfolio/edit/${item.id}`)}
+                            className="flex-1"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePortfolioItem(item.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
+                    ))}
+
+                    {/* Botão Adicionar Projeto */}
+                    <div 
+                      className="bg-card rounded-xl p-6 bizlink-shadow-soft border-2 border-dashed border-border hover:border-primary/30 transition-colors group cursor-pointer"
+                      onClick={() => navigate('/portfolio/create')}
+                    >
+                      <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                            <Plus className="h-6 w-6 text-primary" />
+                          </div>
+                          <p className="text-sm text-primary font-medium">Adicionar Projeto</p>
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-foreground mb-2">Novo Projeto</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Clique para adicionar um novo projeto ao seu portfolio.
+                      </p>
                     </div>
-                    <h4 className="font-semibold text-foreground mb-2">Novo Projeto</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Clique para adicionar um novo projeto ao seu portfolio.
-                    </p>
                   </div>
-                </div>
+                )}
+
+                {/* Estado Vazio */}
+                {!portfolioLoading && portfolioItems.length === 0 && (
+                  <div className="text-center py-12">
+                    <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">
+                      Nenhum projeto no portfolio
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Comece adicionando seu primeiro projeto para mostrar seu trabalho.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/portfolio/create')}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Primeiro Projeto
+                    </Button>
+                  </div>
+                )}
 
                 {/* Ações do Portfolio */}
-                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Gerir Portfolio</h3>
-                  <div className="flex flex-wrap gap-3">
-                    <Button 
-                      variant="outline" 
-                      className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
-                    >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Adicionar Projeto
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
-                    >
-                      <Star className="h-4 w-4 mr-2" />
-                      Reordenar Projetos
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="border-muted-foreground/20 hover:bg-muted-foreground/5"
-                    >
-                      Configurações
-                    </Button>
+                {portfolioItems.length > 0 && (
+                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Gerir Portfolio</h3>
+                    <div className="flex flex-wrap gap-3">
+                      <Button 
+                        variant="outline" 
+                        className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
+                        onClick={() => navigate('/portfolio/create')}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Projeto
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
+                      >
+                        <Star className="h-4 w-4 mr-2" />
+                        Reordenar Projetos
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="my-services" className="profile-tabs-content">
@@ -474,7 +647,7 @@ export default function Profile() {
                   </Button>
                 </div>
                 
-                {servicesLoading ? (
+                {servicesLoading && services.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">Carregando serviços...</p>
                   </div>
@@ -515,10 +688,241 @@ export default function Profile() {
               </div>
             </TabsContent>
           </Tabs>
+        </div>
+        ) : user?.user_type === 'freelancer' ? (
+          <div className="profile-tabs-container">
+            <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
+              <TabsList className="profile-tabs-list">
+                <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
+                <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
+                <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
+              </TabsList>
+              <TabsContent value="about" className="profile-tabs-content">
+                <div className="space-y-6 w-full">
+                  {/* Descrição do Freelancer */}
+                  {user?.bio && (
+                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                      <h3 className="text-lg font-semibold text-foreground mb-3">Sobre Mim</h3>
+                      <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Cards de Informação do Freelancer */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Card de Contato */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3">
+                          <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Contato</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Email</span>
+                          <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                            {user?.email || "—"}
+                          </span>
+                        </div>
+                        {user?.phone && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">WhatsApp</span>
+                            <a 
+                              href={`https://wa.me/${user.phone.replace(/[^\d]/g, "")}`} 
+                              target="_blank" 
+                              className="text-sm font-medium text-green-600 hover:underline"
+                            >
+                              {user.phone}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card de Localização */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
+                          <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Localização</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-xs text-muted-foreground">Região</span>
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {user?.district || ""}{user?.province ? `, ${user.province}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card de Perfil */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-3">
+                          <Building2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Perfil</h3>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-xs text-muted-foreground">Nome Completo</span>
+                          <p className="text-sm font-medium text-foreground mt-1">{user?.full_name || "—"}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-muted-foreground">Tipo</span>
+                          <p className="text-sm font-medium text-foreground mt-1">Freelancer</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="portfolio" className="profile-tabs-content">
+                <div className="text-center py-12">
+                  <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Portfolio em desenvolvimento
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Funcionalidade de portfolio para freelancers será adicionada em breve.
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="my-services" className="profile-tabs-content">
+                <div className="space-y-4 w-full">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Meus Serviços</h3>
+                    <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
+                      Gerir Serviços
+                    </Button>
+                  </div>
+                  
+                  {servicesLoading && services.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Carregando serviços...</p>
+                    </div>
+                  ) : services.length > 0 ? (
+                    <div className="space-y-3">
+                      {services.map((service) => {
+                        const transformedService = {
+                          id: service.id.toString(),
+                          title: service.title,
+                          description: service.description,
+                          price: typeof service.price === 'string' ? parseFloat(service.price) : service.price,
+                          image: toAbsolute(service.image_url) || "/placeholder.svg",
+                          category: service.category,
+                          tags: service.tags ? (typeof service.tags === 'string' ? service.tags.replace(/[{}]/g, '').split(',').map(tag => tag.trim()).filter(Boolean) : []) : [],
+                          postedAt: service.created_at ? new Date(service.created_at).toLocaleDateString('pt-PT') : "Hoje",
+                          is_promoted: !!service.is_promoted,
+                        };
+
+                        return (
+                          <ProfileServiceCard 
+                            key={service.id} 
+                            service={transformedService}
+                            onEdit={handleEditService}
+                            onDelete={handleDeleteService}
+                            onPromote={(id, promote) => handlePromoteService(id, promote)}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">Ainda não tem serviços publicados</p>
+                      <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
+                        Publicar Primeiro Serviço
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        ) : user?.user_type === 'simple' ? (
+          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+            <div className="space-y-6 w-full">
+              {/* Informações do Usuário Simples */}
+              <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Perfil Simples</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Você tem um perfil simples no BizLink. Para acessar mais funcionalidades, considere criar uma empresa ou se tornar um freelancer.
+                </p>
+              </div>
+
+              {/* Cards de Informação do Usuário Simples */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card de Contato */}
+                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3">
+                      <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">Contato</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Email</span>
+                      <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                        {user?.email || "—"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Nome</span>
+                      <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                        {user?.full_name || "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card de Localização */}
+                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
+                      <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">Localização</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Região</span>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {user?.district || ""}{user?.province ? `, ${user.province}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ações para Upgrade */}
+              <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Expandir Perfil</h3>
+                <div className="flex flex-wrap gap-3">
+                  <Button 
+                    onClick={() => navigate('/create-company')} 
+                    className="bg-gradient-primary text-white border-0"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Criar Empresa
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/become-freelancer')} 
+                    variant="outline"
+                    className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Tornar-se Freelancer
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-            <p className="text-muted-foreground">Sugestão: clique em "Adicionar empresa" para começar.</p>
+            <p className="text-muted-foreground">Configure seu perfil para começar a usar o BizLink.</p>
           </div>
         )}
 

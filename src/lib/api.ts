@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://bizlink-production.up.railway.app";
+export const API_BASE_URL = "http://localhost:8000";
 
 export type LoginResponse = {
   access_token: string;
@@ -56,7 +56,7 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
   }
   
   try {
-    const res = await fetch(`${API_BASE_URL}${input}`, { 
+    const res = await fetch(`${API_BASE_URL}${input.startsWith('/') ? input : `/${input}`}`, { 
       ...init, 
       headers,
       // Do not send cookies with cross-origin requests when server uses wildcard CORS
@@ -95,6 +95,52 @@ export type Company = {
   created_at: string;
   updated_at: string;
 };
+
+export type FreelancerProfile = {
+  id: number;
+  user_id: number;
+  title?: string;
+  description: string;  // Descrição completa incluindo skills, experiência, etc.
+  hourly_rate?: number;
+  currency: string;
+  location?: string;
+  remote_work: boolean;
+  completed_projects: number;
+  rating: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Job = {
+  id: number;
+  company_id: number;
+  title: string;
+  description: string;
+  location?: string;
+  remote_work: boolean;
+  status: string;
+  views: number;
+  applications: number;
+  is_promoted: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CompanyPortfolio = {
+  id: number;
+  company_id: number;
+  title: string;
+  description?: string;
+  media_url?: string;
+  link?: string;
+  created_at: string;
+};
+
+export type JobCreate = Omit<Job, 'id' | 'views' | 'applications' | 'created_at' | 'updated_at'>;
+export type JobUpdate = Partial<Omit<Job, 'id' | 'company_id' | 'views' | 'applications' | 'created_at' | 'updated_at'>>;
+
+export type CompanyPortfolioCreate = Omit<CompanyPortfolio, 'id' | 'created_at'>;
+export type CompanyPortfolioUpdate = Partial<Omit<CompanyPortfolio, 'id' | 'company_id' | 'created_at'>>;
 
 export async function getCompanies(): Promise<Company[]> {
   return apiFetch(`/companies/`);
@@ -541,6 +587,282 @@ export async function search(query: string, limit: number = 20): Promise<SearchR
   
   const response = await apiFetch(`/search/?${params.toString()}`);
   return response;
+}
+
+// Jobs API Functions
+export async function getJobs(params?: {
+  company_id?: number;
+  status_filter?: string;
+  location?: string;
+  remote_work?: boolean;
+  skip?: number;
+  limit?: number;
+}): Promise<Job[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.company_id) searchParams.append('company_id', params.company_id.toString());
+  if (params?.status_filter) searchParams.append('status_filter', params.status_filter);
+  if (params?.location) searchParams.append('location', params.location);
+  if (params?.remote_work !== undefined) searchParams.append('remote_work', params.remote_work.toString());
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const queryString = searchParams.toString();
+  return apiFetch(`/jobs/${queryString ? `?${queryString}` : ''}`);
+}
+
+export async function getJob(jobId: number): Promise<Job> {
+  return apiFetch(`/jobs/${jobId}`);
+}
+
+export async function createJob(job: JobCreate): Promise<Job> {
+  return apiFetch('/jobs/', {
+    method: 'POST',
+    body: JSON.stringify(job)
+  });
+}
+
+export async function updateJob(jobId: number, job: JobUpdate): Promise<Job> {
+  return apiFetch(`/jobs/${jobId}`, {
+    method: 'PUT',
+    body: JSON.stringify(job)
+  });
+}
+
+export async function deleteJob(jobId: number): Promise<void> {
+  return apiFetch(`/jobs/${jobId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function updateJobStatus(jobId: number, status: string): Promise<Job> {
+  return apiFetch(`/jobs/${jobId}/status?status=${status}`, {
+    method: 'PATCH'
+  });
+}
+
+export async function toggleJobPromotion(jobId: number): Promise<Job> {
+  return apiFetch(`/jobs/${jobId}/promote`, {
+    method: 'PATCH'
+  });
+}
+
+export async function getCompanyJobs(companyId: number, params?: {
+  status_filter?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<Job[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.status_filter) searchParams.append('status_filter', params.status_filter);
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const queryString = searchParams.toString();
+  return apiFetch(`/jobs/company/${companyId}${queryString ? `?${queryString}` : ''}`);
+}
+
+// Portfolio API Functions
+export async function getPortfolioItems(params?: {
+  company_id?: number;
+  skip?: number;
+  limit?: number;
+}): Promise<CompanyPortfolio[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.company_id) searchParams.append('company_id', params.company_id.toString());
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const queryString = searchParams.toString();
+  return apiFetch(`/portfolio/${queryString ? `?${queryString}` : ''}`);
+}
+
+export async function getPortfolioItem(portfolioId: number): Promise<CompanyPortfolio> {
+  return apiFetch(`/portfolio/${portfolioId}`);
+}
+
+export async function createPortfolioItem(data: FormData): Promise<CompanyPortfolio> {
+  // Extrair dados do FormData para enviar como query parameters
+  const title = data.get('title') as string;
+  const description = data.get('description') as string;
+  const link = data.get('link') as string;
+  const company_id = data.get('company_id') as string;
+  
+  // Criar URL com query parameters
+  const params = new URLSearchParams();
+  params.append('title', title);
+  if (description) params.append('description', description);
+  if (link) params.append('link', link);
+  params.append('company_id', company_id);
+  
+  // Criar novo FormData apenas com o arquivo de mídia
+  const mediaFormData = new FormData();
+  const mediaFile = data.get('media_file') as File;
+  if (mediaFile) {
+    mediaFormData.append('media_file', mediaFile);
+  }
+  
+  return apiFetch(`/portfolio/?${params.toString()}`, {
+    method: 'POST',
+    body: mediaFormData
+  });
+}
+
+export async function updatePortfolioItem(portfolioId: number, data: FormData): Promise<CompanyPortfolio> {
+  // Extrair dados do FormData para enviar como query parameters
+  const title = data.get('title') as string;
+  const description = data.get('description') as string;
+  const link = data.get('link') as string;
+  
+  // Criar URL com query parameters
+  const params = new URLSearchParams();
+  if (title) params.append('title', title);
+  if (description) params.append('description', description);
+  if (link) params.append('link', link);
+  
+  // Criar novo FormData apenas com o arquivo de mídia
+  const mediaFormData = new FormData();
+  const mediaFile = data.get('media_file') as File;
+  if (mediaFile) {
+    mediaFormData.append('media_file', mediaFile);
+  }
+  
+  return apiFetch(`/portfolio/${portfolioId}?${params.toString()}`, {
+    method: 'PUT',
+    body: mediaFormData
+  });
+}
+
+export async function deletePortfolioItem(portfolioId: number): Promise<void> {
+  return apiFetch(`/portfolio/${portfolioId}`, {
+    method: 'DELETE'
+  });
+}
+
+export async function getCompanyPortfolio(companyId: number, params?: {
+  skip?: number;
+  limit?: number;
+}): Promise<CompanyPortfolio[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const queryString = searchParams.toString();
+  return apiFetch(`/portfolio/company/${companyId}${queryString ? `?${queryString}` : ''}`);
+}
+
+export async function updatePortfolioMedia(portfolioId: number, mediaFile: File): Promise<CompanyPortfolio> {
+  const formData = new FormData();
+  formData.append('media_file', mediaFile);
+  
+  return apiFetch(`/portfolio/${portfolioId}/media`, {
+    method: 'POST',
+    body: formData
+  });
+}
+
+export type User = {
+  id: number;
+  email: string;
+  full_name?: string;
+  user_type: string;  // 'simple', 'freelancer', 'company'
+  profile_photo_url?: string;
+  cover_photo_url?: string;
+  gender?: string;
+  bio?: string;
+  phone?: string;
+  is_active: boolean;
+  created_at: string;
+  companies: Company[];
+  freelancer_profile?: FreelancerProfile;
+};
+
+// Freelancer Profile API
+export async function createFreelancerProfile(profile: {
+  title?: string;
+  description: string;
+  hourly_rate?: number;
+  currency?: string;
+  location?: string;
+  remote_work?: boolean;
+}): Promise<FreelancerProfile> {
+  return apiFetch('/freelancer/profile', {
+    method: 'POST',
+    body: JSON.stringify(profile)
+  });
+}
+
+export async function getFreelancerProfile(): Promise<FreelancerProfile> {
+  return apiFetch('/freelancer/profile');
+}
+
+export async function updateFreelancerProfile(profile: {
+  title?: string;
+  description?: string;
+  hourly_rate?: number;
+  currency?: string;
+  location?: string;
+  remote_work?: boolean;
+}): Promise<FreelancerProfile> {
+  return apiFetch('/freelancer/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profile)
+  });
+}
+
+export async function deleteFreelancerProfile(): Promise<void> {
+  return apiFetch('/freelancer/profile', {
+    method: 'DELETE'
+  });
+}
+
+export async function searchFreelancers(params?: {
+  location?: string;
+  min_hourly_rate?: number;
+  max_hourly_rate?: number;
+  remote_work?: boolean;
+  skip?: number;
+  limit?: number;
+}): Promise<FreelancerProfile[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.location) searchParams.append('location', params.location);
+  if (params?.min_hourly_rate) searchParams.append('min_hourly_rate', params.min_hourly_rate.toString());
+  if (params?.max_hourly_rate) searchParams.append('max_hourly_rate', params.max_hourly_rate.toString());
+  if (params?.remote_work !== undefined) searchParams.append('remote_work', params.remote_work.toString());
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+  return apiFetch(`/freelancer/search?${searchParams.toString()}`);
+}
+
+// User Profile Management
+export async function updateUserProfile(profile: {
+  full_name?: string;
+  bio?: string;
+  phone?: string;
+  gender?: string;
+  nationality?: string;
+  province?: string;
+  district?: string;
+}): Promise<User> {
+  return apiFetch('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(profile)
+  });
+}
+
+export async function changeUserType(newType: 'simple' | 'freelancer' | 'company'): Promise<User> {
+  return apiFetch('/users/me/change-type', {
+    method: 'POST',
+    body: JSON.stringify({ new_type: newType })
+  });
+}
+
+export async function getUserProfile(): Promise<User> {
+  return apiFetch('/users/me');
 }
 
 

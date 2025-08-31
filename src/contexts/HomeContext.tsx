@@ -5,6 +5,15 @@ interface User {
   id: number;
   email: string;
   full_name?: string;
+  user_type?: string;  // 'simple', 'freelancer', 'company'
+  profile_photo_url?: string;
+  cover_photo_url?: string;
+  gender?: string;
+  bio?: string;
+  phone?: string;
+  nationality?: string;
+  province?: string;
+  district?: string;
   companies?: Company[];
 }
 
