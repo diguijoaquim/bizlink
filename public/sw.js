@@ -9,7 +9,8 @@ const urlsToCache = [
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/icon-192.png',
-  '/icon-512.png'
+  '/icon-512.png',
+  '/offline.html'
 ];
 
 // Install event - cache resources
@@ -47,4 +48,5 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+
 });
