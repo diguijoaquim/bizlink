@@ -309,13 +309,10 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Aviso de configuração de perfil (sem redirecionamento automático) */}
+        {/* Ação para configurar perfil (sem mensagem descritiva) */}
         {!userLoading && user && !isProfileComplete && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              Seu perfil não está completo. Complete as informações para aproveitar todas as funcionalidades.
-            </p>
-            <div className="flex items-center gap-2">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-end">
               <Button 
                 onClick={() => navigate('/profile-setup')}
                 className="bg-gradient-primary text-white border-0"
@@ -483,7 +480,7 @@ export default function Profile() {
               <div className="space-y-6 w-full">
                 {/* Cabeçalho do Portfolio */}
                 <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                 <h3>Portfolio da Empresa</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Portfólios</h3>
                 </div>
 
                 {/* Loading State */}
@@ -500,14 +497,12 @@ export default function Profile() {
                   </div>
                 )}
 
-                {/* Grid de Projetos */}
+                {/* Grid de Projetos (apenas capa e título) */}
                 {portfolioItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Projetos Existentes */}
-                    {portfolioItems.map((item) => (
-                      <div key={item.id} className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
-                        {/* Imagem/Mídia do Projeto */}
-                        <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {portfolioItems.slice(0, 4).map((item) => (
+                      <div key={item.id} className="bg-card rounded-xl p-4 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
+                        <div className="aspect-video bg-gradient-soft rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                           {item.media_url ? (
                             <img
                               src={item.media_url}
@@ -516,80 +511,14 @@ export default function Profile() {
                             />
                           ) : (
                             <div className="text-center">
-                              <ImageIcon className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">Sem Imagem</p>
+                              <ImageIcon className="h-10 w-10 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-xs text-muted-foreground">Sem Imagem</p>
                             </div>
                           )}
                         </div>
-                        
-                        {/* Informações do Projeto */}
-                        <h4 className="font-semibold text-foreground mb-2">{item.title}</h4>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-                        
-                        {/* Metadados */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(item.created_at)}
-                          </div>
-                          {item.link && (
-                            <a
-                              href={item.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              Ver projeto
-                            </a>
-                          )}
-                        </div>
-
-                        {/* Ações */}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/portfolio/edit/${item.id}`)}
-                            className="flex-1"
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeletePortfolioItem(item.id)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <h4 className="font-semibold text-foreground">{item.title}</h4>
                       </div>
                     ))}
-
-                    {/* Botão Adicionar Projeto */}
-                    <div 
-                      className="bg-card rounded-xl p-6 bizlink-shadow-soft border-2 border-dashed border-border hover:border-primary/30 transition-colors group cursor-pointer"
-                      onClick={() => navigate('/portfolio/create')}
-                    >
-                      <div className="aspect-video bg-gradient-soft rounded-lg mb-4 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                            <Plus className="h-6 w-6 text-primary" />
-                          </div>
-                          <p className="text-sm text-primary font-medium">Adicionar Projeto</p>
-                        </div>
-                      </div>
-                      <h4 className="font-semibold text-foreground mb-2">Novo Projeto</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Clique para adicionar um novo projeto ao seu portfolio.
-                      </p>
-                    </div>
                   </div>
                 )}
 
