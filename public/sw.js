@@ -25,15 +25,21 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
+  if (event.request.mode === 'navigate') {
+    // Se for navegação, tenta buscar, se falhar mostra offline.html
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/offline.html'))
+    );
+  } else {
+    // Para outros requests (css/js/img), tenta cache primeiro
+    event.respondWith(
+      caches.match(event.request).then((response) => {
         return response || fetch(event.request);
-      }
-    )
-  );
+      })
+    );
+  }
 });
+
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
@@ -50,3 +56,4 @@ self.addEventListener('activate', (event) => {
   );
 
 });
+
