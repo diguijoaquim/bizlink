@@ -220,10 +220,7 @@ export default function ProfileSetup() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // 1. Alterar tipo de usuário
-      await changeUserType(userType);
-      
-      // 2. Atualizar perfil básico
+      // 1. Atualizar perfil básico (inclui user_type para evitar rota separada)
       await updateUserProfile({
         full_name: fullName,
         bio,
@@ -231,10 +228,11 @@ export default function ProfileSetup() {
         gender,
         nationality,
         province,
-        district
+        district,
+        user_type: userType
       });
       
-      // 3. Criar perfil específico baseado no tipo
+      // 2. Criar perfil específico baseado no tipo
       if (userType === 'freelancer') {
         await createFreelancerProfile({
           title: freelancerTitle,

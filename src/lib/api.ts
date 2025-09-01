@@ -894,6 +894,7 @@ export async function updateUserProfile(profile: {
   nationality?: string;
   province?: string;
   district?: string;
+  user_type?: 'simple' | 'freelancer' | 'company';
 }): Promise<User> {
   return apiFetch('/users/me', {
     method: 'PUT',
@@ -901,12 +902,9 @@ export async function updateUserProfile(profile: {
   });
 }
 
+// Deprecated: use updateUserProfile({ user_type }) instead to avoid CORS on some hosts
 export async function changeUserType(newType: 'simple' | 'freelancer' | 'company'): Promise<User> {
-  const params = new URLSearchParams();
-  params.append('new_type', newType);
-  return apiFetch(`/users/me/change-type?${params.toString()}`, {
-    method: 'POST'
-  });
+  return updateUserProfile({ user_type: newType });
 }
 
 export async function getUserProfile(): Promise<User> {
