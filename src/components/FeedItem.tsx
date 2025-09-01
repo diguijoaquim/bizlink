@@ -117,7 +117,10 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
   if (item.type === 'company') {
     return (
-      <Card className="cursor-pointer transition-all duration-200 hover:shadow-md border-border bg-card">
+      <Card 
+        className="cursor-pointer transition-all duration-200 hover:shadow-md border-border bg-card"
+        onClick={() => navigate(`/profile?company_id=${item.id}`)}
+      >
         <CardContent className="p-4">
           <div className="flex gap-4">
             {item.logo_url && (
@@ -172,7 +175,10 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
   if (item.type === 'user') {
     return (
-      <Card className="cursor-pointer transition-all duration-200 hover:shadow-md border-border bg-card">
+      <Card 
+        className="cursor-pointer transition-all duration-200 hover:shadow-md border-border bg-card"
+        onClick={() => navigate(`/profile?user_id=${item.id}`)}
+      >
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
