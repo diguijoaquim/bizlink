@@ -26,6 +26,53 @@ export async function loginWithPassword(email: string, password: string): Promis
   return (await response.json()) as LoginResponse;
 }
 
+export async function loginWithGoogle(credential: string): Promise<LoginResponse> {
+  try {
+    // Decode the base64 encoded user info
+    const userInfo = JSON.parse(atob(credential));
+    const email = userInfo.email;
+    const name = userInfo.name;
+    
+    if (!email) {
+      throw new Error('Email não encontrado na resposta do Google');
+    }
+    
+    // Generate a unique password for Google users
+    const googlePassword = `google-auth-${email}-${Date.now()}`;
+    
+    // Try to register the user first, then login
+    try {
+      await registerUser({ 
+        email, 
+        full_name: name || email.split('@')[0], 
+        password: googlePassword 
+      });
+    } catch (error) {
+      // User might already exist, that's okay
+      console.log('User might already exist:', error);
+    }
+    
+    // Try to login with the generated password
+    try {
+      return await loginWithPassword(email, googlePassword);
+    } catch (loginError) {
+      // If login fails, the user probably exists with a different password
+      // Generate a new password and try to update it
+      const newPassword = `google-auth-${email}-${Date.now()}`;
+      try {
+        // For existing Google users, we'll need to handle this differently
+        // For now, throw a helpful error
+        throw new Error('Usuário já existe. Use login com email/senha ou entre em contato com suporte.');
+      } catch (updateError) {
+        throw new Error('Erro ao autenticar com Google. Tente novamente.');
+      }
+    }
+  } catch (error: any) {
+    console.error('Google login error:', error);
+    throw new Error(error.message || 'Falha na autenticação Google');
+  }
+}
+
 export function saveAuthToken(token: string) {
   localStorage.setItem("auth_token", token);
 }

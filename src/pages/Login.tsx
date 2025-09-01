@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { loginWithPassword, saveAuthToken } from "@/lib/api";
+import { loginWithPassword, saveAuthToken, loginWithGoogle } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Login() {
@@ -16,6 +16,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,6 +31,68 @@ export default function Login() {
       setError(err?.message || "Falha ao entrar");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError(null);
+    setGoogleLoading(true);
+    
+    try {
+      const google = (window as any).google;
+      if (!google || !google.accounts || !google.accounts.oauth2) {
+        throw new Error("Google Sign-In não carregou. Recarregue a página.");
+      }
+
+      const CLIENT_ID = "830630003244-86fmt24vpe3etpsmk3hetsie3g0a2ho9.apps.googleusercontent.com";
+
+      // Use OAuth2 popup flow which is more reliable
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'openid email profile',
+        callback: async (response: any) => {
+          try {
+            if (response.access_token) {
+              // Get user info using the access token
+              const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${response.access_token}`);
+              const userInfo = await userInfoResponse.json();
+              
+              if (userInfo.email) {
+                // Create a mock credential for our loginWithGoogle function
+                const mockCredential = btoa(JSON.stringify({
+                  email: userInfo.email,
+                  name: userInfo.name,
+                  picture: userInfo.picture
+                }));
+                
+                const res = await loginWithGoogle(mockCredential);
+                saveAuthToken(res.access_token);
+                try { toast({ title: "Login com Google efetuado" }); } catch {}
+                navigate("/profile");
+              } else {
+                throw new Error("Não foi possível obter informações do usuário");
+              }
+            } else {
+              throw new Error("Token de acesso não recebido");
+            }
+          } catch (err: any) {
+            setError(err?.message || "Falha ao entrar com Google");
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+        error_callback: (error: any) => {
+          setError("Erro na autenticação Google: " + (error.message || "Desconhecido"));
+          setGoogleLoading(false);
+        }
+      });
+
+      // Request access token
+      client.requestAccessToken();
+
+    } catch (err: any) {
+      setError(err?.message || "Erro ao inicializar Google Sign-In");
+      setGoogleLoading(false);
     }
   }
 
@@ -116,6 +179,8 @@ export default function Login() {
           <Button 
             variant="outline" 
             className="w-full h-11 border-border hover:bg-muted"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -123,7 +188,7 @@ export default function Login() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continuar com Google
+            {googleLoading ? "Conectando..." : "Continuar com Google"}
           </Button>
 
           {/* Sign Up Link */}
