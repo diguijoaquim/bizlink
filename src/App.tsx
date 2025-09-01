@@ -37,6 +37,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+
 const App = () => {
   console.log('App component loading...');
   return (
@@ -151,3 +152,4 @@ const App = () => {
 };
 
 export default App;
+
