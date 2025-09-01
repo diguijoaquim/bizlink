@@ -1,5 +1,5 @@
 {
-  "name": "BizLink Moçambique",
+  "name": "BizLink - Vagas e Negócios",
   "short_name": "BizLink",
   "description": "Plataforma de negócios e serviços em Moçambique",
   "start_url": "/",
@@ -30,10 +30,10 @@
   "categories": ["business", "productivity", "social"],
   "shortcuts": [
     {
-      "name": "Explorar Serviços",
-      "short_name": "Explorar",
+      "name": "Vagas",
+      "short_name": "Vagas",
       "description": "Descubra serviços e empresas",
-      "url": "/explore",
+      "url": "/jobs",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -55,4 +55,5 @@
     }
   ],
   "prefer_related_applications": false
+
 }
