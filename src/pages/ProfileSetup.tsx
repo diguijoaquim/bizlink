@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/AppLayout';
-import { Camera, User, Building2, Briefcase, ArrowLeft } from 'lucide-react';
+import { User, Building2, Briefcase, ArrowLeft } from 'lucide-react';
 import { changeUserType, updateUserProfile, createFreelancerProfile, createCompany } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useHome } from '@/contexts/HomeContext';
@@ -132,20 +132,7 @@ export default function ProfileSetup() {
     return map[p] || [];
   };
   
-  // Imagens
-  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
-  const [coverPhoto, setCoverPhoto] = useState<File | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [profilePreview, setProfilePreview] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [companyCoverPreview, setCompanyCoverPreview] = useState<string | null>(null);
-  
-  const profileInputRef = useRef<HTMLInputElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const companyCoverInputRef = useRef<HTMLInputElement>(null);
+  // Imagens removidas desta tela
 
   // Load countries and calling codes for nationality/phone selects
   useEffect(() => {
@@ -267,9 +254,7 @@ export default function ProfileSetup() {
           address,
           website,
           email: companyEmail,
-          whatsapp: whatsCode && whatsapp ? `${whatsCode} ${whatsapp}` : whatsapp,
-          logoFile,
-          coverFile
+          whatsapp: whatsCode && whatsapp ? `${whatsCode} ${whatsapp}` : whatsapp
         });
       }
       
@@ -289,42 +274,6 @@ export default function ProfileSetup() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleImagePick = (type: 'profile' | 'cover' | 'logo' | 'companyCover') => {
-    const inputRef = {
-      profile: profileInputRef,
-      cover: coverInputRef,
-      logo: logoInputRef,
-      companyCover: companyCoverInputRef
-    }[type];
-    
-    inputRef.current?.click();
-  };
-
-  const handleImageChange = (type: 'profile' | 'cover' | 'logo' | 'companyCover', file: File) => {
-    switch (type) {
-      case 'profile':
-        if (profilePreview) URL.revokeObjectURL(profilePreview);
-        setProfilePreview(URL.createObjectURL(file));
-        setProfilePhoto(file);
-        break;
-      case 'cover':
-        if (coverPreview) URL.revokeObjectURL(coverPreview);
-        setCoverPreview(URL.createObjectURL(file));
-        setCoverPhoto(file);
-        break;
-      case 'logo':
-        if (logoPreview) URL.revokeObjectURL(logoPreview);
-        setLogoPreview(URL.createObjectURL(file));
-        setLogoFile(file);
-        break;
-      case 'companyCover':
-        if (companyCoverPreview) URL.revokeObjectURL(companyCoverPreview);
-        setCompanyCoverPreview(URL.createObjectURL(file));
-        setCoverFile(file);
-        break;
     }
   };
 
@@ -412,67 +361,7 @@ export default function ProfileSetup() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Imagens */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Foto de Perfil</Label>
-                <div className="mt-2">
-                  {profilePreview && (
-                    <div className="mb-2 flex items-center gap-3">
-                      <img src={profilePreview} alt="Pré-visualização" className="h-16 w-16 rounded-full object-cover border" />
-                      <span className="text-xs text-muted-foreground">Pré-visualização</span>
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleImagePick('profile')}
-                    className="w-full"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {profilePhoto ? 'Alterar Foto' : 'Selecionar Foto'}
-                  </Button>
-                  <input
-                    ref={profileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageChange('profile', file);
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label>Foto de Capa</Label>
-                <div className="mt-2">
-                  {coverPreview && (
-                    <div className="mb-2">
-                      <img src={coverPreview} alt="Pré-visualização da capa" className="h-24 w-full object-cover rounded border" />
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleImagePick('cover')}
-                    className="w-full"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {coverPhoto ? 'Alterar Capa' : 'Selecionar Capa'}
-                  </Button>
-                  <input
-                    ref={coverInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageChange('cover', file);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+            {/* Campos de imagem removidos desta tela */}
 
             {/* Campos básicos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -520,8 +409,8 @@ export default function ProfileSetup() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <Input
-                    id="phone"
+                <Input
+                  id="phone"
                     value={phoneLocal}
                     onChange={(e) => setPhoneLocal(e.target.value)}
                     placeholder="87 123 456"
@@ -580,12 +469,12 @@ export default function ProfileSetup() {
                   </Popover>
                   </div>
                 ) : (
-                  <Input
-                    id="nationality"
-                    value={nationality}
-                    onChange={(e) => setNationality(e.target.value)}
+                <Input
+                  id="nationality"
+                  value={nationality}
+                  onChange={(e) => setNationality(e.target.value)}
                     placeholder={countriesLoading ? 'Carregando países...' : 'Ex: Moçambique'}
-                  />
+                />
                 )}
                 {countriesError && (
                   <p className="mt-1 text-xs text-red-500">{countriesError}</p>
@@ -629,12 +518,12 @@ export default function ProfileSetup() {
                   </Popover>
                   </div>
                 ) : (
-                  <Input
-                    id="province"
-                    value={province}
-                    onChange={(e) => setProvince(e.target.value)}
-                    placeholder="Ex: Maputo"
-                  />
+                <Input
+                  id="province"
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  placeholder="Ex: Maputo"
+                />
                 )}
               </div>
               
@@ -673,12 +562,12 @@ export default function ProfileSetup() {
                   </Popover>
                   </div>
                 ) : (
-                  <Input
-                    id="district"
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="Ex: KaMavota"
-                  />
+                <Input
+                  id="district"
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  placeholder="Ex: KaMavota"
+                />
                 )}
               </div>
             </div>
@@ -784,67 +673,7 @@ export default function ProfileSetup() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Imagens da empresa */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Logo da Empresa</Label>
-                  <div className="mt-2">
-                    {logoPreview && (
-                      <div className="mb-2 flex items-center gap-3">
-                        <img src={logoPreview} alt="Pré-visualização do logo" className="h-16 w-16 rounded object-cover border" />
-                        <span className="text-xs text-muted-foreground">Pré-visualização</span>
-                      </div>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={() => handleImagePick('logo')}
-                      className="w-full"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      {logoFile ? 'Alterar Logo' : 'Selecionar Logo'}
-                    </Button>
-                    <input
-                      ref={logoInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageChange('logo', file);
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label>Foto de Capa da Empresa</Label>
-                  <div className="mt-2">
-                    {companyCoverPreview && (
-                      <div className="mb-2">
-                        <img src={companyCoverPreview} alt="Pré-visualização da capa da empresa" className="h-24 w-full object-cover rounded border" />
-                      </div>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={() => handleImagePick('companyCover')}
-                      className="w-full"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      {coverFile ? 'Alterar Capa' : 'Selecionar Capa'}
-                    </Button>
-                    <input
-                      ref={companyCoverInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageChange('companyCover', file);
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* Campos de imagem da empresa removidos desta tela */}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -915,12 +744,12 @@ export default function ProfileSetup() {
                     </Popover>
                     </div>
                   ) : (
-                    <Input
-                      id="companyNationality"
-                      value={companyNationality}
-                      onChange={(e) => setCompanyNationality(e.target.value)}
+                  <Input
+                    id="companyNationality"
+                    value={companyNationality}
+                    onChange={(e) => setCompanyNationality(e.target.value)}
                       placeholder={countriesLoading ? 'Carregando países...' : 'Ex: Moçambique'}
-                    />
+                  />
                   )}
                   {countriesError && (
                     <p className="mt-1 text-xs text-red-500">{countriesError}</p>
@@ -962,12 +791,12 @@ export default function ProfileSetup() {
                     </Popover>
                     </div>
                   ) : (
-                    <Input
-                      id="companyProvince"
-                      value={companyProvince}
-                      onChange={(e) => setCompanyProvince(e.target.value)}
-                      placeholder="Ex: Maputo"
-                    />
+                  <Input
+                    id="companyProvince"
+                    value={companyProvince}
+                    onChange={(e) => setCompanyProvince(e.target.value)}
+                    placeholder="Ex: Maputo"
+                  />
                   )}
                 </div>
               </div>
@@ -1008,12 +837,12 @@ export default function ProfileSetup() {
                     </Popover>
                     </div>
                   ) : (
-                    <Input
-                      id="companyDistrict"
-                      value={companyDistrict}
-                      onChange={(e) => setCompanyDistrict(e.target.value)}
-                      placeholder="Ex: KaMavota"
-                    />
+                  <Input
+                    id="companyDistrict"
+                    value={companyDistrict}
+                    onChange={(e) => setCompanyDistrict(e.target.value)}
+                    placeholder="Ex: KaMavota"
+                  />
                   )}
                 </div>
                 
@@ -1085,12 +914,12 @@ export default function ProfileSetup() {
                       </PopoverContent>
                     </Popover>
                   </div>
-                  <Input
-                    id="whatsapp"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
+                <Input
+                  id="whatsapp"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
                     placeholder="87 123 456"
-                  />
+                />
                 </div>
               </div>
             </CardContent>
