@@ -26,6 +26,28 @@ export async function loginWithPassword(email: string, password: string): Promis
   return (await response.json()) as LoginResponse;
 }
 
+// Helper function to check if user exists
+export async function checkUserExists(email: string): Promise<boolean> {
+  try {
+    // Try to get user info without authentication
+    const response = await fetch(`${API_BASE_URL}/users/check-email?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.exists === true;
+    }
+    return false;
+  } catch (error) {
+    // If endpoint doesn't exist, assume user doesn't exist
+    return false;
+  }
+}
+
 export async function loginWithGoogle(credential: string): Promise<LoginResponse> {
   try {
     // Decode the base64 encoded user info
@@ -36,37 +58,12 @@ export async function loginWithGoogle(credential: string): Promise<LoginResponse
     if (!email) {
       throw new Error('Email não encontrado na resposta do Google');
     }
-    
-    // Generate a unique password for Google users
-    const googlePassword = `google-auth-${email}-${Date.now()}`;
-    
-    // Try to register the user first, then login
-    try {
-      await registerUser({ 
-        email, 
-        full_name: name || email.split('@')[0], 
-        password: googlePassword 
-      });
-    } catch (error) {
-      // User might already exist, that's okay
-      console.log('User might already exist:', error);
-    }
-    
-    // Try to login with the generated password
-    try {
-      return await loginWithPassword(email, googlePassword);
-    } catch (loginError) {
-      // If login fails, the user probably exists with a different password
-      // Generate a new password and try to update it
-      const newPassword = `google-auth-${email}-${Date.now()}`;
-      try {
-        // For existing Google users, we'll need to handle this differently
-        // For now, throw a helpful error
-        throw new Error('Usuário já existe. Use login com email/senha ou entre em contato com suporte.');
-      } catch (updateError) {
-        throw new Error('Erro ao autenticar com Google. Tente novamente.');
-      }
-    }
+    // Call backend Google auth which logs in existing users or creates new ones
+    const response = await apiFetch('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ email, full_name: name || email.split('@')[0] })
+    });
+    return response as LoginResponse;
   } catch (error: any) {
     console.error('Google login error:', error);
     throw new Error(error.message || 'Falha na autenticação Google');
