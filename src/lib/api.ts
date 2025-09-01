@@ -109,7 +109,10 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
     
     if (!res.ok) {
       const error = await res.json().catch(() => ({}));
-      throw new Error(error.detail || `Request failed with status ${res.status}`);
+      const detail = (error && (error.detail || error.message))
+        ? (typeof (error.detail || error.message) === 'string' ? (error.detail || error.message) : JSON.stringify(error.detail || error.message))
+        : `Request failed with status ${res.status}`;
+      throw new Error(detail);
     }
     
     // Handle empty response
@@ -899,14 +902,35 @@ export async function updateUserProfile(profile: {
 }
 
 export async function changeUserType(newType: 'simple' | 'freelancer' | 'company'): Promise<User> {
-  return apiFetch('/users/me/change-type', {
-    method: 'POST',
-    body: JSON.stringify({ new_type: newType })
+  const params = new URLSearchParams();
+  params.append('new_type', newType);
+  return apiFetch(`/users/me/change-type?${params.toString()}`, {
+    method: 'POST'
   });
 }
 
 export async function getUserProfile(): Promise<User> {
   return apiFetch('/users/me');
+}
+
+
+// User photo uploads
+export async function uploadUserProfilePhoto(file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return apiFetch('/profile/me/profile-photo', {
+    method: 'PUT',
+    body: formData
+  });
+}
+
+export async function uploadUserCoverPhoto(file: File): Promise<User> {
+  const formData = new FormData();
+  formData.append('photo', file);
+  return apiFetch('/profile/me/cover-photo', {
+    method: 'PUT',
+    body: formData
+  });
 }
 
 

@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon } from "lucide-react";
-import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, type CompanyPortfolio } from "@/lib/api";
+import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, uploadUserProfilePhoto, uploadUserCoverPhoto, type CompanyPortfolio } from "@/lib/api";
 import { ProfileServiceCard } from "@/components/ProfileServiceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useHome } from "@/contexts/HomeContext";
@@ -21,7 +21,8 @@ export default function Profile() {
     services, 
     servicesLoading, 
     loadServices: reloadServices,
-    currentCompany 
+    currentCompany,
+    refreshData
   } = useHome();
 
   const [saving, setSaving] = useState(false);
@@ -152,6 +153,7 @@ export default function Profile() {
   }
 
   const firstCompany = currentCompany;
+  const showingCompanyMedia = user?.user_type === 'company' && !!firstCompany;
   
   const toAbsolute = (url?: string) => {
     if (!url) return undefined;
@@ -181,6 +183,7 @@ export default function Profile() {
       });
       // Refetch data using context
       await reloadServices();
+      await refreshData();
     } catch (e: any) {
       setError(e?.message || "Falha ao atualizar imagem");
     } finally {
@@ -197,6 +200,35 @@ export default function Profile() {
     }
   }
 
+  async function updateUserImage(type: "cover" | "profile", file: File) {
+    setSaving(true);
+    setError(null);
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      if (type === "cover") setCoverPreview(objectUrl);
+      if (type === "profile") setLogoPreview(objectUrl);
+
+      if (type === "cover") {
+        await uploadUserCoverPhoto(file);
+      } else {
+        await uploadUserProfilePhoto(file);
+      }
+      await refreshData();
+    } catch (e: any) {
+      setError(e?.message || "Falha ao atualizar imagem");
+    } finally {
+      setSaving(false);
+      if (coverPreview) {
+        URL.revokeObjectURL(coverPreview);
+        setCoverPreview(null);
+      }
+      if (logoPreview) {
+        URL.revokeObjectURL(logoPreview);
+        setLogoPreview(null);
+      }
+    }
+  }
+
   function onPickCover() {
     coverInputRef.current?.click();
   }
@@ -204,7 +236,13 @@ export default function Profile() {
     logoInputRef.current?.click();
   }
 
-  // Perfil usa exclusivamente as imagens da empresa (logo/capa)
+  // Seleciona a fonte das imagens (empresa ou usuário)
+  const resolvedCoverUrl = coverPreview
+    ? coverPreview
+    : (showingCompanyMedia ? toAbsolute(firstCompany?.cover_url) : toAbsolute(user?.cover_photo_url)) || null;
+  const resolvedAvatarUrl = logoPreview
+    ? logoPreview
+    : (showingCompanyMedia ? toAbsolute(firstCompany?.logo_url) : toAbsolute(user?.profile_photo_url)) || null;
 
   return (
     <AppLayout>
@@ -212,21 +250,15 @@ export default function Profile() {
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
-            {coverPreview ? (
+            {resolvedCoverUrl ? (
               <img
-                src={coverPreview}
-                alt="Capa (preview)"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : firstCompany?.cover_url ? (
-              <img
-                src={toAbsolute(firstCompany.cover_url)}
-                alt="Capa da empresa"
+                src={resolvedCoverUrl}
+                alt="Capa"
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : null}
             <div className="absolute top-4 right-4">
-              <Button onClick={hasCompany ? onPickCover : undefined} variant="ghost" size="icon" className="bg-background/80 backdrop-blur-sm">
+              <Button onClick={onPickCover} variant="ghost" size="icon" className="bg-background/80 backdrop-blur-sm">
                 <Camera className="h-4 w-4" />
               </Button>
             </div>
@@ -235,21 +267,17 @@ export default function Profile() {
             <div className="flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-6">
               <div className="relative">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background shadow-bizlink-soft bg-gradient-soft overflow-hidden flex items-center justify-center text-lg font-bold relative">
-                  {logoPreview ? (
-                    <img src={logoPreview} alt="Logo (preview)" className="w-full h-full object-cover" />
-                  ) : firstCompany?.logo_url ? (
-                    <img src={toAbsolute(firstCompany.logo_url)} alt="Logo" className="w-full h-full object-cover" />
+                  {resolvedAvatarUrl ? (
+                    <img src={resolvedAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span>{user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}</span>
                   )}
-                  {hasCompany ? (
-                    <button
-                      onClick={onPickLogo}
-                      className="absolute bottom-1 right-1 bg-background/90 rounded-full p-1 shadow"
-                    >
-                      <Camera className="h-3.5 w-3.5" />
-                    </button>
-                  ) : null}
+                  <button
+                    onClick={onPickLogo}
+                    className="absolute bottom-1 right-1 bg-background/90 rounded-full p-1 shadow"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
               <div className="flex-1">
@@ -276,21 +304,6 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!hasCompany ? (
-                      <Button 
-                        onClick={() => navigate('/create-company')} 
-                        className="bg-gradient-primary text-white border-0"
-                      >
-                        Adicionar empresa
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => navigate('/edit-company')} 
-                        className="bg-gradient-primary text-white border-0"
-                      >
-                        Editar empresa
-                      </Button>
-                    )}
                     {isProfileComplete && (
                       <Button 
                         variant="ghost" 
@@ -537,7 +550,7 @@ export default function Profile() {
                       className="bg-primary hover:bg-primary/90"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Primeiro Projeto
+                      arpoi Primeiro Projeto
                     </Button>
                   </div>
                 )}
@@ -863,7 +876,13 @@ export default function Profile() {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) updateCompanyImage("cover", file);
+            if (file) {
+              if (showingCompanyMedia) {
+                updateCompanyImage("cover", file);
+              } else {
+                updateUserImage("cover", file);
+              }
+            }
             if (coverInputRef.current) coverInputRef.current.value = "";
           }}
         />
@@ -874,7 +893,13 @@ export default function Profile() {
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) updateCompanyImage("logo", file);
+            if (file) {
+              if (showingCompanyMedia) {
+                updateCompanyImage("logo", file);
+              } else {
+                updateUserImage("profile", file);
+              }
+            }
             if (logoInputRef.current) logoInputRef.current.value = "";
           }}
         />

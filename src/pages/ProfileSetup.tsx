@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/AppLayout';
@@ -25,7 +27,8 @@ export default function ProfileSetup() {
   // Campos básicos do usuário
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneLocal, setPhoneLocal] = useState('');
+  const [phoneCode, setPhoneCode] = useState('');
   const [gender, setGender] = useState('');
   const [nationality, setNationality] = useState('');
   const [province, setProvince] = useState('');
@@ -49,17 +52,183 @@ export default function ProfileSetup() {
   const [website, setWebsite] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [whatsCode, setWhatsCode] = useState('');
+  const [countries, setCountries] = useState<{ name: string; code: string }[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
+  const [countriesError, setCountriesError] = useState<string | null>(null);
+  const [openNationality, setOpenNationality] = useState(false);
+  const [openCompanyNationality, setOpenCompanyNationality] = useState(false);
+  const [openPhoneCode, setOpenPhoneCode] = useState(false);
+  const [openWhatsCode, setOpenWhatsCode] = useState(false);
+  const [callingCodes, setCallingCodes] = useState<{ name: string; code: string; dial: string }[]>([]);
+  const [openProvince, setOpenProvince] = useState(false);
+  const [openCompanyProvince, setOpenCompanyProvince] = useState(false);
+  const [openDistrict, setOpenDistrict] = useState(false);
+  const [openCompanyDistrict, setOpenCompanyDistrict] = useState(false);
+
+  // Minimal ISO-3166-2-like provinces dataset (extend as needed)
+  const getProvincesByCountryName = (countryName?: string): string[] => {
+    if (!countryName) return [];
+    const normalized = countryName.toLowerCase();
+    if (normalized.includes('moçambique') || normalized.includes('mozambique')) {
+      return [
+        'Cabo Delgado',
+        'Gaza',
+        'Inhambane',
+        'Manica',
+        'Maputo',
+        'Maputo Cidade',
+        'Nampula',
+        'Niassa',
+        'Sofala',
+        'Tete',
+        'Zambézia',
+      ];
+    }
+    // Add more countries here if desired
+    return [];
+  };
+
+  const getDistrictsByCountryProvince = (countryName?: string, provinceName?: string): string[] => {
+    if (!countryName || !provinceName) return [];
+    const isMoz = (countryName.toLowerCase().includes('moçambique') || countryName.toLowerCase().includes('mozambique'));
+    if (!isMoz) return [];
+    const p = provinceName.toLowerCase();
+    const map: Record<string, string[]> = {
+      'cabo delgado': [
+        'Ancuabe','Balama','Chiúre','Ibo','Macomia','Mecúfi','Meluco','Metuge','Mocímboa da Praia','Montepuez','Mueda','Muidumbe','Namuno','Nangade','Palma','Pemba'
+      ],
+      'gaza': [
+        'Bilene','Chibuto','Chicualacuala','Chigubo','Chókwè','Chongoene','Guijá','Limpopo','Mabalane','Manjacaze','Massangena','Massingir','Xai-Xai'
+      ],
+      'inhambane': [
+        'Funhalouro','Govuro','Homoíne','Inhambane','Inharrime','Inhassoro','Jangamo','Mabote','Massinga','Morrumbene','Panda','Vilankulo','Zavala'
+      ],
+      'manica': [
+        'Báruè','Chimoio','Gondola','Guro','Macate','Machaze','Macossa','Manica','Mossurize','Sussundenga','Tambara','Vandúzi'
+      ],
+      'maputo': [
+        'Boane','Magude','Manhiça','Marracuene','Matutuíne','Moamba','Namaacha','Matola'
+      ],
+      'maputo cidade': [
+        'KaMpfumo','KaMaxaquene','KaMavota','KaMubukwana','KaTembe','KaNyaka'
+      ],
+      'nampula': [
+        'Angoche','Eráti','Ilha de Moçambique','Lalaua','Larde','Malema','Meconta','Mecubúri','Mogincual','Mogovolas','Moma','Monapo','Mossuril','Muecate','Murrupula','Nacarôa','Nacala-a-Velha','Nacala Porto','Nampula','Rapale','Ribáuè'
+      ],
+      'niassa': [
+        'Cuamba','Lago','Lichinga','Majune','Mandimba','Marrupa','Maúa','Mavago','Mecanhelas','Mecula','Metarica','Muembe','Ngauma','Sanga'
+      ],
+      'sofala': [
+        'Beira','Búzi','Caia','Chemba','Cheringoma','Chibabava','Dondo','Gorongosa','Machanga','Marínguè','Marromeu','Muanza','Nhamatanda'
+      ],
+      'tete': [
+        'Angónia','Cahora-Bassa','Changara','Chifunde','Chiuta','Doa','Macanga','Mágoè','Marávia','Moatize','Mutarara','Tsangano','Zumbo','Tete'
+      ],
+      'zambézia': [
+        'Alto Molócuè','Chinde','Derre','Gilé','Gurué','Ile','Inhassunge','Lugela','Maganja da Costa','Milange','Mocuba','Mocubela','Molumbo','Mopeia','Morrumbala','Mulevala','Namacurra','Namarroi','Nicoadala','Pebane','Quelimane'
+      ],
+    };
+    return map[p] || [];
+  };
   
   // Imagens
   const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
   const [coverPhoto, setCoverPhoto] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [companyCoverPreview, setCompanyCoverPreview] = useState<string | null>(null);
   
   const profileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const companyCoverInputRef = useRef<HTMLInputElement>(null);
+
+  // Load countries and calling codes for nationality/phone selects
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        setCountriesLoading(true);
+        setCountriesError(null);
+        const res = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,translations,idd');
+        if (!res.ok) throw new Error('Falha ao carregar países');
+        const data = await res.json();
+        const mapped = (data || [])
+          .map((c: any) => ({
+            name: (c?.translations?.por?.common as string) || (c?.name?.common as string),
+            code: c?.cca2 as string,
+          }))
+          .filter((c: any) => !!c.name)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name, 'pt'));
+        setCountries(mapped);
+        const codes = (data || [])
+          .map((c: any) => {
+            const name = (c?.translations?.por?.common as string) || (c?.name?.common as string);
+            const code = c?.cca2 as string;
+            const root = c?.idd?.root as string | undefined;
+            const suffixes = (c?.idd?.suffixes as string[] | undefined) || [];
+            const dial = root && suffixes.length > 0 ? `${root}${suffixes[0]}` : root || '';
+            return name && code && dial ? { name, code, dial } : null;
+          })
+          .filter(Boolean)
+          .sort((a: any, b: any) => a.name.localeCompare(b.name, 'pt')) as { name: string; code: string; dial: string }[];
+        setCallingCodes(codes);
+        // Defaults to Moçambique if available
+        const mz = mapped.find((c: any) => c.name.toLowerCase().includes('moçambique') || c.code === 'MZ' || c.name.toLowerCase().includes('mozambique'));
+        if (!nationality && mz) setNationality(mz.name);
+        if (!companyNationality && mz) setCompanyNationality(mz.name);
+        const mzCode = codes.find((c) => c.code === 'MZ' || c.name.toLowerCase().includes('moçambique'));
+        if (!phoneCode && mzCode?.dial) setPhoneCode(mzCode.dial);
+        if (!whatsCode && mzCode?.dial) setWhatsCode(mzCode.dial);
+      } catch (e: any) {
+        setCountriesError(e?.message || 'Não foi possível carregar países');
+        setCountries([]);
+      } finally {
+        setCountriesLoading(false);
+      }
+    };
+    loadCountries();
+  }, []);
+
+  // Reset province when country changes and selected province is not valid
+  useEffect(() => {
+    const list = getProvincesByCountryName(nationality);
+    if (list.length > 0 && province && !list.includes(province)) {
+      setProvince('');
+    }
+    // Close related popovers when country changes
+    setOpenNationality(false);
+    setOpenProvince(false);
+    setOpenDistrict(false);
+  }, [nationality]);
+
+  useEffect(() => {
+    const list = getProvincesByCountryName(companyNationality);
+    if (list.length > 0 && companyProvince && !list.includes(companyProvince)) {
+      setCompanyProvince('');
+    }
+    // Close related popovers when country changes
+    setOpenCompanyNationality(false);
+    setOpenCompanyProvince(false);
+    setOpenCompanyDistrict(false);
+  }, [companyNationality]);
+
+  useEffect(() => {
+    const districts = getDistrictsByCountryProvince(nationality, province);
+    if (district && districts.length > 0 && !districts.includes(district)) {
+      setDistrict('');
+    }
+  }, [nationality, province]);
+
+  useEffect(() => {
+    const districts = getDistrictsByCountryProvince(companyNationality, companyProvince);
+    if (companyDistrict && districts.length > 0 && !districts.includes(companyDistrict)) {
+      setCompanyDistrict('');
+    }
+  }, [companyNationality, companyProvince]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -71,7 +240,7 @@ export default function ProfileSetup() {
       await updateUserProfile({
         full_name: fullName,
         bio,
-        phone,
+        phone: phoneCode && phoneLocal ? `${phoneCode} ${phoneLocal}` : phoneLocal,
         gender,
         nationality,
         province,
@@ -98,7 +267,7 @@ export default function ProfileSetup() {
           address,
           website,
           email: companyEmail,
-          whatsapp,
+          whatsapp: whatsCode && whatsapp ? `${whatsCode} ${whatsapp}` : whatsapp,
           logoFile,
           coverFile
         });
@@ -137,15 +306,23 @@ export default function ProfileSetup() {
   const handleImageChange = (type: 'profile' | 'cover' | 'logo' | 'companyCover', file: File) => {
     switch (type) {
       case 'profile':
+        if (profilePreview) URL.revokeObjectURL(profilePreview);
+        setProfilePreview(URL.createObjectURL(file));
         setProfilePhoto(file);
         break;
       case 'cover':
+        if (coverPreview) URL.revokeObjectURL(coverPreview);
+        setCoverPreview(URL.createObjectURL(file));
         setCoverPhoto(file);
         break;
       case 'logo':
+        if (logoPreview) URL.revokeObjectURL(logoPreview);
+        setLogoPreview(URL.createObjectURL(file));
         setLogoFile(file);
         break;
       case 'companyCover':
+        if (companyCoverPreview) URL.revokeObjectURL(companyCoverPreview);
+        setCompanyCoverPreview(URL.createObjectURL(file));
         setCoverFile(file);
         break;
     }
@@ -240,6 +417,12 @@ export default function ProfileSetup() {
               <div>
                 <Label>Foto de Perfil</Label>
                 <div className="mt-2">
+                  {profilePreview && (
+                    <div className="mb-2 flex items-center gap-3">
+                      <img src={profilePreview} alt="Pré-visualização" className="h-16 w-16 rounded-full object-cover border" />
+                      <span className="text-xs text-muted-foreground">Pré-visualização</span>
+                    </div>
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => handleImagePick('profile')}
@@ -264,6 +447,11 @@ export default function ProfileSetup() {
               <div>
                 <Label>Foto de Capa</Label>
                 <div className="mt-2">
+                  {coverPreview && (
+                    <div className="mb-2">
+                      <img src={coverPreview} alt="Pré-visualização da capa" className="h-24 w-full object-cover rounded border" />
+                    </div>
+                  )}
                   <Button
                     variant="outline"
                     onClick={() => handleImagePick('cover')}
@@ -300,12 +488,45 @@ export default function ProfileSetup() {
               
               <div>
                 <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+258 87 123 456"
-                />
+                <div className="mt-2 flex gap-2">
+                  <div className="w-36">
+                    <Popover open={openPhoneCode} onOpenChange={setOpenPhoneCode}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openPhoneCode} className="w-full justify-between">
+                          {phoneCode || (countriesLoading ? '...' : '+Código')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar país..." />
+                          <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {callingCodes.map((c) => (
+                                <CommandItem
+                                  key={c.code}
+                                  value={`${c.name} ${c.dial}`}
+                                  onSelect={() => {
+                                    setPhoneCode(c.dial);
+                                    setOpenPhoneCode(false);
+                                  }}
+                                >
+                                  {c.name} ({c.code}) {c.dial}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <Input
+                    id="phone"
+                    value={phoneLocal}
+                    onChange={(e) => setPhoneLocal(e.target.value)}
+                    placeholder="87 123 456"
+                  />
+                </div>
               </div>
             </div>
 
@@ -326,34 +547,139 @@ export default function ProfileSetup() {
               
               <div>
                 <Label htmlFor="nationality">Nacionalidade</Label>
-                <Input
-                  id="nationality"
-                  value={nationality}
-                  onChange={(e) => setNationality(e.target.value)}
-                  placeholder="Ex: Moçambicano"
-                />
+                {countries.length > 0 ? (
+                  <div key={`nat-${nationality || 'none'}`}>
+                  <Popover open={openNationality} onOpenChange={setOpenNationality}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={openNationality} className="w-full justify-between">
+                        {nationality || (countriesLoading ? 'Carregando países...' : 'Selecione o país')}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                      <Command>
+                        <CommandInput placeholder="Pesquisar país..." />
+                        <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                        <CommandList>
+                          <CommandGroup>
+                            {countries.map((c) => (
+                              <CommandItem
+                                key={c.code}
+                                value={c.name}
+                                onSelect={(value) => {
+                                  setNationality(value);
+                                  setOpenNationality(false);
+                                }}
+                              >
+                                {c.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  </div>
+                ) : (
+                  <Input
+                    id="nationality"
+                    value={nationality}
+                    onChange={(e) => setNationality(e.target.value)}
+                    placeholder={countriesLoading ? 'Carregando países...' : 'Ex: Moçambique'}
+                  />
+                )}
+                {countriesError && (
+                  <p className="mt-1 text-xs text-red-500">{countriesError}</p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="province">Província</Label>
-                <Input
-                  id="province"
-                  value={province}
-                  onChange={(e) => setProvince(e.target.value)}
-                  placeholder="Ex: Maputo"
-                />
+                {getProvincesByCountryName(nationality).length > 0 ? (
+                  <div key={`prov-${nationality}-${province || 'none'}`}>
+                  <Popover open={openProvince} onOpenChange={setOpenProvince}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={openProvince} className="w-full justify-between">
+                        {province || 'Selecione a província'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                      <Command>
+                        <CommandInput placeholder="Pesquisar província..." />
+                        <CommandEmpty>Nenhuma província encontrada.</CommandEmpty>
+                        <CommandList>
+                          <CommandGroup>
+                            {getProvincesByCountryName(nationality).map((p) => (
+                              <CommandItem
+                                key={p}
+                                value={p}
+                                onSelect={(value) => {
+                                  setProvince(value);
+                                  setOpenProvince(false);
+                                }}
+                              >
+                                {p}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  </div>
+                ) : (
+                  <Input
+                    id="province"
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    placeholder="Ex: Maputo"
+                  />
+                )}
               </div>
               
               <div>
                 <Label htmlFor="district">Distrito</Label>
-                <Input
-                  id="district"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="Ex: KaMavota"
-                />
+                {getDistrictsByCountryProvince(nationality, province).length > 0 ? (
+                  <div key={`dist-${nationality}-${province}-${district || 'none'}`}>
+                  <Popover open={openDistrict} onOpenChange={setOpenDistrict}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={openDistrict} className="w-full justify-between">
+                        {district || 'Selecione o distrito'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                      <Command>
+                        <CommandInput placeholder="Pesquisar distrito..." />
+                        <CommandEmpty>Nenhum distrito encontrado.</CommandEmpty>
+                        <CommandList>
+                          <CommandGroup>
+                            {getDistrictsByCountryProvince(nationality, province).map((d) => (
+                              <CommandItem
+                                key={d}
+                                value={d}
+                                onSelect={(value) => {
+                                  setDistrict(value);
+                                  setOpenDistrict(false);
+                                }}
+                              >
+                                {d}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  </div>
+                ) : (
+                  <Input
+                    id="district"
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                    placeholder="Ex: KaMavota"
+                  />
+                )}
               </div>
             </div>
 
@@ -463,6 +789,12 @@ export default function ProfileSetup() {
                 <div>
                   <Label>Logo da Empresa</Label>
                   <div className="mt-2">
+                    {logoPreview && (
+                      <div className="mb-2 flex items-center gap-3">
+                        <img src={logoPreview} alt="Pré-visualização do logo" className="h-16 w-16 rounded object-cover border" />
+                        <span className="text-xs text-muted-foreground">Pré-visualização</span>
+                      </div>
+                    )}
                     <Button
                       variant="outline"
                       onClick={() => handleImagePick('logo')}
@@ -487,6 +819,11 @@ export default function ProfileSetup() {
                 <div>
                   <Label>Foto de Capa da Empresa</Label>
                   <div className="mt-2">
+                    {companyCoverPreview && (
+                      <div className="mb-2">
+                        <img src={companyCoverPreview} alt="Pré-visualização da capa da empresa" className="h-24 w-full object-cover rounded border" />
+                      </div>
+                    )}
                     <Button
                       variant="outline"
                       onClick={() => handleImagePick('companyCover')}
@@ -545,34 +882,139 @@ export default function ProfileSetup() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="companyNationality">País</Label>
-                  <Input
-                    id="companyNationality"
-                    value={companyNationality}
-                    onChange={(e) => setCompanyNationality(e.target.value)}
-                    placeholder="Ex: Moçambique"
-                  />
+                  {countries.length > 0 ? (
+                    <div key={`comp-nat-${companyNationality || 'none'}`}>
+                    <Popover open={openCompanyNationality} onOpenChange={setOpenCompanyNationality}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openCompanyNationality} className="w-full justify-between">
+                          {companyNationality || (countriesLoading ? 'Carregando países...' : 'Selecione o país')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar país..." />
+                          <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {countries.map((c) => (
+                                <CommandItem
+                                  key={c.code}
+                                  value={c.name}
+                                  onSelect={(value) => {
+                                    setCompanyNationality(value);
+                                    setOpenCompanyNationality(false);
+                                  }}
+                                >
+                                  {c.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    </div>
+                  ) : (
+                    <Input
+                      id="companyNationality"
+                      value={companyNationality}
+                      onChange={(e) => setCompanyNationality(e.target.value)}
+                      placeholder={countriesLoading ? 'Carregando países...' : 'Ex: Moçambique'}
+                    />
+                  )}
+                  {countriesError && (
+                    <p className="mt-1 text-xs text-red-500">{countriesError}</p>
+                  )}
                 </div>
                 
                 <div>
                   <Label htmlFor="companyProvince">Província</Label>
-                  <Input
-                    id="companyProvince"
-                    value={companyProvince}
-                    onChange={(e) => setCompanyProvince(e.target.value)}
-                    placeholder="Ex: Maputo"
-                  />
+                  {getProvincesByCountryName(companyNationality).length > 0 ? (
+                    <div key={`comp-prov-${companyNationality}-${companyProvince || 'none'}`}>
+                    <Popover open={openCompanyProvince} onOpenChange={setOpenCompanyProvince}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openCompanyProvince} className="w-full justify-between">
+                          {companyProvince || 'Selecione a província'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar província..." />
+                          <CommandEmpty>Nenhuma província encontrada.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {getProvincesByCountryName(companyNationality).map((p) => (
+                                <CommandItem
+                                  key={p}
+                                  value={p}
+                                  onSelect={(value) => {
+                                    setCompanyProvince(value);
+                                    setOpenCompanyProvince(false);
+                                  }}
+                                >
+                                  {p}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    </div>
+                  ) : (
+                    <Input
+                      id="companyProvince"
+                      value={companyProvince}
+                      onChange={(e) => setCompanyProvince(e.target.value)}
+                      placeholder="Ex: Maputo"
+                    />
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="companyDistrict">Distrito</Label>
-                  <Input
-                    id="companyDistrict"
-                    value={companyDistrict}
-                    onChange={(e) => setCompanyDistrict(e.target.value)}
-                    placeholder="Ex: KaMavota"
-                  />
+                  {getDistrictsByCountryProvince(companyNationality, companyProvince).length > 0 ? (
+                    <div key={`comp-dist-${companyNationality}-${companyProvince}-${companyDistrict || 'none'}`}>
+                    <Popover open={openCompanyDistrict} onOpenChange={setOpenCompanyDistrict}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openCompanyDistrict} className="w-full justify-between">
+                          {companyDistrict || 'Selecione o distrito'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar distrito..." />
+                          <CommandEmpty>Nenhum distrito encontrado.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {getDistrictsByCountryProvince(companyNationality, companyProvince).map((d) => (
+                                <CommandItem
+                                  key={d}
+                                  value={d}
+                                  onSelect={(value) => {
+                                    setCompanyDistrict(value);
+                                    setOpenCompanyDistrict(false);
+                                  }}
+                                >
+                                  {d}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    </div>
+                  ) : (
+                    <Input
+                      id="companyDistrict"
+                      value={companyDistrict}
+                      onChange={(e) => setCompanyDistrict(e.target.value)}
+                      placeholder="Ex: KaMavota"
+                    />
+                  )}
                 </div>
                 
                 <div>
@@ -611,12 +1053,45 @@ export default function ProfileSetup() {
 
               <div>
                 <Label htmlFor="whatsapp">WhatsApp</Label>
-                <Input
-                  id="whatsapp"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="+258 87 123 456"
-                />
+                <div className="mt-2 flex gap-2">
+                  <div className="w-36">
+                    <Popover open={openWhatsCode} onOpenChange={setOpenWhatsCode}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" role="combobox" aria-expanded={openWhatsCode} className="w-full justify-between">
+                          {whatsCode || (countriesLoading ? '...' : '+Código')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]">
+                        <Command>
+                          <CommandInput placeholder="Pesquisar país..." />
+                          <CommandEmpty>Nenhum país encontrado.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {callingCodes.map((c) => (
+                                <CommandItem
+                                  key={c.code}
+                                  value={`${c.name} ${c.dial}`}
+                                  onSelect={() => {
+                                    setWhatsCode(c.dial);
+                                    setOpenWhatsCode(false);
+                                  }}
+                                >
+                                  {c.name} ({c.code}) {c.dial}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <Input
+                    id="whatsapp"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="87 123 456"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
