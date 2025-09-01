@@ -26,7 +26,8 @@ export default function Login() {
       const res = await loginWithPassword(email, password);
       saveAuthToken(res.access_token);
       try { toast({ title: "Login efetuado" }); } catch {}
-      navigate("/profile");
+      // Redireciona para tela inicial com reload real
+      window.location.href = "/";
     } catch (err: any) {
       setError(err?.message || "Falha ao entrar");
     } finally {
@@ -68,7 +69,8 @@ export default function Login() {
                 const res = await loginWithGoogle(mockCredential);
                 saveAuthToken(res.access_token);
                 try { toast({ title: "Login com Google efetuado" }); } catch {}
-                navigate("/profile");
+                // Redireciona para tela inicial com reload real
+                window.location.href = "/";
               } else {
                 throw new Error("Não foi possível obter informações do usuário");
               }
