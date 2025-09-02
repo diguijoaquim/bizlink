@@ -798,7 +798,7 @@ export default function Profile() {
               </TabsContent>
             </Tabs>
           </div>
-        ) : user?.user_type === 'simple' ? (
+        ) : (!isPublicView && user?.user_type === 'simple') ? (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
             <div className="space-y-6 w-full">
               {/* Informações do Usuário Simples */}
@@ -877,11 +877,11 @@ export default function Profile() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : (!isPublicView ? (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
             <p className="text-muted-foreground">Configure seu perfil para começar a usar o BizLink.</p>
           </div>
-        )}
+        ) : null)}
 
         {/* Hidden inputs for image picking */}
         <input
