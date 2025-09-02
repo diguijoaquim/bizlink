@@ -798,16 +798,18 @@ export default function Profile() {
               </TabsContent>
             </Tabs>
           </div>
-        ) : (!isPublicView && user?.user_type === 'simple') ? (
+        ) : (user?.user_type === 'simple') ? (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
             <div className="space-y-6 w-full">
               {/* Informações do Usuário Simples */}
-              <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Perfil Simples</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Você tem um perfil simples no BizLink. Para acessar mais funcionalidades, considere criar uma empresa ou se tornar um freelancer.
-                </p>
-              </div>
+              {!isPublicView && (
+                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Perfil Simples</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Você tem um perfil simples no BizLink. Para acessar mais funcionalidades, considere criar uma empresa ou se tornar um freelancer.
+                  </p>
+                </div>
+              )}
 
               {/* Cards de Informação do Usuário Simples */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -832,6 +834,17 @@ export default function Profile() {
                         {user?.full_name || "—"}
                       </span>
                     </div>
+                    {user?.phone && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Telefone</span>
+                        <a 
+                          href={`tel:${user.phone}`}
+                          className="text-sm font-medium text-primary hover:underline truncate max-w-[120px]"
+                        >
+                          {user.phone}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -850,31 +863,67 @@ export default function Profile() {
                         {user?.district || ""}{user?.province ? `, ${user.province}` : ""}
                       </p>
                     </div>
+                    {user?.nationality && (
+                      <div>
+                        <span className="text-xs text-muted-foreground">País</span>
+                        <p className="text-sm font-medium text-foreground mt-1">{user.nationality}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Ações para Upgrade */}
-              <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Expandir Perfil</h3>
-                <div className="flex flex-wrap gap-3">
-                  <Button 
-                    onClick={() => navigate('/create-company')} 
-                    className="bg-gradient-primary text-white border-0"
-                  >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Criar Empresa
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/become-freelancer')} 
-                    variant="outline"
-                    className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
-                  >
-                    <Star className="h-4 w-4 mr-2" />
-                    Tornar-se Freelancer
-                  </Button>
+              {/* Sobre Mim */}
+              {user?.bio && (
+                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Sobre Mim</h3>
+                  <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+                </div>
+              )}
+
+              {/* Detalhes Pessoais e Resumo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Detalhes Pessoais</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Nome</span>
+                      <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{user?.full_name || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Gênero</span>
+                      <span className="text-sm font-medium text-foreground">{user?.gender || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Tipo</span>
+                      <span className="text-sm font-medium text-foreground">Usuário simples</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Resumo</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Estado</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-foreground">
+                        {(() => { const anyUser: any = user as any; return anyUser?.is_active ? 'Ativo' : 'Inativo'; })()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Membro desde</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {(() => {
+                          const anyUser: any = user as any;
+                          return anyUser?.created_at ? new Date(anyUser.created_at).toLocaleDateString('pt-PT') : '—';
+                        })()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Upgrade actions removidas para manter visão clean do perfil simples */}
             </div>
           </div>
         ) : (!isPublicView ? (
