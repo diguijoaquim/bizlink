@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { apiFetch, getCompanyServices, Service, Company, getUserByIdPublic, getUserBySlug } from '@/lib/api';
 
 interface User {
@@ -51,6 +52,7 @@ interface HomeProviderProps {
 }
 
 export const HomeProvider = ({ children }: HomeProviderProps) => {
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [hasCompany, setHasCompany] = useState(false);
@@ -123,6 +125,14 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
   useEffect(() => {
     loadUserData();
   }, []);
+
+  // Reload user when navigating to a different profile context
+  useEffect(() => {
+    const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@');
+    if (isProfileRoute) {
+      loadUserData();
+    }
+  }, [location.pathname, location.search]);
 
   const value: HomeContextType = {
     user,

@@ -62,14 +62,7 @@ const App = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/notifications" element={<Notifications />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/profile" element={<Profile />} />
           {/* Public profile by slug e.g., /@djoaquim */}
           <Route path="/@:slug" element={<Profile />} />
           <Route

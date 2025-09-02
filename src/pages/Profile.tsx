@@ -144,7 +144,7 @@ export default function Profile() {
   // Removido redirecionamento automático para configuração de perfil
   // Mantemos apenas um aviso visual com opção de ir para configuração
 
-  if (userLoading) {
+  if (userLoading || !user) {
     return (
       <AppLayout>
         <ProfileSkeleton />
