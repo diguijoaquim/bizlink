@@ -37,10 +37,11 @@ export default function Profile() {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
   // Verificar se o usuário precisa configurar o perfil
-  const needsProfileSetup = !user?.user_type || 
+  const isPublicView = typeof window !== 'undefined' && (window.location.pathname.startsWith('/@') || new URLSearchParams(window.location.search).has('user_id'));
+  const needsProfileSetup = (!user?.user_type || 
     user.user_type === 'simple' && !user.full_name ||
     !user?.province || 
-    !user?.district;
+    !user?.district) && !isPublicView;
 
   // Considerar perfil completo quando for empresa ou freelancer e possuir província e distrito
   const isProfileComplete = (
@@ -257,11 +258,13 @@ export default function Profile() {
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : null}
-            <div className="absolute top-4 right-4">
-              <Button onClick={onPickCover} variant="ghost" size="icon" className="bg-background/80 backdrop-blur-sm">
-                <Camera className="h-4 w-4" />
-              </Button>
-            </div>
+            {!isPublicView && (
+              <div className="absolute top-4 right-4">
+                <Button onClick={onPickCover} variant="ghost" size="icon" className="bg-background/80 backdrop-blur-sm">
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           <div className="relative px-4 -mt-16 md:-mt-20">
             <div className="flex flex-col md:flex-row items-start md:items-end space-y-4 md:space-y-0 md:space-x-6">
@@ -272,12 +275,14 @@ export default function Profile() {
                   ) : (
                     <span>{user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}</span>
                   )}
-                  <button
-                    onClick={onPickLogo}
-                    className="absolute bottom-1 right-1 bg-background/90 rounded-full p-1 shadow"
-                  >
-                    <Camera className="h-3.5 w-3.5" />
-                  </button>
+                  {!isPublicView && (
+                    <button
+                      onClick={onPickLogo}
+                      className="absolute bottom-1 right-1 bg-background/90 rounded-full p-1 shadow"
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex-1">
@@ -303,19 +308,21 @@ export default function Profile() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isProfileComplete && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => navigate('/profile-setup')} 
-                        aria-label="Editar Perfil"
-                        title="Editar Perfil"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  {!isPublicView && (
+                    <div className="flex items-center gap-2">
+                      {isProfileComplete && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => navigate('/profile-setup')} 
+                          aria-label="Editar Perfil"
+                          title="Editar Perfil"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -323,7 +330,7 @@ export default function Profile() {
         </div>
 
         {/* Ação para configurar perfil (sem mensagem descritiva) */}
-        {!userLoading && user && !isProfileComplete && (
+        {!isPublicView && !userLoading && user && !isProfileComplete && (
           <div className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center justify-end">
               <Button 
@@ -461,32 +468,40 @@ export default function Profile() {
                 </div>
 
                 {/* Ações */}
-                <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
-                  <div className="flex flex-wrap gap-3">
-                    <Button 
-                      variant="outline" 
-                      className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
-                    >
-                      <LinkIcon className="h-4 w-4 mr-2" />
-                      Ver Página Pública
-                    </Button>
-                    <Button 
-                      onClick={() => navigate('/my-services')} 
-                      className="bg-gradient-primary text-white border-0 hover:opacity-90"
-                    >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Gerir Serviços
-                    </Button>
-                    <Button 
-                      onClick={() => navigate('/edit-company')} 
-                      variant="outline"
-                      className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
-                    >
-                      Editar Empresa
-                    </Button>
+                {!isPublicView ? (
+                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
+                    <div className="flex flex-wrap gap-3">
+                      <Button 
+                        variant="outline" 
+                        className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
+                        onClick={() => navigate(`/@${(user?.email || '').split('@')[0]}`)}
+                      >
+                        <LinkIcon className="h-4 w-4 mr-2" />
+                        Ver Página Pública
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/my-services')} 
+                        className="bg-gradient-primary text-white border-0 hover:opacity-90"
+                      >
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Gerir Serviços
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/edit-company')} 
+                        variant="outline"
+                        className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
+                      >
+                        Editar Empresa
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Sobre esta empresa</h3>
+                    <p className="text-sm text-muted-foreground">Conecte-se, peça um orçamento ou veja mais serviços.</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="portfolio" className="profile-tabs-content">
