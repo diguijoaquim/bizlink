@@ -42,11 +42,11 @@ const App = () => {
   console.log('App component loading...');
   return (
   <QueryClientProvider client={queryClient}>
-    <HomeProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
       <BrowserRouter>
+        <HomeProvider>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
@@ -139,9 +139,9 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <InstallPrompt />
+        </HomeProvider>
       </BrowserRouter>
       </TooltipProvider>
-    </HomeProvider>
   </QueryClientProvider>
   );
 };
