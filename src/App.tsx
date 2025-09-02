@@ -70,6 +70,8 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          {/* Public profile by slug e.g., /@djoaquim */}
+          <Route path="/@:slug" element={<Profile />} />
           <Route
             path="/edit-company"
             element={

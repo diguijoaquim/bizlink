@@ -911,6 +911,14 @@ export async function getUserProfile(): Promise<User> {
   return apiFetch('/users/me');
 }
 
+export async function getUserByIdPublic(id: number): Promise<User> {
+  return apiFetch(`/users/${id}`);
+}
+
+export async function getUserBySlug(slug: string): Promise<User> {
+  return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
+}
+
 
 // User photo uploads
 export async function uploadUserProfilePhoto(file: File): Promise<User> {

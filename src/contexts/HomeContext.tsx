@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiFetch, getCompanyServices, Service, Company } from '@/lib/api';
+import { apiFetch, getCompanyServices, Service, Company, getUserByIdPublic, getUserBySlug } from '@/lib/api';
 
 interface User {
   id: number;
@@ -63,7 +63,18 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     try {
       console.log('HomeContext: Loading user data...');
       setUserLoading(true);
-      const userData = await apiFetch('/users/me');
+      // Public profile view via query or slug
+      const params = new URLSearchParams(window.location.search);
+      const userIdParam = params.get('user_id');
+      const slugMatch = window.location.pathname.match(/^\/@([^/]+)$/);
+      let userData: any;
+      if (slugMatch && slugMatch[1]) {
+        userData = await getUserBySlug(slugMatch[1]);
+      } else if (userIdParam) {
+        userData = await getUserByIdPublic(parseInt(userIdParam, 10));
+      } else {
+        userData = await apiFetch('/users/me');
+      }
       console.log('HomeContext: User data loaded:', userData);
       
       setUser(userData);
