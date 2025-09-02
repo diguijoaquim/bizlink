@@ -54,7 +54,7 @@ export default function Jobs() {
   const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { hasCompany } = useHome();
+  const { hasCompany, currentCompany } = useHome();
 
   useEffect(() => {
     loadJobs();
@@ -355,129 +355,98 @@ export default function Jobs() {
               </CardContent>
             </Card>
           ) : (
-            filteredJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CardTitle className="text-xl">{job.title}</CardTitle>
-                        {job.is_promoted && (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                            <Star className="h-3 w-3 mr-1" />
-                            Promovida
+            filteredJobs.map((job) => {
+              const isOwner = !!currentCompany && job.company_id === currentCompany.id;
+              return (
+                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex gap-4 items-start">
+                      {/* Capa/ícone à esquerda */}
+                      <div className="w-24 h-24 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                        <Briefcase className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                      {/* Conteúdo central */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold text-foreground truncate">{job.title}</h3>
+                          {job.is_promoted && (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                              <Star className="h-3 w-3 mr-1" />
+                              Promovida
+                            </Badge>
+                          )}
+                          <Badge variant={job.status === 'Ativa' ? 'default' : 'secondary'}>
+                            {job.status}
                           </Badge>
+                          {isOwner && (
+                            <Badge variant="outline">Minha vaga</Badge>
+                          )}
+                        </div>
+                        {job.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{job.description}</p>
                         )}
-                        <Badge variant={job.status === 'Ativa' ? 'default' : 'secondary'}>
-                          {job.status}
-                        </Badge>
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          {job.location && (
+                            <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{job.location}</span>
+                          )}
+                          <span>Publicada em {formatDate(job.created_at)}</span>
+                        </div>
                       </div>
-                      
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                        {job.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {job.location}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        {job.views}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {job.applications}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  {job.description && (
-                    <CardDescription className="mb-4 line-clamp-2">
-                      {job.description}
-                    </CardDescription>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-500">
-                      Publicada em {formatDate(job.created_at)}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
-                      >
-                        Ver Detalhes
-                      </Button>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Alterar Status da Vaga</DialogTitle>
-                            <DialogDescription>
-                              Escolha o novo status para esta vaga.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex gap-2">
-                            {['Ativa', 'Pausada', 'Fechada'].map((status) => (
-                              <Button
-                                key={status}
-                                variant={job.status === status ? 'default' : 'outline'}
-                                onClick={() => handleStatusChange(job.id, status)}
-                              >
-                                {status}
+                      {/* Lado direito: métricas e ações */}
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1"><Eye className="h-4 w-4" />{job.views}</span>
+                          <span className="flex items-center gap-1"><Users className="h-4 w-4" />{job.applications}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/jobs/${job.id}`)}>Ver Detalhes</Button>
+                          {isOwner && (
+                            <>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm"><Edit className="h-4 w-4" /></Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Alterar Status da Vaga</DialogTitle>
+                                    <DialogDescription>Escolha o novo status para esta vaga.</DialogDescription>
+                                  </DialogHeader>
+                                  <div className="flex gap-2">
+                                    {['Ativa', 'Pausada', 'Fechada'].map((status) => (
+                                      <Button key={status} variant={job.status === status ? 'default' : 'outline'} onClick={() => handleStatusChange(job.id, status)}>
+                                        {status}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                              <Button variant="outline" size="sm" onClick={() => handlePromotionToggle(job.id)}>
+                                {job.is_promoted ? 'Remover Promoção' : 'Promover'}
                               </Button>
-                            ))}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePromotionToggle(job.id)}
-                      >
-                        {job.is_promoted ? 'Remover Promoção' : 'Promover'}
-                      </Button>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja deletar esta vaga? Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteJob(job.id)}>
-                              Deletar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm"><Trash2 className="h-4 w-4" /></Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>Tem certeza que deseja deletar esta vaga? Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteJob(job.id)}>Deletar</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
