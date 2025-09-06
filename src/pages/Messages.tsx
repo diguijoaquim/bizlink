@@ -131,9 +131,21 @@ export default function Messages() {
 
   const startChatWithUser = (user: User) => {
     startConversation(user.id).then(async ({ id }) => {
-      await loadConversations();
+      // Optimistically add conversation to list if missing
+      setChats(prev => {
+        if (prev.some(c => c.id === id)) return prev;
+        const optimistic = {
+          id,
+          peer: { id: user.id, full_name: user.full_name, email: user.email, profile_photo_url: user.profile_photo_url },
+          last_message: '',
+          last_time: null as any,
+        };
+        return [optimistic, ...prev];
+      });
       setSelectedChat(String(id));
       setChatMessages(await getMessages(id));
+      // Refresh conversations in background to sync last_message
+      loadConversations();
     }).catch(console.error);
   };
 
