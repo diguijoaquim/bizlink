@@ -1085,5 +1085,19 @@ export async function completePasswordReset(params: { email: string; otp: string
   });
 }
 
+export async function verifyPasswordResetOtp(params: { email: string; otp: string }): Promise<{ token: string }> {
+  return apiFetch('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify(params)
+  });
+}
+
+export async function resetPasswordWithToken(params: { token: string; newPassword: string }): Promise<void> {
+  await apiFetch('/auth/reset-password-token', {
+    method: 'POST',
+    body: JSON.stringify({ token: params.token, new_password: params.newPassword })
+  });
+}
+
 
 
