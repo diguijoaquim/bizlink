@@ -221,11 +221,11 @@ export default function Messages() {
 
   const content = (
     <>
-      <div className={`${isMobile ? 'h-[calc(100vh-8rem)]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden bizlink-shadow-soft`}>
+      <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden bizlink-shadow-soft min-h-0`}>
         {/* Chat List */}
-        <div className={`border-b md:border-r border-border flex flex-col ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
+        <div className={`border-b md:border-r border-border flex flex-col min-h-0 ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
-          <div className="p-4 border-b border-border">
+          <div className="p-4 border-b border-border sticky top-0 z-10 bg-card">
             <h1 className="text-xl font-bold text-foreground mb-3">Mensagens</h1>
           </div>
 
@@ -377,9 +377,9 @@ export default function Messages() {
 
         {/* Chat Area */}
         {selectedChat && selectedChatData ? (
-          <div className={`flex-1 flex flex-col ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`flex-1 flex flex-col min-h-0 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 z-10 bg-card">
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <img
@@ -412,7 +412,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -439,7 +439,7 @@ export default function Messages() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border sticky bottom-0 z-10 bg-card">
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon">
                   <Paperclip className="h-4 w-4" />
