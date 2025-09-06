@@ -50,6 +50,13 @@ export default function Messages() {
     if (f === 'company' || f === 'freelancer' || f === 'simple' || f === 'all') {
       setRecipientFilter(f as any);
     }
+    const openId = params.get('open');
+    if (openId) {
+      const cid = parseInt(openId, 10);
+      if (Number.isFinite(cid)) {
+        handleOpenChat(cid);
+      }
+    }
   }, [location.search]);
 
   // Reload according to recipientFilter
