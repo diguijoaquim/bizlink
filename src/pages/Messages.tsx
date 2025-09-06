@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { searchUsers, type User } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -105,12 +105,16 @@ export default function Messages() {
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [recipientFilter, setRecipientFilter] = useState<'all'|'company'|'freelancer'|'simple'>('all');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
 
   const selectedChatData = mockChats.find(chat => chat.id === selectedChat);
 
-  // Load users when component mounts
+  // Load users/companies when component mounts
   useEffect(() => {
     loadUsers();
+    loadCompanies();
   }, []);
 
   const loadUsers = async () => {
@@ -142,6 +146,18 @@ export default function Messages() {
     }
   };
 
+  const loadCompanies = async () => {
+    try {
+      setCompaniesLoading(true);
+      const data = await getCompanies();
+      setCompanies(data);
+    } catch (e) {
+      console.error('Error loading companies:', e);
+    } finally {
+      setCompaniesLoading(false);
+    }
+  };
+
   const startChatWithUser = (user: User) => {
     // Create a new chat with the selected user
     const newChat: Chat = {
@@ -161,6 +177,15 @@ export default function Messages() {
     }
     
     setSelectedChat(newChat.id);
+  };
+
+  const startChatWithCompany = async (company: Company) => {
+    try {
+      const owner = await getUserByIdPublic(company.owner_id);
+      startChatWithUser(owner as unknown as User);
+    } catch (e) {
+      console.error('Failed to start chat with company owner', e);
+    }
   };
 
   return (
@@ -206,6 +231,13 @@ export default function Messages() {
                     onChange={(e) => handleUserSearch(e.target.value)}
                     className="pl-9 h-9"
                   />
+                </div>
+                {/* Recipient type filter */}
+                <div className="flex gap-2 mt-3">
+                  <Button variant={recipientFilter==='all'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('all')}>Todos</Button>
+                  <Button variant={recipientFilter==='company'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('company')}>Empresas</Button>
+                  <Button variant={recipientFilter==='freelancer'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('freelancer')}>Freelancers</Button>
+                  <Button variant={recipientFilter==='simple'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('simple')}>Simples</Button>
                 </div>
               </TabsContent>
             </Tabs>
@@ -265,7 +297,28 @@ export default function Messages() {
               </TabsContent>
 
               <TabsContent value="users" className="h-full">
-                {usersLoading ? (
+                {(recipientFilter==='company') ? (
+                  companiesLoading ? (
+                    <div className="flex items-center justify-center p-8"><div className="text-muted-foreground">Carregando empresas...</div></div>
+                  ) : companies.length===0 ? (
+                    <div className="flex items-center justify-center p-8"><div className="text-muted-foreground">Nenhuma empresa encontrada</div></div>
+                  ) : (
+                    companies.map((company)=> (
+                      <div key={company.id} onClick={()=>startChatWithCompany(company)} className="p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted">
+                        <div className="flex items-center gap-3">
+                          <img src={company.logo_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-12 h-12 rounded-full object-cover" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-medium text-foreground truncate">{company.name}</h3>
+                              <Badge variant="outline" className="text-xs">Empresa</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground truncate">{company.description || 'Empresa'}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )
+                ) : usersLoading ? (
                   <div className="flex items-center justify-center p-8">
                     <div className="text-muted-foreground">Carregando usuários...</div>
                   </div>
@@ -274,7 +327,9 @@ export default function Messages() {
                     <div className="text-muted-foreground">Nenhum usuário encontrado</div>
                   </div>
                 ) : (
-                  users.map((user) => (
+                  users
+                    .filter(u => recipientFilter==='all' ? true : (recipientFilter==='freelancer' ? u.user_type==='freelancer' : recipientFilter==='simple' ? u.user_type==='simple' : true))
+                    .map((user) => (
                     <div
                       key={user.id}
                       onClick={() => startChatWithUser(user)}
