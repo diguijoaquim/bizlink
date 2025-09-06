@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/AppLayout";
 import { FeedItemComponent } from "@/components/FeedItem";
@@ -38,36 +37,6 @@ export default function Index() {
     loadFeed(); 
   }, []);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      // If search is empty, reload normal feed
-      setLoading(true);
-      try {
-        console.log('Reloading normal feed...');
-        const response = await getFeed(undefined, 10);
-        setFeedItems(response.items);
-        setHasMore(response.has_more);
-        setLastId(response.next_page_info?.last_id);
-      } catch (error) {
-        console.error('Error loading feed:', error);
-        setFeedItems([]);
-        setHasMore(false);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Redirect to search page with query
-    navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-  };
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   const loadMore = async () => {
     if (!hasMore || !lastId) return;
     
@@ -92,22 +61,12 @@ export default function Index() {
     <AppLayout>
       <div className="">
         {/* Search Section */}
-         <div className="pt-6 pb-4 bg-blue-500">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar serviços, empresas, pessoas..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleSearchKeyPress}
-              className="pl-12 pr-20 h-12 text-base rounded-xl border-border focus:border-primary bg-card"
-            />
-            <Button 
-              onClick={handleSearch}
-              className="absolute right-2 top-2 h-8 px-4 rounded-lg text-sm"
-            >
-              Buscar
-            </Button>
+         <div className="pt-6 pb-4">
+          <div className="px-1">
+            <div className="relative h-12 rounded-full bg-muted flex items-center cursor-pointer" onClick={()=>navigate(`/search`)}>
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <span className="pl-12 pr-4 w-full text-sm text-muted-foreground">Buscar serviços, empresas, pessoas...</span>
+            </div>
           </div>
         </div>
 
