@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId } from "@/lib/api";
 
@@ -261,13 +262,25 @@ export default function Messages() {
                     </div>
                   </div>
                 </div>
-                {(!chatLoading && chats.length === 0) && (
+                {chatLoading ? (
+                  <div className="space-y-4 p-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center space-x-3">
+                        <Skeleton className="w-12 h-12 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (!chatLoading && chats.length === 0) ? (
                   <div className="p-6 text-center space-y-3">
                     <p className="text-muted-foreground">Você ainda não tem conversas.</p>
                     <Button onClick={openStartChat} className="bg-gradient-primary text-white border-0">Iniciar chat</Button>
-          </div>
-                )}
-                {chats.map((chat) => (
+                  </div>
+                ) : (
+                  chats.map((chat) => (
                   <div
                     key={chat.id}
                     onClick={() => handleOpenChat(chat.id)}
@@ -433,7 +446,19 @@ export default function Messages() {
 
             {/* Messages */}
             <div className="overflow-y-scroll p-4 space-y-3 touch-auto" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' }}>
-              {chatMessages.map((message) => (
+              {chatMessages.length === 0 ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${i % 2 === 0 ? "bg-muted" : "bg-primary/10"}`}>
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-16 mt-1" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                chatMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}
