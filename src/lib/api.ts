@@ -999,6 +999,13 @@ export async function getRecipients(params: { type?: 'companies' | 'freelancer' 
   return apiFetch(`/chat/recipients?${p.toString()}`);
 }
 
+export function connectChatWS(conversationId: number): WebSocket | null {
+  const token = getAuthToken();
+  if (!token) return null;
+  const url = `${API_BASE_URL.replace('http', 'ws')}/chat/ws?conversation_id=${conversationId}&token=${encodeURIComponent(token)}`;
+  return new WebSocket(url);
+}
+
 export async function getUserBySlug(slug: string): Promise<User> {
   return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
 }

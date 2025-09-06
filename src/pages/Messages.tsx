@@ -8,7 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS } from "@/lib/api";
 
  
 
@@ -29,6 +29,7 @@ export default function Messages() {
   const [recLoading, setRecLoading] = useState(false);
   const [recUsers, setRecUsers] = useState<User[]>([]);
   const [recCompanies, setRecCompanies] = useState<Company[]>([]);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -161,6 +162,23 @@ export default function Messages() {
   const handleOpenChat = async (chatId: number) => {
     setSelectedChat(String(chatId));
     setChatMessages(await getMessages(chatId));
+    // connect websocket
+    try {
+      ws?.close();
+    } catch {}
+    const socket = connectChatWS(chatId);
+    if (socket) {
+      socket.onmessage = (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg?.event === 'message') {
+            const m = msg.data;
+            setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+          }
+        } catch {}
+      };
+      setWs(socket);
+    }
   };
 
   const handleSend = async () => {
@@ -169,7 +187,8 @@ export default function Messages() {
     try {
       await sendMessage(cid, newMessage.trim());
       setNewMessage("");
-      setChatMessages(await getMessages(cid));
+      // optimistic own message
+      setChatMessages(prev => [...prev, { id: Date.now(), text: newMessage.trim(), time: new Date().toISOString(), isMe: true }]);
     } catch (e) {
       console.error('send failed', e);
     }
