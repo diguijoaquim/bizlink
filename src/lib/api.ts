@@ -473,6 +473,7 @@ export interface FeedItem {
   // Service fields
   title?: string;
   description?: string;
+  location?: string;
   price?: number;
   category?: string;
   tags?: any;
