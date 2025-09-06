@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients } from "@/lib/api";
 
  
 
@@ -48,8 +48,9 @@ export default function Messages() {
   const loadUsers = async () => {
     try {
       setUsersLoading(true);
-      const usersData = await searchUsers({ limit: 50 });
-      setUsers(usersData);
+      // Use recipients endpoint to allow filtering by type later
+      const data = await getRecipients({ type: 'users', limit: 50 });
+      setUsers(data.users || []);
     } catch (error) {
       console.error("Error loading users:", error);
     } finally {
@@ -77,8 +78,8 @@ export default function Messages() {
   const loadCompanies = async () => {
     try {
       setCompaniesLoading(true);
-      const data = await getCompanies();
-      setCompanies(data);
+      const data = await getRecipients({ type: 'companies', limit: 50 });
+      setCompanies(data.companies || []);
     } catch (e) {
       console.error('Error loading companies:', e);
     } finally {

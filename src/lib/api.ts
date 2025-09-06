@@ -990,6 +990,15 @@ export async function sendMessage(conversationId: number, text: string): Promise
   return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
 }
 
+// Recipients (users/companies) for chat
+export async function getRecipients(params: { type?: 'companies' | 'freelancer' | 'simple' | 'users' | 'all'; q?: string; limit?: number }): Promise<{ users?: User[]; companies?: Company[] }> {
+  const p = new URLSearchParams();
+  if (params.type) p.append('type', params.type);
+  if (params.q) p.append('q', params.q);
+  if (params.limit) p.append('limit', String(params.limit));
+  return apiFetch(`/chat/recipients?${p.toString()}`);
+}
+
 export async function getUserBySlug(slug: string): Promise<User> {
   return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
 }
