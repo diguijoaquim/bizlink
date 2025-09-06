@@ -217,6 +217,18 @@ export default function Messages() {
     }
   };
 
+  useEffect(() => {
+    // Add viewport meta tag to prevent keyboard from pushing fixed elements
+    const meta = document.createElement('meta');
+    meta.name = 'viewport';
+    meta.content = 'width=device-width, initial-scale=1, viewport-fit=cover, height=device-height';
+    document.head.appendChild(meta);
+    
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   const content = (
     <>
       <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden overscroll-none bizlink-shadow-soft min-h-0`}>
@@ -384,7 +396,7 @@ export default function Messages() {
         {selectedChat && selectedChatData ? (
           <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between">
+            <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between" style={{ position: 'fixed', top: 0 }}>
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
                   <ArrowLeft size={24} />
@@ -420,7 +432,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="overflow-y-scroll p-4 space-y-3" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0 }}>
+            <div className="overflow-y-scroll p-4 space-y-3" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' }}>
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -447,7 +459,7 @@ export default function Messages() {
             </div>
 
             {/* Message Input */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-card p-4 border-t border-border">
+            <div className="fixed bottom-0 left-0 right-0 z-20 bg-card p-4 border-t border-border" style={{ position: 'fixed', bottom: 0 }}>
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon">
                   <Paperclip className="h-4 w-4" />
