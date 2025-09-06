@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, Users, MessageCircle } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AppLayout } from "@/components/AppLayout";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Avatar } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId } from "@/lib/api";
 
@@ -521,9 +519,5 @@ export default function Messages() {
     </>
   );
 
-  return isMobile ? (
-    <AppLayout>{content}</AppLayout>
-  ) : (
-    content
-  );
+  return content;
 }
