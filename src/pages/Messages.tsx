@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, MoreVertical, Send, Paperclip, Smile, ArrowLeft } from "lucide-react";
+import { Search, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -381,7 +381,7 @@ export default function Messages() {
             <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 z-10 bg-card">
               <div className="flex items-center space-x-3">
                 <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
-                  <ArrowLeft className="h-6 w-6" />
+                  <ArrowLeft size={24} />
                 </Button>
                 <div className="relative">
                   <img
@@ -401,6 +401,9 @@ export default function Messages() {
               </div>
 
               <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="icon">
+                  <Video className="h-4 w-4" />
+                </Button>
                 <Button variant="ghost" size="icon">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
