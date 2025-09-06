@@ -166,57 +166,23 @@ export default function Messages() {
           {/* Chat List Header */}
           <div className="p-4 border-b border-border">
             <h1 className="text-xl font-bold text-foreground mb-3">Mensagens</h1>
-            
-            {/* Tabs for Conversations and Users */}
-            <Tabs defaultValue="conversations" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="conversations" className="flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4" />
-                  Conversas
-                </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Usuários
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="conversations" className="mt-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar conversas..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="users" className="mt-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar usuários..."
-                    value={userSearchQuery}
-                    onChange={(e) => handleUserSearch(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
-                {/* Recipient type filter */}
-                <div className="flex gap-2 mt-3">
-                  <Button variant={recipientFilter==='all'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('all')}>Todos</Button>
-                  <Button variant={recipientFilter==='company'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('company')}>Empresas</Button>
-                  <Button variant={recipientFilter==='freelancer'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('freelancer')}>Freelancers</Button>
-                  <Button variant={recipientFilter==='simple'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('simple')}>Simples</Button>
-                </div>
-              </TabsContent>
-            </Tabs>
           </div>
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
+                <div className="p-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar conversas..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+                </div>
                 {chats.map((chat) => (
                   <div
                     key={chat.id}
@@ -254,6 +220,24 @@ export default function Messages() {
               </TabsContent>
 
               <TabsContent value="users" className="h-full">
+                <div className="p-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar usuários..."
+                      value={userSearchQuery}
+                      onChange={(e) => handleUserSearch(e.target.value)}
+                      className="pl-9 h-9"
+                    />
+                  </div>
+                  {/* Recipient type filter */}
+                  <div className="flex gap-2 mt-3">
+                    <Button variant={recipientFilter==='all'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('all')}>Todos</Button>
+                    <Button variant={recipientFilter==='company'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('company')}>Empresas</Button>
+                    <Button variant={recipientFilter==='freelancer'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('freelancer')}>Freelancers</Button>
+                    <Button variant={recipientFilter==='simple'?'default':'outline'} size="sm" onClick={()=>setRecipientFilter('simple')}>Simples</Button>
+                  </div>
+                </div>
                 {(recipientFilter==='company') ? (
                   companiesLoading ? (
                     <div className="flex items-center justify-center p-8"><div className="text-muted-foreground">Carregando empresas...</div></div>
