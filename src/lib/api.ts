@@ -458,7 +458,7 @@ export const promoteService = async (id: number, promote: boolean): Promise<Serv
 // Feed API
 export interface FeedItem {
   id: number;
-  type: 'service' | 'company' | 'user' | 'portfolio';
+  type: 'service' | 'company' | 'user' | 'portfolio' | 'job';
   // Service fields
   title?: string;
   description?: string;

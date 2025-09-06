@@ -192,6 +192,73 @@ export function FeedItemComponent({ item }: FeedItemProps) {
     );
   }
 
+  if (item.type === 'job') {
+    return (
+      <Card className="w-full border-border bg-card overflow-hidden feed-item shadow-none">
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between p-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-foreground">Vaga</h4>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
+                </p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="px-4 pb-3">
+            <div className="text-lg font-bold text-foreground mb-1">{item.title}</div>
+            {item.location && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                <MapPin className="h-4 w-4" />
+                <span>{item.location}</span>
+              </div>
+            )}
+            <p className="text-foreground mb-3 leading-relaxed">
+              {item.description}
+            </p>
+          </div>
+
+          {item.image_url && (
+            <div className="w-full h-64 overflow-hidden">
+              <img
+                src={toAbsolute(item.image_url)}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between p-4 pt-3">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`} onClick={handleLike}>
+                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleComment}>
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleShare}>
+                <Send className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button variant="ghost" size="icon" className={`h-8 w-8 ${isBookmarked ? 'text-blue-500' : 'text-muted-foreground'}`} onClick={handleBookmark}>
+              <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (item.type === 'company') {
     return (
       <Card className="w-full border-border bg-card overflow-hidden feed-item shadow-none">
