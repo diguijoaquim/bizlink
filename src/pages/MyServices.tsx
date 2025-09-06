@@ -11,6 +11,7 @@ import { PublishServiceModal } from "@/components/PublishServiceModal";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, getCompanies, getCompanyServices, getCompanyServiceStats, Service, Company, API_BASE_URL, deleteService, promoteService } from "@/lib/api";
+import { useHome } from "@/contexts/HomeContext";
 
 
 export default function MyServices() {
@@ -22,15 +23,20 @@ export default function MyServices() {
   const [stats, setStats] = useState<{ total: number; active: number; promoted: number; views: number } | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
+  const { user } = useHome();
 
   const loadServices = async () => {
-    if (companies.length > 0) {
-      try {
-        const servicesData = await getCompanyServices(companies[0].id);
-        setServices(servicesData);
-      } catch (error) {
-        console.error('Error loading services:', error);
-      }
+    const companyId = (user?.companies && user.companies[0]?.id) || companies[0]?.id;
+    if (!companyId) return;
+    try {
+      const [servicesData, statsData] = await Promise.all([
+        getCompanyServices(companyId),
+        getCompanyServiceStats(companyId)
+      ]);
+      setServices(servicesData);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading services:', error);
     }
   };
 
@@ -77,11 +83,9 @@ export default function MyServices() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const companiesData = await getCompanies();
-        setCompanies(companiesData);
-        
-        if (companiesData.length > 0) {
-          const companyId = companiesData[0].id;
+        if (user?.companies && user.companies.length > 0) {
+          setCompanies(user.companies as unknown as Company[]);
+          const companyId = user.companies[0].id;
           const [servicesData, statsData] = await Promise.all([
             getCompanyServices(companyId),
             getCompanyServiceStats(companyId)
@@ -89,7 +93,19 @@ export default function MyServices() {
           setServices(servicesData);
           setStats(statsData);
         } else {
-          setStats({ total: 0, active: 0, promoted: 0, views: 0 });
+          const companiesData = await getCompanies();
+          setCompanies(companiesData);
+          if (companiesData.length > 0) {
+            const companyId = companiesData[0].id;
+            const [servicesData, statsData] = await Promise.all([
+              getCompanyServices(companyId),
+              getCompanyServiceStats(companyId)
+            ]);
+            setServices(servicesData);
+            setStats(statsData);
+          } else {
+            setStats({ total: 0, active: 0, promoted: 0, views: 0 });
+          }
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -104,7 +120,7 @@ export default function MyServices() {
     };
 
     loadData();
-  }, [toast]);
+  }, [toast, user]);
 
   const handleModalChange = (open: boolean) => {
     setIsPublishModalOpen(open);
@@ -329,7 +345,7 @@ export default function MyServices() {
                                 <Badge variant={service.status === "Ativo" ? "default" : "secondary"} className="text-xs">
                                   {service.status}
                                 </Badge>
-                                {service.is_promoted === 1 && (
+                                {Boolean((service as any).is_promoted) && (
                                   <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0 text-xs">
                                     ⭐ Promovido
                                   </Badge>
@@ -360,9 +376,9 @@ export default function MyServices() {
                                   <TrendingUp className="h-4 w-4 mr-2" />
                                   {service.status === "Ativo" ? "Pausar" : "Activar"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handlePromoteService(service.id, service.is_promoted !== 1)}>
+                                <DropdownMenuItem onClick={() => handlePromoteService(service.id, !Boolean((service as any).is_promoted))}>
                                   <Star className="h-4 w-4 mr-2" />
-                                  {service.is_promoted === 1 ? "Remover Promoção" : "Promover"}
+                                  {Boolean((service as any).is_promoted) ? "Remover Promoção" : "Promover"}
                                 </DropdownMenuItem>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
