@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bell, Clock, MessageCircle, Heart, UserPlus, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiFetch, getAuthToken, API_BASE_URL } from "@/lib/api";
 
 interface Notification {
   id: string;
@@ -16,60 +17,7 @@ interface Notification {
   actionUrl?: string;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "message",
-    title: "Nova mensagem de TechSolutions",
-    description: "Enviaram uma proposta para o seu projeto de website",
-    time: "5 min atrás",
-    isRead: false,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-  },
-  {
-    id: "2",
-    type: "like",
-    title: "23 pessoas curtiram o seu serviço",
-    description: "Catering para Eventos Especiais recebeu novas curtidas",
-    time: "1 hora atrás",
-    isRead: false,
-  },
-  {
-    id: "3",
-    type: "follow",
-    title: "Clínica Saúde+ começou a seguir você",
-    description: "Agora vocês podem trocar mensagens facilmente",
-    time: "2 horas atrás",
-    isRead: true,
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100",
-  },
-  {
-    id: "4",
-    type: "service",
-    title: "Novo serviço na sua área",
-    description: "AutoServiços Premium publicou: Manutenção Completa de Veículos",
-    time: "3 horas atrás",
-    isRead: true,
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
-  },
-  {
-    id: "5",
-    type: "system",
-    title: "Perfil verificado com sucesso",
-    description: "Parabéns! Seu perfil foi verificado e agora tem o selo azul",
-    time: "1 dia atrás",
-    isRead: true,
-  },
-  {
-    id: "6",
-    type: "message",
-    title: "EduFuturo Academia respondeu",
-    description: "Informações sobre o curso de programação que você solicitou",
-    time: "2 dias atrás",
-    isRead: true,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-  },
-];
+const mockNotifications: Notification[] = [];
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -94,16 +42,69 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
+  // Load from API
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiFetch('/notifications/?limit=50');
+        setNotifications(
+          (data as any[]).map(n => ({
+            id: String(n.id),
+            type: n.type,
+            title: n.title,
+            description: n.description,
+            time: new Date(n.time).toLocaleString('pt-PT'),
+            isRead: n.isRead,
+          }))
+        );
+      } catch (e) {
+        console.error('Failed to load notifications', e);
+      }
+    })();
+  }, []);
+
+  // WebSocket for realtime
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+    const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/notifications/ws?token=${encodeURIComponent(token)}`;
+    let socket: WebSocket | null = null;
+    try {
+      socket = new WebSocket(wsUrl);
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg?.event === 'notification') {
+            const n = msg.data as any;
+            setNotifications(prev => [
+              {
+                id: String(n.id),
+                type: n.type,
+                title: n.title,
+                description: n.description,
+                time: new Date(n.time).toLocaleString('pt-PT'),
+                isRead: false,
+              },
+              ...prev,
+            ]);
+          }
+        } catch {}
+      };
+    } catch (e) {
+      console.error('WS error', e);
+    }
+    return () => {
+      try { socket?.close(); } catch {}
+    };
+  }, []);
+
+  const markAsRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    try { await apiFetch(`/notifications/${id}/read`, { method: 'POST' }); } catch {}
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, isRead: true }))
-    );
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const filteredNotifications = notifications.filter(notification => {
