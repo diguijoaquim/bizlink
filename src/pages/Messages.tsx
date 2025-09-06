@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -378,8 +378,8 @@ export default function Messages() {
         {selectedChat && selectedChatData ? (
           <div className={`flex-1 flex flex-col min-h-0 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 z-10 bg-card">
-              <div className="flex items-center space-x-3">
+            <div className="p-3 border-b border-border flex items-center justify-between sticky top-0 z-10 bg-card">
+              <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
                   <ArrowLeft size={24} />
                 </Button>
@@ -401,6 +401,9 @@ export default function Messages() {
               </div>
 
               <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="icon">
+                  <Phone className="h-4 w-4" />
+                </Button>
                 <Button variant="ghost" size="icon">
                   <Video className="h-4 w-4" />
                 </Button>
