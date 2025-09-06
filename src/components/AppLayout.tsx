@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Search, MessageCircle, Bell, Menu, X, Briefcase, Image, User } from "lucide-react";
+import { Home, Search, MessageCircle, Bell, Menu, X, Briefcase, Image, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
 import { getAuthToken, clearAuthToken } from "@/lib/api";
+import { useHome } from "@/contexts/HomeContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,8 +14,8 @@ interface AppLayoutProps {
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
+  { name: "Explorar", href: "/explore", icon: Search },
   { name: "Vagas", href: "/jobs", icon: Briefcase },
-  { name: "Mensagens", href: "/messages", icon: MessageCircle },
   { name: "Notificações", href: "/notifications", icon: Bell },
   { name: "Perfil", href: "/profile", icon: User },
 ];
@@ -21,6 +23,7 @@ const navigation = [
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user } = useHome();
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,12 +129,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
+      <main className="w-full md:container md:mx-auto px-0 md:px-4 py-6 md:max-w-4xl pb-20 md:pb-6">
         {children}
       </main>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border md:hidden z-50" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
         <div className="grid grid-cols-5 py-2">
           {navigation.map((item) => (
             <NavLink
@@ -146,7 +149,19 @@ export function AppLayout({ children }: AppLayoutProps) {
                 )
               }
             >
-              <item.icon className="h-5 w-5 mb-1" />
+              {item.name === "Perfil" ? (
+                <Avatar className="h-6 w-6 mb-1">
+                  <AvatarImage 
+                    src={user?.profile_photo_url ? `https://bizlink-production.up.railway.app${user.profile_photo_url}` : undefined} 
+                    alt={user?.full_name || "Perfil"} 
+                  />
+                  <AvatarFallback className="text-xs">
+                    {user?.full_name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <item.icon className="h-5 w-5 mb-1" />
+              )}
               <span className="text-xs font-medium">{item.name}</span>
             </NavLink>
           ))}

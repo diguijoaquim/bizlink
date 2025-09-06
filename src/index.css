@@ -2,6 +2,163 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Feed Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Feed Item Hover Effects */
+.feed-item {
+  transition: all 0.2s ease-in-out;
+  box-shadow: none !important;
+}
+
+.feed-item:hover {
+  transform: none;
+  box-shadow: none !important;
+}
+
+/* Like Animation */
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.animate-heart-beat {
+  animation: heartBeat 0.6s ease-in-out;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .feed-item {
+    margin-bottom: 0;
+    border-radius: 0 !important;
+    border-left: none;
+    border-right: none;
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: none !important;
+  }
+  
+  .feed-item:hover {
+    transform: none;
+    box-shadow: none !important;
+  }
+  
+  .feed-item:first-child {
+    border-top: none;
+  }
+  
+  .feed-item:last-child {
+    border-bottom: none;
+  }
+  
+  /* Remove all padding on mobile */
+  .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Ensure full width on mobile */
+  .w-full {
+    width: 100% !important;
+  }
+  
+  /* Remove padding from main content */
+  main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
+  /* Remove padding from header */
+  header .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Remove all spacing between feed items on mobile */
+  .space-y-0 > * + * {
+    margin-top: 0 !important;
+  }
+}
+
+/* Global shadow removal for Instagram-like design */
+.feed-item {
+  box-shadow: none !important;
+}
+
+.feed-item:hover {
+  box-shadow: none !important;
+}
+
+/* Remove shadows from all cards in feed */
+[data-radix-collection-item] {
+  box-shadow: none !important;
+}
+
+/* Instagram-like clean design */
+.card {
+  box-shadow: none !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.card:hover {
+  box-shadow: none !important;
+}
+
 /* Rich text editor defaults */
 .biz-rich-text ul {
   list-style: disc;

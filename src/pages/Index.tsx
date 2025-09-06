@@ -90,9 +90,9 @@ export default function Index() {
 
   return (
     <AppLayout>
-      <div className="space-y-8">
+      <div className="">
         {/* Search Section */}
-        <div className="px-4 pt-6 pb-4">
+         <div className="pt-6 pb-4 bg-blue-500">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
@@ -112,7 +112,7 @@ export default function Index() {
         </div>
 
         {/* Feed Section */}
-        <div className="px-4 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Feed</h2>
             <Button 

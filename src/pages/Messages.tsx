@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, Users, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { searchUsers, type User } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -100,8 +102,66 @@ export default function Messages() {
   const [selectedChat, setSelectedChat] = useState<string | null>("1");
   const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const selectedChatData = mockChats.find(chat => chat.id === selectedChat);
+
+  // Load users when component mounts
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setUsersLoading(true);
+      const usersData = await searchUsers({ limit: 50 });
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error loading users:", error);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleUserSearch = async (query: string) => {
+    setUserSearchQuery(query);
+    if (query.trim()) {
+      try {
+        setUsersLoading(true);
+        const usersData = await searchUsers({ query: query.trim(), limit: 50 });
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Error searching users:", error);
+      } finally {
+        setUsersLoading(false);
+      }
+    } else {
+      loadUsers();
+    }
+  };
+
+  const startChatWithUser = (user: User) => {
+    // Create a new chat with the selected user
+    const newChat: Chat = {
+      id: `user_${user.id}`,
+      name: user.full_name || user.email,
+      avatar: user.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      lastMessage: "Conversa iniciada",
+      time: "Agora",
+      isOnline: true,
+      unreadCount: 0,
+      isVerified: false,
+    };
+    
+    // Add to mockChats if not already exists
+    if (!mockChats.find(chat => chat.id === newChat.id)) {
+      mockChats.unshift(newChat);
+    }
+    
+    setSelectedChat(newChat.id);
+  };
 
   return (
     <AppLayout>
@@ -111,66 +171,144 @@ export default function Messages() {
           {/* Chat List Header */}
           <div className="p-4 border-b border-border">
             <h1 className="text-xl font-bold text-foreground mb-3">Mensagens</h1>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar conversas..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9"
-              />
-            </div>
+            
+            {/* Tabs for Conversations and Users */}
+            <Tabs defaultValue="conversations" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="conversations" className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Conversas
+                </TabsTrigger>
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Usuários
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="conversations" className="mt-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar conversas..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="users" className="mt-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar usuários..."
+                    value={userSearchQuery}
+                    onChange={(e) => handleUserSearch(e.target.value)}
+                    className="pl-9 h-9"
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
 
-          {/* Chat List */}
+          {/* Content Area */}
           <div className="flex-1 overflow-y-auto">
-            {mockChats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => setSelectedChat(chat.id)}
-                className={`p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted ${
-                  selectedChat === chat.id ? "bg-muted" : ""
-                }`}
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="relative">
-                    <img
-                      src={chat.avatar}
-                      alt={chat.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    {chat.isOnline && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center space-x-1">
-                        <h3 className="font-medium text-foreground truncate">{chat.name}</h3>
-                        {chat.isVerified && (
-                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">✓</span>
-                          </div>
+            <Tabs defaultValue="conversations" className="h-full">
+              <TabsContent value="conversations" className="h-full">
+                {mockChats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onClick={() => setSelectedChat(chat.id)}
+                    className={`p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted ${
+                      selectedChat === chat.id ? "bg-muted" : ""
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="relative">
+                        <img
+                          src={chat.avatar}
+                          alt={chat.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        {chat.isOnline && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">{chat.time}</span>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground truncate flex-1">
-                        {chat.lastMessage}
-                      </p>
-                      {chat.unreadCount > 0 && (
-                        <Badge className="bg-gradient-primary text-white border-0 text-xs ml-2">
-                          {chat.unreadCount}
-                        </Badge>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center space-x-1">
+                            <h3 className="font-medium text-foreground truncate">{chat.name}</h3>
+                            {chat.isVerified && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">✓</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">{chat.time}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground truncate flex-1">
+                            {chat.lastMessage}
+                          </p>
+                          {chat.unreadCount > 0 && (
+                            <Badge className="bg-gradient-primary text-white border-0 text-xs ml-2">
+                              {chat.unreadCount}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                ))}
+              </TabsContent>
+
+              <TabsContent value="users" className="h-full">
+                {usersLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-muted-foreground">Carregando usuários...</div>
+                  </div>
+                ) : users.length === 0 ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-muted-foreground">Nenhum usuário encontrado</div>
+                  </div>
+                ) : (
+                  users.map((user) => (
+                    <div
+                      key={user.id}
+                      onClick={() => startChatWithUser(user)}
+                      className="p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <img
+                            src={user.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                            alt={user.full_name || user.email}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-medium text-foreground truncate">
+                              {user.full_name || user.email}
+                            </h3>
+                            <Badge variant="outline" className="text-xs">
+                              {user.user_type}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {user.bio || "Usuário do BizLink"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 

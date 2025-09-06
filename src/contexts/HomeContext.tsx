@@ -68,7 +68,7 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
       // Public profile view via query or slug
       const params = new URLSearchParams(window.location.search);
       const userIdParam = params.get('user_id');
-      const slugMatch = window.location.pathname.match(/^\/@([^/]+)$/);
+      const slugMatch = window.location.pathname.match(/^\/profile\/([^/]+)$/);
       let userData: any;
       if (slugMatch && slugMatch[1]) {
         userData = await getUserBySlug(slugMatch[1]);

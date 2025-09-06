@@ -21,6 +21,8 @@ import EditCompany from "./pages/EditCompany";
 import EditService from "./pages/EditService";
 import SearchPage from "./pages/SearchPage";
 import Jobs from "./pages/Jobs";
+import Companies from "./pages/Companies";
+import Freelancers from "./pages/Freelancers";
 import CreateJob from "./pages/CreateJob";
 import JobDetail from "./pages/JobDetail";
 import Portfolio from "./pages/Portfolio";
@@ -62,9 +64,9 @@ const App = () => {
           <Route path="/explore" element={<Explore />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/notifications" element={<Notifications />} />
+          {/* Profiles */}
+          <Route path="/profile/:slug" element={<Profile />} />
           <Route path="/profile" element={<Profile />} />
-          {/* Public profile by slug e.g., /@djoaquim */}
-          <Route path="/@:slug" element={<Profile />} />
           <Route
             path="/edit-company"
             element={
@@ -88,6 +90,8 @@ const App = () => {
           
           {/* Jobs Routes */}
           <Route path="/jobs" element={<Jobs />} />
+          <Route path="/companies" element={<Companies />} />
+          <Route path="/freelancers" element={<Freelancers />} />
           <Route
             path="/jobs/create"
             element={

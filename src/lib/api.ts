@@ -169,6 +169,7 @@ export type Job = {
   views: number;
   applications: number;
   is_promoted: boolean;
+  image_url?: string;
   created_at: string;
   updated_at: string;
 };
@@ -662,10 +663,39 @@ export async function getJob(jobId: number): Promise<Job> {
   return apiFetch(`/jobs/${jobId}`);
 }
 
-export async function createJob(job: JobCreate): Promise<Job> {
+export async function createJob(input: {
+  title: string;
+  description: string;
+  location?: string;
+  remote_work?: boolean;
+  status?: string;
+  is_promoted?: boolean;
+  company_id: number;
+  image?: File;
+}): Promise<Job> {
+  const formData = new FormData();
+  
+  formData.append('title', input.title);
+  formData.append('description', input.description);
+  formData.append('company_id', input.company_id.toString());
+  formData.append('status', input.status || 'Ativa');
+  formData.append('is_promoted', input.is_promoted ? '1' : '0');
+  
+  if (input.location) {
+    formData.append('location', input.location);
+  }
+  
+  if (input.remote_work !== undefined) {
+    formData.append('remote_work', input.remote_work ? '1' : '0');
+  }
+  
+  if (input.image) {
+    formData.append('image', input.image);
+  }
+
   return apiFetch('/jobs/', {
     method: 'POST',
-    body: JSON.stringify(job)
+    body: formData
   });
 }
 
@@ -815,6 +845,7 @@ export type User = {
   email: string;
   full_name?: string;
   user_type: string;  // 'simple', 'freelancer', 'company'
+  username?: string;
   profile_photo_url?: string;
   cover_photo_url?: string;
   gender?: string;
@@ -895,6 +926,7 @@ export async function updateUserProfile(profile: {
   province?: string;
   district?: string;
   user_type?: 'simple' | 'freelancer' | 'company';
+  username?: string;
 }): Promise<User> {
   return apiFetch('/users/me', {
     method: 'PUT',
@@ -917,6 +949,29 @@ export async function getUserByIdPublic(id: number): Promise<User> {
 
 export async function getUserBySlug(slug: string): Promise<User> {
   return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
+}
+
+// Search users function
+export async function searchUsers(params?: {
+  query?: string;
+  skip?: number;
+  limit?: number;
+}): Promise<User[]> {
+  const searchParams = new URLSearchParams();
+  
+  if (params?.query) searchParams.append('q', params.query);
+  if (params?.skip) searchParams.append('skip', params.skip.toString());
+  if (params?.limit) searchParams.append('limit', params.limit.toString());
+  
+  const queryString = searchParams.toString();
+  const response = await apiFetch(`/search/?${queryString}`);
+  
+  // Extract users from search response
+  if (response && response.results && response.results.users) {
+    return response.results.users;
+  }
+  
+  return [];
 }
 
 
