@@ -225,7 +225,12 @@ export default function Messages() {
         <div className={`border-b md:border-r border-border flex flex-col min-h-0 ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
           <div className="p-4 border-b border-border sticky top-0 z-10 bg-card">
-            <h1 className="text-xl font-bold text-foreground mb-3">Mensagens</h1>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => { if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/'); } }}>
+                <ArrowLeft size={24} />
+              </Button>
+              <h1 className="text-xl font-bold gradient-text">Mensagens</h1>
+            </div>
           </div>
 
           {/* Content Area */}
