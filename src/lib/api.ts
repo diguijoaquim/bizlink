@@ -1006,6 +1006,23 @@ export function connectChatWS(conversationId: number): WebSocket | null {
   return new WebSocket(url);
 }
 
+// Utility: current user id from JWT (sub)
+export function getCurrentUserId(): number | null {
+  const token = getAuthToken();
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = JSON.parse(atob(base64));
+    const sub = json.sub ?? json.user_id;
+    const id = parseInt(String(sub), 10);
+    return Number.isFinite(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getUserBySlug(slug: string): Promise<User> {
   return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
 }

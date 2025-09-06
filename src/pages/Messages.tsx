@@ -8,7 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId } from "@/lib/api";
 
  
 
@@ -171,7 +171,12 @@ export default function Messages() {
           const msg = JSON.parse(ev.data);
           if (msg?.event === 'message') {
             const m = msg.data;
-            setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+            const myId = getCurrentUserId();
+            const isMine = myId !== null && Number(m.sender_id) === Number(myId);
+            // Ignore echo of my own message (já adicionada otimisticamente)
+            if (!isMine) {
+              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+            }
           }
         } catch {}
       };
