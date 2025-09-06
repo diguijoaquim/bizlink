@@ -7,100 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem } from "@/lib/api";
 
-interface Message {
-  id: string;
-  text: string;
-  time: string;
-  isMe: boolean;
-  isRead?: boolean;
-}
-
-interface Chat {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  time: string;
-  isOnline: boolean;
-  unreadCount: number;
-  isVerified: boolean;
-}
-
-const mockChats: Chat[] = [
-  {
-    id: "1",
-    name: "TechSolutions Moçambique",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-    lastMessage: "Obrigado pelo interesse no nosso serviço!",
-    time: "14:30",
-    isOnline: true,
-    unreadCount: 2,
-    isVerified: true,
-  },
-  {
-    id: "2",
-    name: "Restaurante Sabor Local",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100",
-    lastMessage: "O catering está disponível para o dia 25",
-    time: "12:45",
-    isOnline: false,
-    unreadCount: 0,
-    isVerified: true,
-  },
-  {
-    id: "3",
-    name: "Clínica Saúde+",
-    avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100",
-    lastMessage: "Pode marcar a consulta para segunda-feira",
-    time: "11:20",
-    isOnline: true,
-    unreadCount: 1,
-    isVerified: true,
-  },
-  {
-    id: "4",
-    name: "EduFuturo Academia",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-    lastMessage: "As inscrições para o novo curso já abriram",
-    time: "09:15",
-    isOnline: false,
-    unreadCount: 0,
-    isVerified: true,
-  },
-];
-
-const mockMessages: Message[] = [
-  {
-    id: "1",
-    text: "Olá! Vi o vosso serviço de desenvolvimento de websites.",
-    time: "14:25",
-    isMe: true,
-  },
-  {
-    id: "2", 
-    text: "Olá! Obrigado pelo interesse. Como podemos ajudar?",
-    time: "14:27",
-    isMe: false,
-  },
-  {
-    id: "3",
-    text: "Gostaria de saber mais sobre os preços e prazos para um site de uma pequena empresa.",
-    time: "14:28",
-    isMe: true,
-  },
-  {
-    id: "4",
-    text: "Obrigado pelo interesse no nosso serviço! Vou enviar-lhe uma proposta detalhada por email.",
-    time: "14:30",
-    isMe: false,
-    isRead: true,
-  },
-];
+ 
 
 export default function Messages() {
-  const [selectedChat, setSelectedChat] = useState<string | null>("1");
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -109,8 +21,11 @@ export default function Messages() {
   const [recipientFilter, setRecipientFilter] = useState<'all'|'company'|'freelancer'|'simple'>('all');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [chats, setChats] = useState<ConversationListItem[]>([]);
+  const [chatLoading, setChatLoading] = useState(true);
+  const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([]);
 
-  const selectedChatData = mockChats.find(chat => chat.id === selectedChat);
+  const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
   const location = useLocation();
 
@@ -118,6 +33,7 @@ export default function Messages() {
   useEffect(() => {
     loadUsers();
     loadCompanies();
+    loadConversations();
   }, []);
 
   // Apply filter from query string (?filter=company|freelancer|simple)
@@ -170,25 +86,29 @@ export default function Messages() {
     }
   };
 
-  const startChatWithUser = (user: User) => {
-    // Create a new chat with the selected user
-    const newChat: Chat = {
-      id: `user_${user.id}`,
-      name: user.full_name || user.email,
-      avatar: user.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-      lastMessage: "Conversa iniciada",
-      time: "Agora",
-      isOnline: true,
-      unreadCount: 0,
-      isVerified: false,
-    };
-    
-    // Add to mockChats if not already exists
-    if (!mockChats.find(chat => chat.id === newChat.id)) {
-      mockChats.unshift(newChat);
+  const loadConversations = async () => {
+    try {
+      setChatLoading(true);
+      const data = await getConversations();
+      setChats(data);
+      if (data.length > 0) {
+        setSelectedChat(String(data[0].id));
+        const msgs = await getMessages(data[0].id);
+        setChatMessages(msgs);
+      }
+    } catch (e) {
+      console.error('Error loading conversations', e);
+    } finally {
+      setChatLoading(false);
     }
-    
-    setSelectedChat(newChat.id);
+  };
+
+  const startChatWithUser = (user: User) => {
+    startConversation(user.id).then(async ({ id }) => {
+      await loadConversations();
+      setSelectedChat(String(id));
+      setChatMessages(await getMessages(id));
+    }).catch(console.error);
   };
 
   const startChatWithCompany = async (company: Company) => {
@@ -197,6 +117,23 @@ export default function Messages() {
       startChatWithUser(owner as unknown as User);
     } catch (e) {
       console.error('Failed to start chat with company owner', e);
+    }
+  };
+
+  const handleOpenChat = async (chatId: number) => {
+    setSelectedChat(String(chatId));
+    setChatMessages(await getMessages(chatId));
+  };
+
+  const handleSend = async () => {
+    if (!selectedChat || !newMessage.trim()) return;
+    const cid = parseInt(selectedChat, 10);
+    try {
+      await sendMessage(cid, newMessage.trim());
+      setNewMessage("");
+      setChatMessages(await getMessages(cid));
+    } catch (e) {
+      console.error('send failed', e);
     }
   };
 
@@ -259,48 +196,35 @@ export default function Messages() {
           <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
-                {mockChats.map((chat) => (
+                {chats.map((chat) => (
                   <div
                     key={chat.id}
-                    onClick={() => setSelectedChat(chat.id)}
+                    onClick={() => handleOpenChat(chat.id)}
                     className={`p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted ${
-                      selectedChat === chat.id ? "bg-muted" : ""
+                      selectedChat === String(chat.id) ? "bg-muted" : ""
                     }`}
                   >
                     <div className="flex items-start space-x-3">
                       <div className="relative">
                         <img
-                          src={chat.avatar}
-                          alt={chat.name}
+                          src={chat.peer.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                          alt={chat.peer.full_name || chat.peer.email}
                           className="w-12 h-12 rounded-full object-cover"
                         />
-                        {chat.isOnline && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center space-x-1">
-                            <h3 className="font-medium text-foreground truncate">{chat.name}</h3>
-                            {chat.isVerified && (
-                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                <span className="text-white text-xs">✓</span>
-                              </div>
-                            )}
+                            <h3 className="font-medium text-foreground truncate">{chat.peer.full_name || chat.peer.email}</h3>
                           </div>
-                          <span className="text-xs text-muted-foreground">{chat.time}</span>
+                          <span className="text-xs text-muted-foreground">{chat.last_time ? new Date(chat.last_time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
                         </div>
 
                         <div className="flex items-center justify-between">
                           <p className="text-sm text-muted-foreground truncate flex-1">
-                            {chat.lastMessage}
+                            {chat.last_message}
                           </p>
-                          {chat.unreadCount > 0 && (
-                            <Badge className="bg-gradient-primary text-white border-0 text-xs ml-2">
-                              {chat.unreadCount}
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -387,25 +311,17 @@ export default function Messages() {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <img
-                    src={selectedChatData.avatar}
-                    alt={selectedChatData.name}
+                    src={selectedChatData.peer.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                    alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
                     className="w-10 h-10 rounded-full object-cover"
                   />
-                  {selectedChatData.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
-                  )}
                 </div>
                 <div>
                   <div className="flex items-center space-x-1">
-                    <h3 className="font-medium text-foreground">{selectedChatData.name}</h3>
-                    {selectedChatData.isVerified && (
-                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                    )}
+                    <h3 className="font-medium text-foreground">{selectedChatData.peer.full_name || selectedChatData.peer.email}</h3>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {selectedChatData.isOnline ? "Online" : "Visto há 1h"}
+                    Conversa
                   </p>
                 </div>
               </div>
@@ -425,7 +341,7 @@ export default function Messages() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {mockMessages.map((message) => (
+              {chatMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}
@@ -443,7 +359,7 @@ export default function Messages() {
                         message.isMe ? "text-white/70" : "text-muted-foreground"
                       }`}
                     >
-                      {message.time}
+                      {new Date(message.time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}
                     </p>
                   </div>
                 </div>
@@ -467,7 +383,7 @@ export default function Messages() {
                     <Smile className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button className="bg-gradient-primary text-white border-0 hover:opacity-90">
+                <Button onClick={handleSend} className="bg-gradient-primary text-white border-0 hover:opacity-90">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>

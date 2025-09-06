@@ -957,6 +957,38 @@ export async function getUserProfile(): Promise<User> {
 export async function getUserByIdPublic(id: number): Promise<User> {
   return apiFetch(`/users/${id}`);
 }
+// Chat API
+export type ConversationListItem = {
+  id: number;
+  peer: { id: number; full_name?: string; email: string; profile_photo_url?: string };
+  last_message: string;
+  last_time?: string | null;
+};
+
+export type ChatMessageItem = {
+  id: number;
+  text: string;
+  time: string;
+  isMe: boolean;
+};
+
+export async function getConversations(): Promise<ConversationListItem[]> {
+  return apiFetch('/chat/conversations');
+}
+
+export async function startConversation(peerUserId: number): Promise<{ id: number }> {
+  const params = new URLSearchParams({ peer_user_id: String(peerUserId) });
+  return apiFetch(`/chat/conversations/start?${params.toString()}`, { method: 'POST' });
+}
+
+export async function getMessages(conversationId: number): Promise<ChatMessageItem[]> {
+  return apiFetch(`/chat/conversations/${conversationId}/messages`);
+}
+
+export async function sendMessage(conversationId: number, text: string): Promise<{ id: number }> {
+  const params = new URLSearchParams({ text });
+  return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
+}
 
 export async function getUserBySlug(slug: string): Promise<User> {
   return apiFetch(`/users/by-slug/${encodeURIComponent(slug)}`);
