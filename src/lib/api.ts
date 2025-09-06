@@ -1070,5 +1070,20 @@ export async function uploadUserCoverPhoto(file: File): Promise<User> {
   });
 }
 
+// Password reset (OTP)
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiFetch('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  });
+}
+
+export async function completePasswordReset(params: { email: string; otp: string; newPassword: string }): Promise<void> {
+  await apiFetch('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email: params.email, otp: params.otp, new_password: params.newPassword })
+  });
+}
+
 
 

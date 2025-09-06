@@ -28,6 +28,7 @@ import JobDetail from "./pages/JobDetail";
 import Portfolio from "./pages/Portfolio";
 import CreatePortfolio from "./pages/CreatePortfolio";
 import ProfileSetup from "./pages/ProfileSetup";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/create-company"
             element={
