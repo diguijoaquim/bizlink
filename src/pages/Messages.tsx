@@ -313,7 +313,8 @@ export default function Messages() {
                       </div>
                     </div>
                   </div>
-                ))}
+                )))
+                }
               </TabsContent>
 
               <TabsContent value="users" className="h-full">
@@ -480,7 +481,8 @@ export default function Messages() {
                     </p>
                   </div>
                 </div>
-              ))}
+              )))
+              }
             </div>
 
             {/* Message Input */}
