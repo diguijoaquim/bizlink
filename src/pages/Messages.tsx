@@ -219,9 +219,9 @@ export default function Messages() {
 
   const content = (
     <>
-      <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden bizlink-shadow-soft min-h-0`}>
+      <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden overscroll-none bizlink-shadow-soft min-h-0`}>
         {/* Chat List */}
-        <div className={`border-b md:border-r border-border flex flex-col min-h-0 ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
+        <div className={`border-b md:border-r border-border flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
           <div className="p-4 border-b border-border sticky top-0 z-10 bg-card">
             <div className="flex items-center justify-between gap-2">
@@ -382,7 +382,7 @@ export default function Messages() {
 
         {/* Chat Area */}
         {selectedChat && selectedChatData ? (
-          <div className={`flex-1 flex flex-col min-h-0 ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
             <div className={`${isMobile ? 'fixed top-0 left-0 right-0 z-20 bg-card' : 'sticky top-0 z-10 bg-card'} p-3 border-b border-border flex items-center justify-between`}>
               <div className="flex items-center space-x-2">
