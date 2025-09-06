@@ -34,6 +34,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const profileSrc = user?.profile_photo_url
     ? (user.profile_photo_url.startsWith("http") ? user.profile_photo_url : `${API_BASE_URL}${user.profile_photo_url}`)
     : undefined;
+  const fallbackInitial = (() => {
+    const base = (user?.full_name || user?.email || "U").trim();
+    return base ? base.charAt(0).toUpperCase() : "U";
+  })();
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,7 +173,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       alt={user?.full_name || "Perfil"} 
                     />
                     <AvatarFallback className="text-xs">
-                      {user?.full_name?.charAt(0) || "U"}
+                      {fallbackInitial}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
