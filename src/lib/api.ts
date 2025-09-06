@@ -102,9 +102,7 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
   try {
     const res = await fetch(`${API_BASE_URL}${input.startsWith('/') ? input : `/${input}`}`, { 
       ...init, 
-      headers,
-      // Send credentials to include Authorization header
-      credentials: 'include'
+      headers
     });
     
     if (!res.ok) {
