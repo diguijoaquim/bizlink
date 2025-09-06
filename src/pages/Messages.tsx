@@ -171,10 +171,7 @@ export default function Messages() {
           const msg = JSON.parse(ev.data);
           if (msg?.event === 'message') {
             const m = msg.data;
-            // only push if we are viewing same conversation
-            if (String(chatId) === selectedChat) {
-              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
-            }
+            setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
           }
         } catch {}
       };
@@ -189,9 +186,9 @@ export default function Messages() {
     try {
       const text = newMessage.trim();
       setNewMessage("");
-      await sendMessage(cid, text);
-      // optimistic own message
+      // optimistic own message primeiro
       setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true }]);
+      await sendMessage(cid, text);
     } catch (e) {
       console.error('send failed', e);
     }
