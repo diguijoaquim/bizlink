@@ -45,6 +45,25 @@ export default function Messages() {
     }
   }, [location.search]);
 
+  // Reload according to recipientFilter
+  useEffect(() => {
+    if (recipientFilter === 'company') {
+      loadCompanies();
+    } else if (recipientFilter === 'freelancer') {
+      (async () => {
+        const data = await getRecipients({ type: 'freelancer', limit: 50 });
+        setUsers(data.users || []);
+      })();
+    } else if (recipientFilter === 'simple') {
+      (async () => {
+        const data = await getRecipients({ type: 'simple', limit: 50 });
+        setUsers(data.users || []);
+      })();
+    } else {
+      loadUsers();
+    }
+  }, [recipientFilter]);
+
   const loadUsers = async () => {
     try {
       setUsersLoading(true);
@@ -63,8 +82,9 @@ export default function Messages() {
     if (query.trim()) {
       try {
         setUsersLoading(true);
-        const usersData = await searchUsers({ query: query.trim(), limit: 50 });
-        setUsers(usersData);
+        const typ = recipientFilter==='freelancer' ? 'freelancer' : recipientFilter==='simple' ? 'simple' : 'users';
+        const data = await getRecipients({ type: typ as any, q: query.trim(), limit: 50 });
+        setUsers(data.users || []);
       } catch (error) {
         console.error("Error searching users:", error);
       } finally {
