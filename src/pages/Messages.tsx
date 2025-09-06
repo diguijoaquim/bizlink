@@ -14,7 +14,6 @@ import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, 
 export default function Messages() {
   const isMobile = useIsMobile();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -238,15 +237,12 @@ export default function Messages() {
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
                 <div className="p-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar conversas..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9"
-                  />
-                </div>
+                  <div className="relative" role="button">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <div className="pl-10 h-11 rounded-full bg-muted text-muted-foreground flex items-center">
+                      <span className="text-sm">Pesquisar conversas</span>
+                    </div>
+                  </div>
                 </div>
                 {(!chatLoading && chats.length === 0) && (
                   <div className="p-6 text-center space-y-3">
