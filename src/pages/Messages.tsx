@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients } from "@/lib/api";
 
  
@@ -24,6 +25,10 @@ export default function Messages() {
   const [chats, setChats] = useState<ConversationListItem[]>([]);
   const [chatLoading, setChatLoading] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([]);
+  const [startOpen, setStartOpen] = useState(false);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recUsers, setRecUsers] = useState<User[]>([]);
+  const [recCompanies, setRecCompanies] = useState<Company[]>([]);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -158,6 +163,22 @@ export default function Messages() {
     }
   };
 
+  const openStartChat = async () => {
+    try {
+      setRecLoading(true);
+      setStartOpen(true);
+      const data = await getRecipients({ type: 'all', limit: 50 });
+      setRecUsers(data.users || []);
+      setRecCompanies(data.companies || []);
+    } catch (e) {
+      console.error('recipients failed', e);
+      setRecUsers([]);
+      setRecCompanies([]);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="h-[calc(100vh-8rem)] flex bg-card rounded-xl overflow-hidden bizlink-shadow-soft">
@@ -183,6 +204,12 @@ export default function Messages() {
                     />
                   </div>
                 </div>
+                {(!chatLoading && chats.length === 0) && (
+                  <div className="p-6 text-center space-y-3">
+                    <p className="text-muted-foreground">Você ainda não tem conversas.</p>
+                    <Button onClick={openStartChat} className="bg-gradient-primary text-white border-0">Iniciar chat</Button>
+                  </div>
+                )}
                 {chats.map((chat) => (
                   <div
                     key={chat.id}
@@ -403,6 +430,54 @@ export default function Messages() {
 
       {/* Bottom spacing for mobile navigation */}
       <div className="h-20 md:h-0" />
+
+      {/* Start Chat dialog */}
+      <Dialog open={startOpen} onOpenChange={setStartOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Iniciar conversa</DialogTitle>
+            <DialogDescription>Selecione um destinatário (empresa, freelancer ou usuário).</DialogDescription>
+          </DialogHeader>
+          {recLoading ? (
+            <div className="p-6 text-center text-muted-foreground">Carregando…</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-auto">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Empresas</h3>
+                {recCompanies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma empresa</p>
+                ) : recCompanies.map((c) => (
+                  <div key={c.id} onClick={() => { setStartOpen(false); startChatWithCompany(c); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
+                    <div className="flex items-center gap-3">
+                      <img src={c.logo_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{c.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{c.description || 'Empresa'}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Usuários</h3>
+                {recUsers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhum usuário</p>
+                ) : recUsers.map((u) => (
+                  <div key={u.id} onClick={() => { setStartOpen(false); startChatWithUser(u); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
+                    <div className="flex items-center gap-3">
+                      <img src={u.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{u.full_name || u.email}</div>
+                        <div className="text-xs text-muted-foreground">{u.user_type}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
