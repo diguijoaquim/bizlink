@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { getAuthToken, clearAuthToken } from "@/lib/api";
+import { getAuthToken, clearAuthToken, API_BASE_URL } from "@/lib/api";
 import { useHome } from "@/contexts/HomeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -30,6 +30,10 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isChatRoute = location.pathname.startsWith("/messages") || location.pathname.startsWith("/chat");
   const showHeader = !(isChatRoute && isMobile);
   const showBottomNav = !(isChatRoute && isMobile);
+
+  const profileSrc = user?.profile_photo_url
+    ? (user.profile_photo_url.startsWith("http") ? user.profile_photo_url : `${API_BASE_URL}${user.profile_photo_url}`)
+    : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,7 +165,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {item.name === "Perfil" ? (
                   <Avatar className="h-8 w-8">
                     <AvatarImage 
-                      src={user?.profile_photo_url ? `https://bizlink-production.up.railway.app${user.profile_photo_url}` : undefined} 
+                      src={profileSrc}
                       alt={user?.full_name || "Perfil"} 
                     />
                     <AvatarFallback className="text-xs">
