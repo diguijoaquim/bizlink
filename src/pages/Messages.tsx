@@ -420,7 +420,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="overflow-y-auto p-4 space-y-3" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0 }}>
+            <div className="overflow-y-scroll p-4 space-y-3" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0 }}>
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
