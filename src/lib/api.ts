@@ -142,6 +142,13 @@ export type Company = {
   updated_at: string;
 };
 
+export type CompanyServiceStats = {
+  total: number;
+  active: number;
+  promoted: number;
+  views: number;
+};
+
 export type FreelancerProfile = {
   id: number;
   user_id: number;
@@ -367,6 +374,10 @@ export const createService = async (input: {
 
 export const getCompanyServices = async (companyId: number): Promise<Service[]> => {
   return apiFetch(`/services/company/${companyId}`);
+};
+
+export const getCompanyServiceStats = async (companyId: number): Promise<CompanyServiceStats> => {
+  return apiFetch(`/services/company/${companyId}/stats`);
 };
 
 export interface ServicesResponse {

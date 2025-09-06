@@ -10,7 +10,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PublishServiceModal } from "@/components/PublishServiceModal";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { apiFetch, getCompanies, getCompanyServices, Service, Company, API_BASE_URL, deleteService, promoteService } from "@/lib/api";
+import { apiFetch, getCompanies, getCompanyServices, getCompanyServiceStats, Service, Company, API_BASE_URL, deleteService, promoteService } from "@/lib/api";
 
 
 export default function MyServices() {
@@ -19,6 +19,7 @@ export default function MyServices() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<{ total: number; active: number; promoted: number; views: number } | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
 
@@ -80,8 +81,15 @@ export default function MyServices() {
         setCompanies(companiesData);
         
         if (companiesData.length > 0) {
-          const servicesData = await getCompanyServices(companiesData[0].id);
+          const companyId = companiesData[0].id;
+          const [servicesData, statsData] = await Promise.all([
+            getCompanyServices(companyId),
+            getCompanyServiceStats(companyId)
+          ]);
           setServices(servicesData);
+          setStats(statsData);
+        } else {
+          setStats({ total: 0, active: 0, promoted: 0, views: 0 });
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -195,7 +203,7 @@ export default function MyServices() {
                     </div>
                     <div>
                       <p className="text-xs md:text-sm font-medium text-blue-700">Total</p>
-                      <p className="text-xl md:text-2xl font-bold text-blue-900">{services.length}</p>
+                      <p className="text-xl md:text-2xl font-bold text-blue-900">{stats ? stats.total : services.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -210,7 +218,7 @@ export default function MyServices() {
                     <div>
                       <p className="text-xs md:text-sm font-medium text-green-700">Ativos</p>
                       <p className="text-xl md:text-2xl font-bold text-green-900">
-                        {services.filter(s => s.status === "Ativo").length}
+                        {stats ? stats.active : services.filter(s => s.status === "Ativo").length}
                       </p>
                     </div>
                   </div>
@@ -226,7 +234,7 @@ export default function MyServices() {
                     <div>
                       <p className="text-xs md:text-sm font-medium text-purple-700">Promovidos</p>
                       <p className="text-xl md:text-2xl font-bold text-purple-900">
-                        {services.filter(s => s.is_promoted === 1).length}
+                        {stats ? stats.promoted : services.filter(s => s.is_promoted === 1).length}
                       </p>
                     </div>
                   </div>
@@ -242,7 +250,7 @@ export default function MyServices() {
                     <div>
                       <p className="text-xs md:text-sm font-medium text-orange-700">Visualizações</p>
                       <p className="text-xl md:text-2xl font-bold text-orange-900">
-                        {services.reduce((acc, s) => acc + ((s as any).views || 0), 0)}
+                        {stats ? stats.views : services.reduce((acc, s) => acc + ((s as any).views || 0), 0)}
                       </p>
                     </div>
                   </div>
