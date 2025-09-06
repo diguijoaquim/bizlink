@@ -163,9 +163,7 @@ export default function Messages() {
     setSelectedChat(String(chatId));
     setChatMessages(await getMessages(chatId));
     // connect websocket
-    try {
-      ws?.close();
-    } catch {}
+    try { ws?.close(); } catch {}
     const socket = connectChatWS(chatId);
     if (socket) {
       socket.onmessage = (ev) => {
@@ -173,10 +171,14 @@ export default function Messages() {
           const msg = JSON.parse(ev.data);
           if (msg?.event === 'message') {
             const m = msg.data;
-            setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+            // only push if we are viewing same conversation
+            if (String(chatId) === selectedChat) {
+              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+            }
           }
         } catch {}
       };
+      socket.onclose = () => { setWs(null); };
       setWs(socket);
     }
   };
@@ -185,10 +187,11 @@ export default function Messages() {
     if (!selectedChat || !newMessage.trim()) return;
     const cid = parseInt(selectedChat, 10);
     try {
-      await sendMessage(cid, newMessage.trim());
+      const text = newMessage.trim();
       setNewMessage("");
+      await sendMessage(cid, text);
       // optimistic own message
-      setChatMessages(prev => [...prev, { id: Date.now(), text: newMessage.trim(), time: new Date().toISOString(), isMe: true }]);
+      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true }]);
     } catch (e) {
       console.error('send failed', e);
     }
