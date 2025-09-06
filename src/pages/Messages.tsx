@@ -231,7 +231,7 @@ export default function Messages() {
 
   const content = (
     <>
-      <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden overscroll-none bizlink-shadow-soft min-h-0`}>
+      <div className={`${isMobile ? 'h-[100dvh]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden overscroll-none bizlink-shadow-soft min-h-0 touch-none`}>
         {/* Chat List */}
         <div className={`border-b md:border-r border-border flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
@@ -250,7 +250,7 @@ export default function Messages() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto touch-auto">
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
                 <div className="p-3">
@@ -432,7 +432,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="overflow-y-scroll p-4 space-y-3" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' }}>
+            <div className="overflow-y-scroll p-4 space-y-3 touch-auto" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' }}>
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
