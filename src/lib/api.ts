@@ -663,10 +663,6 @@ export async function getJob(jobId: number): Promise<Job> {
   return apiFetch(`/jobs/${jobId}`);
 }
 
-export async function getMyJobs(): Promise<Job[]> {
-  return apiFetch('/jobs/my-jobs');
-}
-
 export async function createJob(input: {
   title: string;
   description: string;
