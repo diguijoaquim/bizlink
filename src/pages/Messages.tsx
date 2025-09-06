@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Avatar } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -13,6 +14,7 @@ import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, 
  
 
 export default function Messages() {
+  const isMobile = useIsMobile();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMessage, setNewMessage] = useState("");
@@ -217,9 +219,8 @@ export default function Messages() {
     }
   };
 
-  return (
-    <AppLayout>
-      <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-card rounded-xl overflow-hidden bizlink-shadow-soft">
+  const content = (
+      <div className={`${isMobile ? 'h-[calc(100vh-8rem)]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden bizlink-shadow-soft`}>
         {/* Chat List */}
         <div className={`border-b md:border-r border-border flex flex-col ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
@@ -467,7 +468,7 @@ export default function Messages() {
       </div>
 
       {/* Bottom spacing for mobile navigation */}
-      <div className="h-20 md:h-0" />
+      {isMobile && <div className="h-20" />}
 
       {/* Start Chat dialog */}
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
@@ -516,6 +517,11 @@ export default function Messages() {
           )}
         </DialogContent>
       </Dialog>
-    </AppLayout>
+  );
+
+  return isMobile ? (
+    <AppLayout>{content}</AppLayout>
+  ) : (
+    content
   );
 }
