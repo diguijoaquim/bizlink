@@ -173,8 +173,8 @@ export default function Messages() {
             const m = msg.data;
             const myId = getCurrentUserId();
             const isMine = myId !== null && Number(m.sender_id) === Number(myId);
-            // Ignore echo of my own message (já adicionada otimisticamente)
-            if (!isMine) {
+            // Ignore only if it's mine; also ensure message belongs to current conversation
+            if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
               setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
             }
           }
@@ -194,6 +194,8 @@ export default function Messages() {
       // optimistic own message primeiro
       setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true }]);
       await sendMessage(cid, text);
+      // Atualizar o preview da última mensagem na lista de conversas
+      setChats(prev => prev.map(c => c.id === cid ? { ...c, last_message: text, last_time: new Date().toISOString() } : c));
     } catch (e) {
       console.error('send failed', e);
     }
