@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, 
 
 export default function Messages() {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -255,7 +256,7 @@ export default function Messages() {
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
                 <div className="p-3">
-                  <div className="relative" role="button">
+                  <div className="relative" role="button" onClick={()=>navigate('/chat-search')}>
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <div className="pl-10 h-11 rounded-full bg-muted text-muted-foreground flex items-center">
                       <span className="text-sm">Pesquisar conversas</span>

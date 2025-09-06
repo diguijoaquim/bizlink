@@ -29,6 +29,7 @@ import Portfolio from "./pages/Portfolio";
 import CreatePortfolio from "./pages/CreatePortfolio";
 import ProfileSetup from "./pages/ProfileSetup";
 import ResetPassword from "./pages/ResetPassword";
+import ChatSearch from "./pages/ChatSearch";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/chat-search" element={<ChatSearch />} />
           <Route
             path="/create-company"
             element={
