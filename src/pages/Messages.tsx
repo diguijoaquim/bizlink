@@ -219,9 +219,9 @@ export default function Messages() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-8rem)] flex bg-card rounded-xl overflow-hidden bizlink-shadow-soft">
+      <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row bg-card rounded-xl overflow-hidden bizlink-shadow-soft">
         {/* Chat List */}
-        <div className="w-full md:w-1/3 border-r border-border flex flex-col">
+        <div className={`border-b md:border-r border-border flex flex-col ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
           {/* Chat List Header */}
           <div className="p-4 border-b border-border">
             <h1 className="text-xl font-bold text-foreground mb-3">Mensagens</h1>
@@ -232,21 +232,21 @@ export default function Messages() {
             <Tabs defaultValue="conversations" className="h-full">
               <TabsContent value="conversations" className="h-full">
                 <div className="p-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar conversas..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 h-9"
-                    />
-                  </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar conversas..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9"
+                  />
+                </div>
                 </div>
                 {(!chatLoading && chats.length === 0) && (
                   <div className="p-6 text-center space-y-3">
                     <p className="text-muted-foreground">Você ainda não tem conversas.</p>
                     <Button onClick={openStartChat} className="bg-gradient-primary text-white border-0">Iniciar chat</Button>
-                  </div>
+          </div>
                 )}
                 {chats.map((chat) => (
                   <div
@@ -269,7 +269,7 @@ export default function Messages() {
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center space-x-1">
                             <h3 className="font-medium text-foreground truncate">{chat.peer.full_name || chat.peer.email}</h3>
-                          </div>
+                              </div>
                           <span className="text-xs text-muted-foreground">{chat.last_time ? new Date(chat.last_time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
                         </div>
 
@@ -375,7 +375,7 @@ export default function Messages() {
 
         {/* Chat Area */}
         {selectedChat && selectedChatData ? (
-          <div className="flex-1 flex flex-col">
+          <div className={`flex-1 flex flex-col ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -460,7 +460,7 @@ export default function Messages() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 hidden md:flex items-center justify-center">
             <p className="text-muted-foreground">Selecione uma conversa para começar</p>
           </div>
         )}
