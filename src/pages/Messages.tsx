@@ -83,6 +83,13 @@ export default function Messages() {
     }
   };
 
+  // Auto open first conversation on desktop only
+  useEffect(() => {
+    if (!isMobile && chats.length > 0 && !selectedChat) {
+      handleOpenChat(chats[0].id);
+    }
+  }, [isMobile, chats, selectedChat]);
+
   const handleUserSearch = async (query: string) => {
     setUserSearchQuery(query);
     if (query.trim()) {
@@ -118,11 +125,6 @@ export default function Messages() {
       setChatLoading(true);
       const data = await getConversations();
       setChats(data);
-      if (data.length > 0) {
-        setSelectedChat(String(data[0].id));
-        const msgs = await getMessages(data[0].id);
-        setChatMessages(msgs);
-      }
     } catch (e) {
       console.error('Error loading conversations', e);
     } finally {
@@ -143,8 +145,7 @@ export default function Messages() {
         };
         return [optimistic, ...prev];
       });
-      setSelectedChat(String(id));
-      setChatMessages(await getMessages(id));
+      await handleOpenChat(id);
       // Refresh conversations in background to sync last_message
       loadConversations();
     }).catch(console.error);
