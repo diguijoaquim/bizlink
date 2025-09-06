@@ -103,8 +103,8 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
     const res = await fetch(`${API_BASE_URL}${input.startsWith('/') ? input : `/${input}`}`, { 
       ...init, 
       headers,
-      // Do not send cookies with cross-origin requests when server uses wildcard CORS
-      credentials: 'omit'
+      // Send credentials to include Authorization header
+      credentials: 'include'
     });
     
     if (!res.ok) {
@@ -661,6 +661,10 @@ export async function getJobs(params?: {
 
 export async function getJob(jobId: number): Promise<Job> {
   return apiFetch(`/jobs/${jobId}`);
+}
+
+export async function getMyJobs(): Promise<Job[]> {
+  return apiFetch('/jobs/my-jobs');
 }
 
 export async function createJob(input: {

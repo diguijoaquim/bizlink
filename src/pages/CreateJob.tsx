@@ -5,6 +5,7 @@ import {
   updateJob, 
   getJob, 
   getCompanies, 
+  getAuthToken,
   type JobCreate, 
   type JobUpdate,
   type Company 
@@ -45,11 +46,23 @@ export default function CreateJob() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
+    // Verificar se usuário está autenticado
+    const token = getAuthToken();
+    if (!token) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para criar vagas",
+        variant: "destructive"
+      });
+      navigate('/login');
+      return;
+    }
+    
     loadCompanies();
     if (isEditing) {
       loadJob();
     }
-  }, [id]);
+  }, [id, navigate, toast]);
 
   const loadCompanies = async () => {
     try {
@@ -154,9 +167,26 @@ export default function CreateJob() {
       navigate('/jobs');
     } catch (error) {
       console.error('Error saving job:', error);
+      
+      let errorMessage = isEditing ? "Não foi possível atualizar a vaga" : "Não foi possível criar a vaga";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        } else if (error.message.includes('401') || error.message.includes('Not authenticated')) {
+          errorMessage = "Sessão expirada. Faça login novamente.";
+          // Redirecionar para login
+          setTimeout(() => navigate('/login'), 2000);
+        } else if (error.message.includes('403')) {
+          errorMessage = "Você não tem permissão para criar vagas.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erro",
-        description: isEditing ? "Não foi possível atualizar a vaga" : "Não foi possível criar a vaga",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

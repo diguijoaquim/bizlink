@@ -5,7 +5,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon } from "lucide-react";
-import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, uploadUserProfilePhoto, uploadUserCoverPhoto, type CompanyPortfolio } from "@/lib/api";
+import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, uploadUserProfilePhoto, uploadUserCoverPhoto, getMyJobs, deleteJob, type CompanyPortfolio, type Job } from "@/lib/api";
 import { ProfileServiceCard } from "@/components/ProfileServiceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useHome } from "@/contexts/HomeContext";
@@ -35,6 +35,10 @@ export default function Profile() {
   // Portfolio state
   const [portfolioItems, setPortfolioItems] = useState<CompanyPortfolio[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
+  
+  // Jobs state
+  const [myJobs, setMyJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
 
   // Verificar se o usuário precisa configurar o perfil
   const isPublicView = typeof window !== 'undefined' && (window.location.pathname.startsWith('/@') || new URLSearchParams(window.location.search).has('user_id'));
@@ -126,6 +130,42 @@ export default function Profile() {
     }
   };
 
+  const loadMyJobs = async () => {
+    if (!hasCompany) return;
+    
+    try {
+      setJobsLoading(true);
+      const jobs = await getMyJobs();
+      setMyJobs(jobs);
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as vagas",
+        variant: "destructive"
+      });
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: number) => {
+    try {
+      await deleteJob(jobId);
+      setMyJobs(myJobs.filter(job => job.id !== jobId));
+      toast({
+        title: "Sucesso",
+        description: "Vaga deletada com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível deletar a vaga",
+        variant: "destructive"
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-MZ', {
       day: '2-digit',
@@ -138,6 +178,7 @@ export default function Profile() {
   useEffect(() => {
     if (currentCompany?.id) {
       loadPortfolio();
+      loadMyJobs();
     }
   }, [currentCompany?.id]);
 
@@ -351,6 +392,9 @@ export default function Profile() {
                 <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
+                {hasCompany && (
+                  <TabsTrigger value="my-jobs" className="profile-tabs-trigger">Minhas Vagas</TabsTrigger>
+                )}
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
@@ -644,6 +688,109 @@ export default function Profile() {
                 )}
               </div>
             </TabsContent>
+            
+            {hasCompany && (
+              <TabsContent value="my-jobs" className="profile-tabs-content">
+                <div className="space-y-4 w-full">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Minhas Vagas</h3>
+                    <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nova Vaga
+                    </Button>
+                  </div>
+                  
+                  {jobsLoading && myJobs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Carregando vagas...</p>
+                    </div>
+                  ) : myJobs.length > 0 ? (
+                    <div className="space-y-4">
+                      {myJobs.map((job) => (
+                        <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                {job.image_url ? (
+                                  <img 
+                                    src={job.image_url} 
+                                    alt={job.title}
+                                    className="w-16 h-16 object-cover rounded-lg"
+                                  />
+                                ) : (
+                                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <Building2 className="h-8 w-8 text-white" />
+                                  </div>
+                                )}
+                                <div>
+                                  <h4 className="font-semibold text-lg">{job.title}</h4>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                                    <span className="flex items-center gap-1">
+                                      <MapPin className="h-4 w-4" />
+                                      {job.location || 'Remoto'}
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      job.status === 'Ativa' ? 'bg-green-100 text-green-800' :
+                                      job.status === 'Pausada' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'
+                                    }`}>
+                                      {job.status}
+                                    </span>
+                                    {job.is_promoted && (
+                                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+                                        Promovida
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                                {job.description}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>{job.views} visualizações</span>
+                                <span>{job.applications} candidaturas</span>
+                                <span>Criada em {formatDate(job.created_at)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/jobs/${job.id}/edit`)}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit className="h-4 w-4" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteJob(job.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Building2 className="h-8 w-8 text-white" />
+                      </div>
+                      <p className="text-muted-foreground mb-4">Ainda não tem vagas publicadas</p>
+                      <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Publicar Primeira Vaga
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
         ) : user?.user_type === 'freelancer' ? (
@@ -653,6 +800,9 @@ export default function Profile() {
                 <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
+                {hasCompany && (
+                  <TabsTrigger value="my-jobs" className="profile-tabs-trigger">Minhas Vagas</TabsTrigger>
+                )}
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
