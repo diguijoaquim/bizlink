@@ -467,8 +467,8 @@ export default function Messages() {
         )}
       </div>
 
-      {/* Bottom spacing for mobile navigation */}
-      {isMobile && <div className="h-20" />}
+      {/* Bottom spacing for mobile navigation (hidden on chat route due AppLayout hide) */}
+      {isMobile && <div className="h-0" />}
 
       {/* Start Chat dialog */}
       <Dialog open={startOpen} onOpenChange={setStartOpen}>
