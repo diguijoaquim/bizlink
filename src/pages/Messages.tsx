@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, Users, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -111,11 +112,22 @@ export default function Messages() {
 
   const selectedChatData = mockChats.find(chat => chat.id === selectedChat);
 
+  const location = useLocation();
+
   // Load users/companies when component mounts
   useEffect(() => {
     loadUsers();
     loadCompanies();
   }, []);
+
+  // Apply filter from query string (?filter=company|freelancer|simple)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const f = params.get('filter');
+    if (f === 'company' || f === 'freelancer' || f === 'simple' || f === 'all') {
+      setRecipientFilter(f as any);
+    }
+  }, [location.search]);
 
   const loadUsers = async () => {
     try {

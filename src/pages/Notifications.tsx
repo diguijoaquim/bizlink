@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiFetch, getAuthToken, API_BASE_URL } from "@/lib/api";
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface Notification {
   id: string;
@@ -39,6 +41,8 @@ const getNotificationIcon = (type: string) => {
 export default function Notifications() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const [activeTab, setActiveTab] = useState("all");
+  const [startChatOpen, setStartChatOpen] = useState(false);
+  const navigate = useNavigate();
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -125,15 +129,34 @@ export default function Notifications() {
               {unreadCount > 0 ? `${unreadCount} não lidas` : "Todas as notificações lidas"}
             </p>
           </div>
-          {unreadCount > 0 && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={markAllAsRead}
-            >
-              Marcar todas como lidas
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {activeTab === 'messages' && (
+              <Dialog open={startChatOpen} onOpenChange={setStartChatOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-gradient-primary text-white border-0">Iniciar chat</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Iniciar chat com</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=company'); }}>Empresa</Button>
+                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=freelancer'); }}>Freelancer</Button>
+                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=simple'); }}>Usuário simples</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            {unreadCount > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={markAllAsRead}
+              >
+                Marcar todas como lidas
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Notification Tabs */}
