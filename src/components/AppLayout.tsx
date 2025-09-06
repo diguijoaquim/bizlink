@@ -144,14 +144,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Bottom Navigation for Mobile */}
       {showBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border md:hidden z-50" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
-          <div className="grid grid-cols-6 py-2">
+          <div className="grid grid-cols-6 py-3">
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center justify-center py-2 px-1 transition-all duration-200",
+                    "flex items-center justify-center py-2 transition-all duration-200",
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground"
@@ -159,7 +159,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 }
               >
                 {item.name === "Perfil" ? (
-                  <Avatar className="h-6 w-6 mb-1">
+                  <Avatar className="h-8 w-8">
                     <AvatarImage 
                       src={user?.profile_photo_url ? `https://bizlink-production.up.railway.app${user.profile_photo_url}` : undefined} 
                       alt={user?.full_name || "Perfil"} 
@@ -169,9 +169,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <item.icon className="h-5 w-5 mb-1" />
+                  <item.icon className="h-7 w-7" />
                 )}
-                <span className="text-xs font-medium">{item.name}</span>
               </NavLink>
             ))}
           </div>
