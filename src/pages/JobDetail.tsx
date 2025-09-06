@@ -19,6 +19,7 @@ import {
   Globe,
   Building
 } from 'lucide-react';
+import { useHome } from '../contexts/HomeContext';
 
 export default function JobDetail() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function JobDetail() {
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useHome();
 
   useEffect(() => {
     if (id) {
@@ -152,13 +154,15 @@ export default function JobDetail() {
             )}
           </div>
           
-          <Button
-            onClick={() => navigate(`/jobs/edit/${job.id}`)}
-            className="flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            Editar Vaga
-          </Button>
+          {user && company && user.id === company.owner_id && (
+            <Button
+              onClick={() => navigate(`/jobs/edit/${job.id}`)}
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Editar Vaga
+            </Button>
+          )}
         </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -268,6 +272,7 @@ export default function JobDetail() {
           </Card>
 
           {/* Ações */}
+          {user && company && user.id === company.owner_id && (
           <Card>
             <CardHeader>
               <CardTitle>Ações</CardTitle>
@@ -289,6 +294,7 @@ export default function JobDetail() {
               </Button>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
       </div>

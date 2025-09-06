@@ -21,6 +21,7 @@ import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/Skeleton';
 import { AppLayout } from '../components/AppLayout';
 import { ArrowLeft, Save, Plus, Briefcase, MapPin } from 'lucide-react';
+import { useHome } from '../contexts/HomeContext';
 
 export default function CreateJob() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function CreateJob() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const { user, hasCompany } = useHome();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -57,7 +59,17 @@ export default function CreateJob() {
       navigate('/login');
       return;
     }
-    
+    // Garantir que possui empresa para publicar vagas
+    if (!hasCompany) {
+      toast({
+        title: 'Sem empresa',
+        description: 'Apenas contas com empresa podem publicar vagas.',
+        variant: 'destructive'
+      });
+      navigate('/companies');
+      return;
+    }
+
     loadCompanies();
     if (isEditing) {
       loadJob();
@@ -66,10 +78,19 @@ export default function CreateJob() {
 
   const loadCompanies = async () => {
     try {
+      // Preferir empresas do usuário logado
+      if (user?.companies && user.companies.length > 0) {
+        setCompanies(user.companies);
+        if (!isEditing) {
+          setFormData(prev => ({ ...prev, company_id: user.companies![0].id }));
+        }
+        return;
+      }
       const companiesData = await getCompanies();
-      setCompanies(companiesData);
-      if (companiesData.length > 0 && !isEditing) {
-        setFormData(prev => ({ ...prev, company_id: companiesData[0].id }));
+      const owned = user ? companiesData.filter(c => c.owner_id === user.id) : companiesData;
+      setCompanies(owned);
+      if (owned.length > 0 && !isEditing) {
+        setFormData(prev => ({ ...prev, company_id: owned[0].id }));
       }
     } catch (error) {
       console.error('Error loading companies:', error);
