@@ -220,6 +220,7 @@ export default function Messages() {
   };
 
   const content = (
+    <>
       <div className={`${isMobile ? 'h-[calc(100vh-8rem)]' : 'h-screen'} flex flex-col md:flex-row bg-card ${isMobile ? 'rounded-xl' : ''} overflow-hidden bizlink-shadow-soft`}>
         {/* Chat List */}
         <div className={`border-b md:border-r border-border flex flex-col ${selectedChat ? 'hidden md:flex md:w-1/3' : 'flex w-full md:w-1/3'}`}>
@@ -517,6 +518,7 @@ export default function Messages() {
           )}
         </DialogContent>
       </Dialog>
+    </>
   );
 
   return isMobile ? (
