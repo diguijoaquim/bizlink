@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -380,6 +380,9 @@ export default function Messages() {
             {/* Chat Header */}
             <div className="p-4 border-b border-border flex items-center justify-between sticky top-0 z-10 bg-card">
               <div className="flex items-center space-x-3">
+                <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => { try { ws?.close(); } catch {}; setWs(null); setSelectedChat(null); }}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
                 <div className="relative">
                   <img
                     src={selectedChatData.peer.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
