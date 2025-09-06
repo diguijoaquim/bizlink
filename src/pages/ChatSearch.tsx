@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Search, ArrowLeft } from 'lucide-react';
-import { getRecipients, startConversation, type User, type Company } from '@/lib/api';
+import { getRecipients, type User, type Company } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 
 export default function ChatSearch() {
@@ -26,9 +25,9 @@ export default function ChatSearch() {
 
   useEffect(() => { load(); }, []);
 
-  const onSearch = async (e: React.FormEvent) => {
+  const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    await load(q);
+    load(q);
   };
 
   return (
@@ -38,11 +37,17 @@ export default function ChatSearch() {
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <form onSubmit={onSearch} className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar pessoas e empresas" className="pl-10" />
+          <form onSubmit={onSubmit} className="flex-1">
+            <div className="relative h-11 rounded-full bg-muted flex items-center">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                value={q}
+                onChange={(e)=>setQ(e.target.value)}
+                placeholder="Pesquisar conversas"
+                className="pl-10 pr-4 w-full h-full bg-transparent outline-none border-0 text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
           </form>
-          <Button onClick={onSearch} variant="default">Buscar</Button>
         </div>
       </div>
 
