@@ -17,6 +17,7 @@ const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Explorar", href: "/explore", icon: Search },
   { name: "Vagas", href: "/jobs", icon: Briefcase },
+  { name: "Chat", href: "/messages", icon: MessageCircle },
   { name: "Notificações", href: "/notifications", icon: Bell },
   { name: "Perfil", href: "/profile", icon: User },
 ];
@@ -143,7 +144,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Bottom Navigation for Mobile */}
       {showBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border md:hidden z-50" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
-          <div className="grid grid-cols-5 py-2">
+          <div className="grid grid-cols-6 py-2">
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
