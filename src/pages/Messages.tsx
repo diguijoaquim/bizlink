@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default function Messages() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const typingTimeoutRef = useRef<number | null>(null as any);
+  const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -219,8 +220,9 @@ export default function Messages() {
     if (!f) return;
     setUploading(true);
     try {
-      const res = await sendMessageFile(cid, f);
-      setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename: f.name, content_type: f.type }]);
+      const res = await sendMessageFile(cid, f, { reply_to_id: replyTo?.id ?? undefined });
+      setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename: f.name, content_type: f.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+      clearReply();
     } catch (err) {
       console.error('file send failed', err);
     } finally {
@@ -235,13 +237,20 @@ export default function Messages() {
     try {
       const text = newMessage.trim();
       setNewMessage("");
-      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true, type: 'text' }]);
-      await sendMessage(cid, text);
+      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true, type: 'text', reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+      await sendMessage(cid, text, { reply_to_id: replyTo?.id });
       setChats(prev => prev.map(c => c.id === cid ? { ...c, last_message: text, last_time: new Date().toISOString() } : c));
+      clearReply();
     } catch (e) {
       console.error('send failed', e);
     }
   };
+
+  const onMessageClick = (m: ChatMessageItem) => {
+    setReplyTo({ id: m.id, preview: m.text });
+  };
+
+  const clearReply = () => setReplyTo(null);
 
   const openStartChat = async () => {
     try {
@@ -519,11 +528,14 @@ export default function Messages() {
               ) : (
                 chatMessages.map((message) => (
                 <div key={message.id} className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
+                  <div onClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
+                    {message.reply_to_preview && (
+                      <div className={`mb-1 px-2 py-1 rounded ${message.isMe ? 'bg-white/20' : 'bg-background/60'} text-xs italic line-clamp-1`}>↪ {message.reply_to_preview}</div>
+                    )}
                     {message.type === 'file' ? (
                       <a href={message.text} target="_blank" rel="noreferrer" className="underline break-all">{message.filename || 'Arquivo'}</a>
                     ) : (
-                      <p className="text-sm">{message.text}</p>
+                      <p className="text-sm break-words">{message.text}</p>
                     )}
                     <p className={`text-xs mt-1 ${message.isMe ? "text-white/70" : "text-muted-foreground"}`}>
                       {new Date(message.time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}
@@ -536,6 +548,12 @@ export default function Messages() {
 
             {/* Message Input */}
             <div className="fixed bottom-0 left-0 right-0 z-20 bg-card p-4 border-t border-border" style={{ position: 'fixed', bottom: 0 }}>
+              {replyTo && (
+                <div className="mb-2 px-3 py-2 rounded border bg-muted text-xs flex items-center justify-between">
+                  <div className="truncate">Respondendo: {replyTo.preview}</div>
+                  <Button size="icon" variant="ghost" onClick={clearReply}><X className="h-4 w-4" /></Button>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" onClick={handleFilePick} disabled={uploading}>
                   <Paperclip className="h-4 w-4" />

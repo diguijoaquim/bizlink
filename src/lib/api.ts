@@ -983,6 +983,8 @@ export type ChatMessageItem = {
   type?: 'text' | 'file';
   filename?: string;
   content_type?: string;
+  reply_to_id?: number | null;
+  reply_to_preview?: string | null;
 };
 
 export async function getConversations(): Promise<ConversationListItem[]> {
@@ -998,15 +1000,18 @@ export async function getMessages(conversationId: number): Promise<ChatMessageIt
   return apiFetch(`/chat/conversations/${conversationId}/messages`);
 }
 
-export async function sendMessage(conversationId: number, text: string): Promise<{ id: number }> {
+export async function sendMessage(conversationId: number, text: string, options?: { reply_to_id?: number }): Promise<{ id: number }> {
   const params = new URLSearchParams({ text });
+  if (options?.reply_to_id !== undefined) params.append('reply_to', String(options.reply_to_id));
   return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
 }
 
-export async function sendMessageFile(conversationId: number, file: File): Promise<{ id: number; url: string }> {
+export async function sendMessageFile(conversationId: number, file: File, options?: { reply_to_id?: number }): Promise<{ id: number; url: string }> {
   const form = new FormData();
   form.append('file', file);
-  return apiFetch(`/chat/conversations/${conversationId}/send-file`, { method: 'POST', body: form });
+  const url = new URL(`${API_BASE_URL}/chat/conversations/${conversationId}/send-file`);
+  if (options?.reply_to_id !== undefined) url.searchParams.set('reply_to', String(options.reply_to_id));
+  return apiFetch(url.toString().replace(API_BASE_URL, ''), { method: 'POST', body: form });
 }
 
 export async function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {
