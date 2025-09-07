@@ -13,41 +13,52 @@ import { Progress } from "@/components/ui/progress";
 
  
  
-// Lightweight custom audio player for chat bubbles
-function ChatAudioPlayer({ src, lightText }: { src: string; lightText?: boolean }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+// WaveSurfer-based audio player
+function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const wsRef = useRef<any>(null);
+  const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [current, setCurrent] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  const togglePlay = () => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (a.paused) {
-      a.play().catch(() => {});
-    } else {
-      a.pause();
-    }
-  };
+  const [dur, setDur] = useState(0);
+  const [curr, setCurr] = useState(0);
 
   useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onTime = () => setCurrent(a.currentTime || 0);
-    const onLoaded = () => setDuration(a.duration || 0);
-    a.addEventListener('play', onPlay);
-    a.addEventListener('pause', onPause);
-    a.addEventListener('timeupdate', onTime);
-    a.addEventListener('loadedmetadata', onLoaded);
+    let ws: any = null;
+    let mounted = true;
+    (async () => {
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js');
+        if (!mounted || !containerRef.current) return;
+        ws = mod.default.create({
+          container: containerRef.current,
+          waveColor: '#9ca3af',
+          progressColor: '#6366f1',
+          barWidth: 2,
+          barGap: 1,
+          height: 40,
+          url: src,
+        });
+        ws.on('ready', () => { setIsReady(true); setDur(ws.getDuration() || 0); });
+        ws.on('audioprocess', () => { setCurr(ws.getCurrentTime() || 0); });
+        ws.on('play', () => setIsPlaying(true));
+        ws.on('pause', () => setIsPlaying(false));
+        wsRef.current = ws;
+      } catch (e) {
+        // Fallback: simple audio tag if CDN fails
+        setIsReady(false);
+      }
+    })();
     return () => {
-      a.removeEventListener('play', onPlay);
-      a.removeEventListener('pause', onPause);
-      a.removeEventListener('timeupdate', onTime);
-      a.removeEventListener('loadedmetadata', onLoaded);
+      mounted = false;
+      try { ws?.destroy(); } catch {}
     };
   }, [src]);
+
+  const toggle = () => {
+    const ws = wsRef.current;
+    if (!ws) return;
+    if (ws.isPlaying()) ws.pause(); else ws.play();
+  };
 
   const fmt = (s: number) => {
     const mm = Math.floor(s / 60).toString().padStart(2, '0');
@@ -55,30 +66,13 @@ function ChatAudioPlayer({ src, lightText }: { src: string; lightText?: boolean 
     return `${mm}:${ss}`;
   };
 
-  const onSeek: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const a = audioRef.current;
-    if (!a) return;
-    const v = Number(e.target.value);
-    a.currentTime = v;
-    setCurrent(v);
-  };
-
   return (
     <div className="flex items-center gap-3">
-      <audio ref={audioRef} src={src} preload="metadata" />
-      <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" onClick={togglePlay}>
+      <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" onClick={toggle} disabled={!wsRef.current}>
         {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </Button>
-      <input
-        type="range"
-        min={0}
-        max={duration || 0}
-        step={1}
-        value={Math.min(current, duration || 0)}
-        onChange={onSeek}
-        className="w-40 h-1 accent-indigo-500"
-      />
-      <span className={`text-xs ${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(current)} / {fmt(duration || 0)}</span>
+      <div ref={containerRef} className="w-40" />
+      <span className={`text-xs ${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(curr)} / {fmt(dur)}</span>
     </div>
   );
 }
@@ -719,7 +713,7 @@ export default function Messages() {
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <ChatAudioPlayer src={message.text} lightText={message.isMe} />
+                              <ChatWavePlayer src={message.text} lightText={message.isMe} />
                               <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                             </div>
                           );
