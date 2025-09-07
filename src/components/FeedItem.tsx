@@ -143,8 +143,8 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                   <Briefcase className="h-5 w-5 text-white" />
-                </div>
-              )}
+              </div>
+            )}
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-semibold text-foreground">{item.poster_name || 'BizLink'}</h4>
@@ -165,9 +165,9 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           {/* Content */}
           <div className="px-4 pb-3">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className="text-xs">
-                {item.category}
-              </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {item.category}
+                  </Badge>
               <div className="text-lg font-bold text-primary">
                   {item.price ? `${item.price.toLocaleString('pt-PT')} MT` : 'Preço sob consulta'}
                 </div>
@@ -277,8 +277,8 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 <p className="text-xs text-muted-foreground">
                   {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
                 </p>
+                </div>
               </div>
-            </div>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
@@ -508,8 +508,8 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           {/* User Info */}
           <div className="px-4 py-3">
             <p className="text-sm text-muted-foreground mb-2">
-              {item.email}
-            </p>
+                {item.email}
+              </p>
             {item.gender && (
               <p className="text-sm text-muted-foreground">
                 {item.gender}
@@ -579,7 +579,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                   {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
                 </p>
               </div>
-            </div>
+              </div>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
@@ -601,7 +601,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                   <span className="truncate">{item.link}</span>
                 </div>
               )}
-          </div>
+            </div>
 
           {/* Media */}
           {item.media_url && (

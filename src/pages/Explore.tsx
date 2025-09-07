@@ -39,18 +39,18 @@ export default function Explore() {
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-              </div>
-              
+        </div>
+
               <div className="flex items-center gap-2">
                 <div className="flex items-center border border-border rounded-lg">
-                  <Button
+            <Button 
                     variant={viewMode === "feed" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("feed")}
                     className="rounded-r-none"
                   >
                     <List className="h-4 w-4" />
-                  </Button>
+            </Button>
                   <Button
                     variant={viewMode === "grid" ? "default" : "ghost"}
                     size="sm"
@@ -67,9 +67,9 @@ export default function Explore() {
                   >
                     <List className="h-4 w-4" />
                   </Button>
-                </div>
-              </div>
             </div>
+          </div>
+        </div>
 
             {/* Mobile Tabs */}
             <div className="md:hidden mt-4">
@@ -78,24 +78,24 @@ export default function Explore() {
                   <TabsTrigger value="all" className="flex items-center gap-1 text-xs">
                     <Grid3X3 className="h-3 w-3" />
                     Todos
-                  </TabsTrigger>
+              </TabsTrigger>
                   <TabsTrigger value="services" className="flex items-center gap-1 text-xs">
                     <Briefcase className="h-3 w-3" />
                     Serviços
-                  </TabsTrigger>
+              </TabsTrigger>
                   <TabsTrigger value="companies" className="flex items-center gap-1 text-xs">
                     <Building2 className="h-3 w-3" />
                     Empresas
-                  </TabsTrigger>
+              </TabsTrigger>
                   <TabsTrigger value="users" className="flex items-center gap-1 text-xs">
                     <Users className="h-3 w-3" />
                     Usuários
-                  </TabsTrigger>
-                </TabsList>
+              </TabsTrigger>
+            </TabsList>
               </Tabs>
-            </div>
-          </div>
-        </div>
+                  </div>
+                  </div>
+                </div>
 
         {/* Content */}
         <div className="container mx-auto px-4 py-6">
@@ -105,7 +105,7 @@ export default function Explore() {
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <Grid3X3 className="h-8 w-8 text-muted-foreground" />
-              </div>
+                </div>
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 Modo de visualização em desenvolvimento
               </h3>
@@ -115,9 +115,9 @@ export default function Explore() {
               <Button onClick={() => setViewMode("feed")}>
                 Voltar ao Feed
               </Button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
       </div>
     </AppLayout>
   );

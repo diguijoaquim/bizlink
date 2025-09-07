@@ -289,38 +289,38 @@ export default function Messages() {
                   </div>
                 ) : (
                   chats.map((chat) => (
-                  <div
-                    key={chat.id}
+              <div
+                key={chat.id}
                     onClick={() => handleOpenChat(chat.id)}
-                    className={`p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted ${
+                className={`p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted ${
                       selectedChat === String(chat.id) ? "bg-muted" : ""
-                    }`}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="relative">
-                        <img
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="relative">
+                    <img
                           src={chat.peer.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
                           alt={chat.peer.full_name || chat.peer.email}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      </div>
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center space-x-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-1">
                             <h3 className="font-medium text-foreground truncate">{chat.peer.full_name || chat.peer.email}</h3>
-                              </div>
+                          </div>
                           <span className="text-xs text-muted-foreground">{chat.last_time ? new Date(chat.last_time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
-                        </div>
+                    </div>
 
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-muted-foreground truncate flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground truncate flex-1">
                             {chat.last_message}
-                          </p>
-                        </div>
-                      </div>
+                      </p>
                     </div>
                   </div>
+                </div>
+              </div>
                 )))
                 }
               </TabsContent>
