@@ -83,19 +83,17 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
   const pct = dur > 0 ? (curr / dur) * 100 : 0;
 
   return (
-    <div className={`rounded-xl ${lightText ? 'bg-white/15' : 'bg-muted'} p-2 w-[200px] max-w-full`}> 
+    <div className={`rounded-xl ${lightText ? 'bg-white/15' : 'bg-card'} p-2 w-[220px] max-w-full shadow-sm border border-border/50`}> 
       <div className="flex items-center gap-2">
-        <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full" onClick={toggle} disabled={!wsRef.current}>
-          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-        </Button>
+        <button onClick={toggle} disabled={!wsRef.current} className={`h-7 w-7 rounded-full grid place-items-center text-white ${lightText ? 'bg-white/30' : 'bg-gradient-to-br from-indigo-500 to-violet-500'} shadow`}>{isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
         <div className="relative flex-1">
-          <div ref={containerRef} className="w-32" />
+          <div ref={containerRef} className="w-36" />
           <span className="absolute -top-1" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
             <span className="inline-block h-1.5 w-1.5 bg-sky-500 rounded-full" />
           </span>
         </div>
         {avatarUrl && (
-          <img src={avatarUrl} className="h-8 w-8 rounded-full object-cover" />
+          <img src={avatarUrl} className="h-8 w-8 rounded-full object-cover border border-white/20" />
         )}
       </div>
       <div className="mt-1 flex items-center justify-between text-[10px]">
@@ -708,7 +706,7 @@ export default function Messages() {
         {selectedChat && selectedChatData ? (
           <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between" style={{ position: 'fixed', top: 0 }}>
+            <div className={`${isMobile ? 'fixed top-0' : 'sticky top-0'} left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between`} style={isMobile ? { position: 'fixed', top: 0 } : undefined}>
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
                   <ArrowLeft size={24} />
@@ -744,7 +742,7 @@ export default function Messages() {
             </div>
 
             {/* Messages */}
-            <div className="overflow-y-scroll p-4 space-y-3 touch-auto" style={{ position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' }}>
+            <div className={`${isMobile ? 'overflow-y-scroll' : 'overflow-y-auto flex-1'} p-4 space-y-3 touch-auto`} style={isMobile ? { position: 'absolute', top: '60px', bottom: '70px', left: 0, right: 0, WebkitOverflowScrolling: 'touch' } : undefined}>
               {chatMessages.length === 0 ? (
                 <div className="space-y-4">
                   {Array.from({ length: 5 }).map((_, i) => (
