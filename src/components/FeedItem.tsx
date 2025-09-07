@@ -317,6 +317,13 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
             </Button>
           </div>
+
+          {/* Stats */}
+          <div className="px-4 pb-4">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="font-semibold">{likesCount} likes</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
