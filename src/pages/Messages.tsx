@@ -13,11 +13,10 @@ import { Progress } from "@/components/ui/progress";
 
  
  
-// WaveSurfer-based audio player
-function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }) {
+// WaveSurfer-based audio player (card style)
+function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?: boolean; avatarUrl?: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<any>(null);
-  const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [dur, setDur] = useState(0);
   const [curr, setCurr] = useState(0);
@@ -49,10 +48,10 @@ function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }
           progressColor: '#383351',
           barWidth: 2,
           barGap: 1,
-          height: 40,
+          height: 36,
           url: src,
         });
-        ws.on('ready', () => { if (!destroyed) { setIsReady(true); setDur(ws.getDuration() || 0); } });
+        ws.on('ready', () => { if (!destroyed) { setDur(ws.getDuration() || 0); } });
         ws.on('audioprocess', () => { if (!destroyed) setCurr(ws.getCurrentTime() || 0); });
         ws.on('play', () => { if (!destroyed) setIsPlaying(true); });
         ws.on('pause', () => { if (!destroyed) setIsPlaying(false); });
@@ -81,13 +80,29 @@ function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }
     return `${mm}:${ss}`;
   };
 
+  const pct = dur > 0 ? (curr / dur) * 100 : 0;
+
   return (
-    <div className="flex items-center gap-3">
-      <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" onClick={toggle} disabled={!wsRef.current}>
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-      </Button>
-      <div ref={containerRef} className="w-40" />
-      <span className={`text-xs ${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(curr)} / {fmt(dur)}</span>
+    <div className={`rounded-2xl ${lightText ? 'bg-white/15' : 'bg-muted'} p-3 w-[260px] max-w-full`}> 
+      <div className="flex items-center gap-3">
+        <Button variant="secondary" size="icon" className="h-9 w-9 rounded-full" onClick={toggle} disabled={!wsRef.current}>
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+        <div className="relative flex-1">
+          <div ref={containerRef} className="w-full" />
+          <span className="absolute -top-1.5" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
+            <span className="inline-block h-2.5 w-2.5 bg-sky-500 rounded-full" />
+          </span>
+        </div>
+        {avatarUrl && (
+          <img src={avatarUrl} className="h-9 w-9 rounded-full object-cover" />
+        )}
+      </div>
+      <div className="mt-2 flex items-center justify-between text-xs">
+        <span className={`${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(curr)}</span>
+        <Mic className={`${lightText ? 'text-white/80' : 'text-muted-foreground'} h-3.5 w-3.5`} />
+        <span className={`${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(dur)}</span>
+      </div>
     </div>
   );
 }
@@ -770,7 +785,7 @@ export default function Messages() {
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <ChatWavePlayer src={message.text} lightText={message.isMe} />
+                              <ChatWavePlayer src={message.text} lightText={message.isMe} avatarUrl={selectedChatData.peer.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} />
                               <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                             </div>
                           );
