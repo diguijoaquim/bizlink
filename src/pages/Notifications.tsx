@@ -113,7 +113,6 @@ export default function Notifications() {
 
   const filteredNotifications = notifications.filter(notification => {
     if (activeTab === "unread") return !notification.isRead;
-    if (activeTab === "messages") return notification.type === "message";
     if (activeTab === "activity") return ["like", "follow", "service"].includes(notification.type);
     return true;
   });
@@ -130,23 +129,6 @@ export default function Notifications() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {activeTab === 'messages' && (
-              <Dialog open={startChatOpen} onOpenChange={setStartChatOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="bg-gradient-primary text-white border-0">Iniciar chat</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Iniciar chat com</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=company'); }}>Empresa</Button>
-                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=freelancer'); }}>Freelancer</Button>
-                    <Button variant="outline" onClick={() => { setStartChatOpen(false); navigate('/messages?filter=simple'); }}>Usuário simples</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
             {unreadCount > 0 && (
               <Button 
                 variant="outline" 
@@ -161,7 +143,7 @@ export default function Notifications() {
 
         {/* Notification Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="bizlink-animate-slide-up">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="all" className="text-xs">
               Todas
               {notifications.length > 0 && (
@@ -178,7 +160,6 @@ export default function Notifications() {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="messages" className="text-xs">Mensagens</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs">Atividade</TabsTrigger>
           </TabsList>
 
