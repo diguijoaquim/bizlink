@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Home, Search, MessageCircle, Bell, Menu, X, Briefcase, Image, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch } from "@/lib/api";
+import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch, getConversations, connectChatWS } from "@/lib/api";
 import { useHome } from "@/contexts/HomeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -80,6 +80,60 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
   }, [location.pathname]);
 
+  // Realtime chat unread badge (UI-only counter)
+  const [chatUnread, setChatUnread] = useState<number>(0);
+  const activeChatIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    let sockets: WebSocket[] = [];
+    let cancelled = false;
+
+    const setup = async () => {
+      try {
+        const convs = await getConversations();
+        if (cancelled) return;
+        const limit = Math.min(convs.length, 20); // avoid opening too many sockets
+        for (let i = 0; i < limit; i++) {
+          const cid = convs[i].id;
+          const ws = connectChatWS(cid);
+          if (!ws) continue;
+          ws.onmessage = (ev) => {
+            try {
+              const msg = JSON.parse(ev.data);
+              if (msg?.event === 'message') {
+                const convId = Number(msg?.data?.conversation_id ?? cid);
+                if (activeChatIdRef.current !== convId) {
+                  setChatUnread((c) => c + 1);
+                }
+              }
+            } catch {}
+          };
+          sockets.push(ws);
+        }
+      } catch {}
+    };
+
+    setup();
+
+    const onActive = (e: any) => {
+      const val = e?.detail;
+      activeChatIdRef.current = (val === null || val === undefined) ? null : Number(val);
+    };
+    const onClear = () => setChatUnread(0);
+    window.addEventListener('chat:active', onActive as any);
+    window.addEventListener('chat:clear-unread', onClear as any);
+
+    return () => {
+      cancelled = true;
+      sockets.forEach((s) => { try { s.close(); } catch {} });
+      sockets = [];
+      window.removeEventListener('chat:active', onActive as any);
+      window.removeEventListener('chat:clear-unread', onClear as any);
+    };
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Header */}
@@ -109,6 +163,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                     {item.name === "Notificações" && unreadCount > 0 && (
                       <span className="absolute -top-2 -right-3 inline-flex min-w-[18px] h-4 px-1 items-center justify-center bg-red-500 text-white rounded-full text-[10px] leading-none">
                         {formatBadgeCount(unreadCount)}
+                      </span>
+                    )}
+                    {item.name === "Chat" && chatUnread > 0 && (
+                      <span className="absolute -top-2 -right-3 inline-flex min-w-[18px] h-4 px-1 items-center justify-center bg-emerald-600 text-white rounded-full text-[10px] leading-none">
+                        {formatBadgeCount(chatUnread)}
                       </span>
                     )}
                     <item.icon className="h-5 w-5" />
@@ -214,6 +273,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {item.name === "Notificações" && unreadCount > 0 && (
                     <span className="absolute -top-1.5 -right-2 inline-flex min-w-[16px] h-3.5 px-[3px] items-center justify-center bg-red-500 text-white rounded-full text-[9px] leading-none">
                       {formatBadgeCount(unreadCount)}
+                    </span>
+                  )}
+                  {item.name === "Chat" && chatUnread > 0 && (
+                    <span className="absolute -top-1.5 -right-2 inline-flex min-w-[16px] h-3.5 px-[3px] items-center justify-center bg-emerald-600 text-white rounded-full text-[9px] leading-none">
+                      {formatBadgeCount(chatUnread)}
                     </span>
                   )}
                   {item.name === "Perfil" ? (

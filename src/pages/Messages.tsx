@@ -170,6 +170,8 @@ export default function Messages() {
 
   const handleOpenChat = async (chatId: number) => {
     setSelectedChat(String(chatId));
+    // Inform layout which chat is active (to avoid counting as unread)
+    window.dispatchEvent(new CustomEvent('chat:active', { detail: chatId }));
     setChatMessages(await getMessages(chatId));
     // connect websocket
     try { ws?.close(); } catch {}
@@ -185,6 +187,8 @@ export default function Messages() {
             // Ignore only if it's mine; also ensure message belongs to current conversation
             if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
               setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+              // Estamos visualizando; não conta como não lida
+              window.dispatchEvent(new Event('chat:clear-unread'));
             }
           }
         } catch {}
@@ -235,6 +239,13 @@ export default function Messages() {
     
     return () => {
       document.head.removeChild(meta);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      // leaving page clears active chat id
+      window.dispatchEvent(new CustomEvent('chat:active', { detail: null }));
     };
   }, []);
 
