@@ -87,7 +87,7 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
       {/* Search Bar */}
-      <div className="sticky top-16 z-40 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 px-3 py-2 border-b border-border">
+      <div className="sticky top-16 z-40  px-3 py-2 border-b border-border">
         {showSearchAsLink ? (
           <div
             className="relative h-10 rounded-full bg-muted flex items-center cursor-pointer"
