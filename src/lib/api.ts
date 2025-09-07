@@ -754,6 +754,10 @@ export async function getCompanyJobs(companyId: number, params?: {
   return apiFetch(`/jobs/company/${companyId}${queryString ? `?${queryString}` : ''}`);
 }
 
+export async function getMyJobs(): Promise<Job[]> {
+  return await apiFetch('/jobs/my-jobs');
+}
+
 // Portfolio API Functions
 export async function getPortfolioItems(params?: {
   company_id?: number;
