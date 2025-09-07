@@ -143,6 +143,19 @@ export default function Profile() {
     }
   }, [currentCompany?.id]);
 
+  // Ensure services refresh when returning to this page (e.g., after editing a service cover)
+  useEffect(() => {
+    const refreshOnFocus = () => {
+      reloadServices();
+    };
+    window.addEventListener('focus', refreshOnFocus);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+    return () => {
+      window.removeEventListener('focus', refreshOnFocus);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
+  }, [reloadServices]);
+
   const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [jobsLoading, setJobsLoading] = useState(false);
 
