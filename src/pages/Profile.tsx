@@ -12,7 +12,7 @@ import { useHome } from "@/contexts/HomeContext";
 import { ProfileSkeleton } from "@/components/Skeleton";
 import { getMyJobs, type Job } from "@/lib/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PortfolioItemCard, JobItemCard, ProfileTabsList } from "@/components/profile";
+import { PortfolioItemCard, JobItemCard, ProfileTabsList, ProfileTabs } from "@/components/profile";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -383,290 +383,293 @@ export default function Profile() {
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
           <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
-            <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <ProfileTabsList items={[
+            <ProfileTabs
+              defaultValue="about"
+              items={[
                 { value: 'about', label: 'Sobre' },
                 { value: 'portfolio', label: 'Portfolio' },
                 { value: 'my-services', label: 'Meus Serviços' },
                 { value: 'my-jobs', label: 'Minhas Vagas' },
-              ]} columns={4} />
+              ]}
+              columns={4}
+            >
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
-                {/* Descrição da Empresa */}
-                {firstCompany?.description && (
-                  <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                    <h3 className="text-lg font-semibold text-foreground mb-3">Sobre a Empresa</h3>
-                    <p className="text-muted-foreground leading-relaxed">{firstCompany.description}</p>
-                  </div>
-                )}
+                  {/* Descrição da Empresa */}
+                  {firstCompany?.description && (
+                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                      <h3 className="text-lg font-semibold text-foreground mb-3">Sobre a Empresa</h3>
+                      <p className="text-muted-foreground leading-relaxed">{firstCompany.description}</p>
+                    </div>
+                  )}
 
-                {/* Cards de Informação */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Card de Contato */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3">
-                        <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h3 className="text-sm font-semibold text-foreground">Contato</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Email</span>
-                        <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
-                          {firstCompany?.email || user?.email || "—"}
-                        </span>
-                      </div>
-                      {firstCompany?.whatsapp && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">WhatsApp</span>
-                          <a 
-                            href={`https://wa.me/${firstCompany.whatsapp.replace(/[^\d]/g, "")}`} 
-                            target="_blank" 
-                            className="text-sm font-medium text-green-600 hover:underline"
-                          >
-                            {firstCompany.whatsapp}
-                          </a>
+                  {/* Cards de Informação */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Card de Contato */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3">
+                          <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         </div>
-                      )}
-                      {firstCompany?.website && (
+                        <h3 className="text-sm font-semibold text-foreground">Contato</h3>
+                      </div>
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">Website</span>
-                          <a 
-                            href={firstCompany.website.startsWith("http") ? firstCompany.website : `http://${firstCompany.website}`} 
-                            target="_blank" 
-                            className="text-sm font-medium text-primary hover:underline truncate max-w-[120px]"
-                          >
-                            {firstCompany.website.replace(/^https?:\/\//, '')}
-                          </a>
+                          <span className="text-xs text-muted-foreground">Email</span>
+                          <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+                            {firstCompany?.email || user?.email || "—"}
+                          </span>
                         </div>
-                      )}
+                        {firstCompany?.whatsapp && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">WhatsApp</span>
+                            <a 
+                              href={`https://wa.me/${firstCompany.whatsapp.replace(/[^\d]/g, "")}`} 
+                              target="_blank" 
+                              className="text-sm font-medium text-green-600 hover:underline"
+                            >
+                              {firstCompany.whatsapp}
+                            </a>
+                          </div>
+                        )}
+                        {firstCompany?.website && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Website</span>
+                            <a 
+                              href={firstCompany.website.startsWith("http") ? firstCompany.website : `http://${firstCompany.website}`} 
+                              target="_blank" 
+                              className="text-sm font-medium text-primary hover:underline truncate max-w-[120px]"
+                            >
+                              {firstCompany.website.replace(/^https?:\/\//, '')}
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Card de Localização */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
-                        <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h3 className="text-sm font-semibold text-foreground">Localização</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {firstCompany?.address && (
-                        <div>
-                          <span className="text-xs text-muted-foreground">Endereço</span>
-                          <p className="text-sm font-medium text-foreground mt-1">{firstCompany.address}</p>
+                    {/* Card de Localização */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
+                          <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </div>
-                      )}
-                      {(firstCompany?.district || firstCompany?.province) && (
+                        <h3 className="text-sm font-semibold text-foreground">Localização</h3>
+                      </div>
+                      <div className="space-y-3">
+                        {firstCompany?.address && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Endereço</span>
+                            <p className="text-sm font-medium text-foreground mt-1">{firstCompany.address}</p>
+                          </div>
+                        )}
+                        {(firstCompany?.district || firstCompany?.province) && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">Região</span>
+                            <p className="text-sm font-medium text-foreground mt-1">
+                              {firstCompany?.district || ""}{firstCompany?.province ? `, ${firstCompany.province}` : ""}
+                            </p>
+                          </div>
+                        )}
+                        {firstCompany?.nationality && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">País</span>
+                            <p className="text-sm font-medium text-foreground mt-1">{firstCompany.nationality}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card de Informações Legais */}
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                      <div className="flex items-center mb-4">
+                        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-3">
+                          <Building2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground">Empresa</h3>
+                      </div>
+                      <div className="space-y-3">
                         <div>
-                          <span className="text-xs text-muted-foreground">Região</span>
+                          <span className="text-xs text-muted-foreground">Nome da Empresa</span>
+                          <p className="text-sm font-medium text-foreground mt-1">{firstCompany?.name || "—"}</p>
+                        </div>
+                        {firstCompany?.nuit && (
+                          <div>
+                            <span className="text-xs text-muted-foreground">NUIT</span>
+                            <p className="text-sm font-medium text-foreground mt-1 font-mono">{firstCompany.nuit}</p>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs text-muted-foreground">Criado em</span>
                           <p className="text-sm font-medium text-foreground mt-1">
-                            {firstCompany?.district || ""}{firstCompany?.province ? `, ${firstCompany.province}` : ""}
+                            {firstCompany?.created_at ? new Date(firstCompany.created_at).toLocaleDateString('pt-PT') : "—"}
                           </p>
                         </div>
-                      )}
-                      {firstCompany?.nationality && (
-                        <div>
-                          <span className="text-xs text-muted-foreground">País</span>
-                          <p className="text-sm font-medium text-foreground mt-1">{firstCompany.nationality}</p>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Card de Informações Legais */}
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
-                    <div className="flex items-center mb-4">
-                      <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-3">
-                        <Building2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  {/* Ações */}
+                  {!isPublicView ? (
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
+                      <div className="flex flex-wrap gap-3">
+                        <Button 
+                          variant="outline" 
+                          className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
+                          onClick={() => navigate(`/@${(user?.email || '').split('@')[0]}`)}
+                        >
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          Ver Página Pública
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/my-services')} 
+                          className="bg-gradient-primary text-white border-0 hover:opacity-90"
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Gerir Serviços
+                        </Button>
+                        <Button 
+                          onClick={() => navigate('/edit-company')} 
+                          variant="outline"
+                          className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
+                        >
+                          Editar Empresa
+                        </Button>
                       </div>
-                      <h3 className="text-sm font-semibold text-foreground">Empresa</h3>
                     </div>
-                    <div className="space-y-3">
-                      <div>
-                        <span className="text-xs text-muted-foreground">Nome da Empresa</span>
-                        <p className="text-sm font-medium text-foreground mt-1">{firstCompany?.name || "—"}</p>
-                      </div>
-                      {firstCompany?.nuit && (
-                        <div>
-                          <span className="text-xs text-muted-foreground">NUIT</span>
-                          <p className="text-sm font-medium text-foreground mt-1 font-mono">{firstCompany.nuit}</p>
-                        </div>
-                      )}
-                      <div>
-                        <span className="text-xs text-muted-foreground">Criado em</span>
-                        <p className="text-sm font-medium text-foreground mt-1">
-                          {firstCompany?.created_at ? new Date(firstCompany.created_at).toLocaleDateString('pt-PT') : "—"}
-                        </p>
-                      </div>
+                  ) : (
+                    <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+                      <h3 className="text-lg font-semibold text-foreground mb-2">Sobre esta empresa</h3>
+                      <p className="text-sm text-muted-foreground">Conecte-se, peça um orçamento ou veja mais serviços.</p>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Ações */}
-                {!isPublicView ? (
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
-                    <div className="flex flex-wrap gap-3">
-                      <Button 
-                        variant="outline" 
-                        className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
-                        onClick={() => navigate(`/@${(user?.email || '').split('@')[0]}`)}
-                      >
-                        <LinkIcon className="h-4 w-4 mr-2" />
-                        Ver Página Pública
-                      </Button>
-                      <Button 
-                        onClick={() => navigate('/my-services')} 
-                        className="bg-gradient-primary text-white border-0 hover:opacity-90"
-                      >
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Gerir Serviços
-                      </Button>
-                      <Button 
-                        onClick={() => navigate('/edit-company')} 
-                        variant="outline"
-                        className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
-                      >
-                        Editar Empresa
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
+              </TabsContent>
+              <TabsContent value="portfolio" className="profile-tabs-content">
+                <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
+                  {/* Cabeçalho do Portfolio */}
                   <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Sobre esta empresa</h3>
-                    <p className="text-sm text-muted-foreground">Conecte-se, peça um orçamento ou veja mais serviços.</p>
+                    <h3 className="text-lg font-semibold text-foreground">Portfólios</h3>
                   </div>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="portfolio" className="profile-tabs-content">
-              <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
-                {/* Cabeçalho do Portfolio */}
-                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
-                  <h3 className="text-lg font-semibold text-foreground">Portfólios</h3>
-                </div>
 
-                {/* Loading State */}
-                {portfolioLoading && portfolioItems.length === 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border animate-pulse">
-                        <div className="aspect-video bg-muted rounded-lg mb-4"></div>
-                        <div className="h-4 bg-muted rounded mb-2"></div>
-                        <div className="h-3 bg-muted rounded mb-3"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {/* Loading State */}
+                  {portfolioLoading && portfolioItems.length === 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="bg-card rounded-xl p-6 bizlink-shadow-soft border border-border animate-pulse">
+                          <div className="aspect-video bg-muted rounded-lg mb-4"></div>
+                          <div className="h-4 bg-muted rounded mb-2"></div>
+                          <div className="h-3 bg-muted rounded mb-3"></div>
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                {/* Grid de Projetos (apenas capa e título) */}
-                {portfolioItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {portfolioItems.slice(0, 12).map((item) => (
-                      <PortfolioItemCard key={item.id} item={item} onEdit={(id)=>navigate(`/portfolio/edit/${id}`)} onDelete={handleDeletePortfolioItem} />
-                    ))}
-                  </div>
-                )}
+                  {/* Grid de Projetos (apenas capa e título) */}
+                  {portfolioItems.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {portfolioItems.slice(0, 12).map((item) => (
+                        <PortfolioItemCard key={item.id} item={item} onEdit={(id)=>navigate(`/portfolio/edit/${id}`)} onDelete={handleDeletePortfolioItem} />
+                      ))}
+                    </div>
+                  )}
 
-                {/* Estado Vazio */}
-                {!portfolioLoading && portfolioItems.length === 0 && (
-                  <div className="text-center py-12">
-                    <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">
-                      Nenhum projeto no portfolio
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      Comece adicionando seu primeiro projeto para mostrar seu trabalho.
-                    </p>
-                    <Button 
-                      onClick={() => navigate('/portfolio/create')}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      arpoi Primeiro Projeto
-                    </Button>
-                  </div>
-                )}
-
-                {/* Ações do Portfolio */}
-                {portfolioItems.length > 0 && (
-                  <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Gerir Portfolio</h3>
-                    <div className="flex flex-wrap gap-3">
+                  {/* Estado Vazio */}
+                  {!portfolioLoading && portfolioItems.length === 0 && (
+                    <div className="text-center py-12">
+                      <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">
+                        Nenhum projeto no portfolio
+                      </h3>
+                      <p className="text-muted-foreground mb-6">
+                        Comece adicionando seu primeiro projeto para mostrar seu trabalho.
+                      </p>
                       <Button 
-                        variant="outline" 
-                        className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
                         onClick={() => navigate('/portfolio/create')}
+                        className="bg-primary hover:bg-primary/90"
                       >
                         <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Projeto
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Reordenar Projetos
+                        arpoi Primeiro Projeto
                       </Button>
                     </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="my-services" className="profile-tabs-content">
-              <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Meus Serviços</h3>
-                  <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
-                    Gerir Serviços
-                  </Button>
-                </div>
-                
-                {servicesLoading && services.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Carregando serviços...</p>
-                  </div>
-                ) : services.length > 0 ? (
-                  <div className="space-y-3">
-                    {services.map((service) => {
-                      const transformedService = {
-                        id: service.id.toString(),
-                        title: service.title,
-                        description: service.description,
-                        price: typeof service.price === 'string' ? parseFloat(service.price) : service.price,
-                        image: toAbsolute(service.image_url) || "/placeholder.svg",
-                        category: service.category,
-                        tags: service.tags ? (typeof service.tags === 'string' ? service.tags.replace(/[{}]/g, '').split(',').map(tag => tag.trim()).filter(Boolean) : []) : [],
-                        postedAt: service.created_at ? new Date(service.created_at).toLocaleDateString('pt-PT') : "Hoje",
-                        is_promoted: !!service.is_promoted,
-                      };
+                  )}
 
-                      return (
-                        <ProfileServiceCard 
-                          key={service.id} 
-                          service={transformedService}
-                          onEdit={handleEditService}
-                          onDelete={handleDeleteService}
-                          onPromote={(id, promote) => handlePromoteService(id, promote)}
-                        />
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-4">Ainda não tem serviços publicados</p>
+                  {/* Ações do Portfolio */}
+                  {portfolioItems.length > 0 && (
+                    <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+                      <h3 className="text-lg font-semibold text-foreground mb-4">Gerir Portfolio</h3>
+                      <div className="flex flex-wrap gap-3">
+                        <Button 
+                          variant="outline" 
+                          className="border-primary/20 hover:bg-primary/5 hover:border-primary/40"
+                          onClick={() => navigate('/portfolio/create')}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar Projeto
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40"
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Reordenar Projetos
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="my-services" className="profile-tabs-content">
+                <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Meus Serviços</h3>
                     <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
-                      Publicar Primeiro Serviço
+                      Gerir Serviços
                     </Button>
                   </div>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="my-jobs" className="profile-tabs-content">
+                  
+                  {servicesLoading && services.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Carregando serviços...</p>
+                    </div>
+                  ) : services.length > 0 ? (
+                    <div className="space-y-3">
+                      {services.map((service) => {
+                        const transformedService = {
+                          id: service.id.toString(),
+                          title: service.title,
+                          description: service.description,
+                          price: typeof service.price === 'string' ? parseFloat(service.price) : service.price,
+                          image: toAbsolute(service.image_url) || "/placeholder.svg",
+                          category: service.category,
+                          tags: service.tags ? (typeof service.tags === 'string' ? service.tags.replace(/[{}]/g, '').split(',').map(tag => tag.trim()).filter(Boolean) : []) : [],
+                          postedAt: service.created_at ? new Date(service.created_at).toLocaleDateString('pt-PT') : "Hoje",
+                          is_promoted: !!service.is_promoted,
+                        };
+
+                        return (
+                          <ProfileServiceCard 
+                            key={service.id} 
+                            service={transformedService}
+                            onEdit={handleEditService}
+                            onDelete={handleDeleteService}
+                            onPromote={(id, promote) => handlePromoteService(id, promote)}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">Ainda não tem serviços publicados</p>
+                      <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
+                        Publicar Primeiro Serviço
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="my-jobs" className="profile-tabs-content">
                 <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Minhas Vagas</h3>
@@ -696,16 +699,19 @@ export default function Profile() {
                   )}
                 </div>
               </TabsContent>
-          </Tabs>
-        </div>
+            </ProfileTabs>
+          </div>
         ) : user?.user_type === 'freelancer' ? (
           <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
-            <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <ProfileTabsList items={[
+            <ProfileTabs
+              defaultValue="about"
+              items={[
                 { value: 'about', label: 'Sobre' },
                 { value: 'portfolio', label: 'Portfolio' },
                 { value: 'my-services', label: 'Meus Serviços' },
-              ]} columns={3} />
+              ]}
+              columns={3}
+            >
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                   {/* Descrição do Freelancer */}
@@ -848,7 +854,7 @@ export default function Profile() {
                   )}
                 </div>
               </TabsContent>
-            </Tabs>
+            </ProfileTabs>
           </div>
         ) : (user?.user_type === 'simple') ? (
           <div className="bg-card rounded-xl p-6 bizlink-shadow-soft mx-auto max-w-2xl md:max-w-4xl">
