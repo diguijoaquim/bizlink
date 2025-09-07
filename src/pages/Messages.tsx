@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File, Mic, Square } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File, Mic, Square, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,9 @@ export default function Messages() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const typingTimeoutRef = useRef<number | null>(null as any);
+
+  // State for reply-to message
+  const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
 
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false);
