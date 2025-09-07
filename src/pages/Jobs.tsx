@@ -277,6 +277,7 @@ export default function Jobs() {
                              >
                                <Heart className={`h-3 w-3`} fill={jobLikes[job.id]?.isLiked ? 'currentColor' : 'none'} strokeWidth={jobLikes[job.id]?.isLiked ? 0 : 2} />
                                {jobLikes[job.id]?.likesCount || 0}
+                               <span className="text-[10px] leading-none">likes</span>
                              </span>
                           {job.is_promoted && (
                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
