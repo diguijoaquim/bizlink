@@ -48,6 +48,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
           progressColor: '#383351',
           barWidth: 2,
           barGap: 1,
+          barRadius: 2,
           height: 26,
           url: src,
         });
