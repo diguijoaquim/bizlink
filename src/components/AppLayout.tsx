@@ -152,34 +152,31 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Bottom Navigation for Mobile */}
       {showBottomNav && (
         <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border md:hidden z-50" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
-          <div className="grid grid-cols-6 py-3">
+          <div className="grid grid-cols-6 py-2">
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center justify-center py-2 transition-all duration-200",
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                    "flex flex-col items-center justify-center py-1 gap-0.5 transition-all duration-200",
+                    isActive ? "text-primary" : "text-muted-foreground"
                   )
                 }
               >
                 {item.name === "Perfil" ? (
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-6 w-6">
                     <AvatarImage 
                       src={profileSrc}
                       alt={user?.full_name || "Perfil"} 
                       className="border border-indigo-500"
                     />
-                    <AvatarFallback className="text-xs">
-                      {fallbackInitial}
-                    </AvatarFallback>
+                    <AvatarFallback className="text-[10px]">{fallbackInitial}</AvatarFallback>
                   </Avatar>
                 ) : (
-                  <item.icon className="h-7 w-7" />
+                  <item.icon className="h-5 w-5" />
                 )}
+                <span className="text-[10px] leading-none">{item.name}</span>
               </NavLink>
             ))}
           </div>
