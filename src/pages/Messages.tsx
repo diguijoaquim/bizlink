@@ -515,7 +515,7 @@ export default function Messages() {
                       </div>
                     </div>
                   ))}
-                </div>
+                </div>    
               ) : (
                 chatMessages.map((message) => (
                 <div key={message.id} className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
