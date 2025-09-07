@@ -693,7 +693,7 @@ export default function Messages() {
               ) : (
                 chatMessages.map((message) => (
                 <div key={message.id} className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
-                  <div onClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
+                  <div onDoubleClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
                     {message.reply_to_preview && (
                       <div className={`mb-1 px-2 py-1 rounded ${message.isMe ? 'bg-white/20' : 'bg-background/60'} text-xs italic line-clamp-1`}>↪ {message.reply_to_preview}</div>
                     )}
