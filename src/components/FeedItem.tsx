@@ -71,6 +71,9 @@ export function FeedItemComponent({ item }: FeedItemProps) {
     e.stopPropagation();
     
     if (loading) return;
+
+    // cache the button element before any await (React may pool the event)
+    const buttonEl = e.currentTarget as HTMLElement | null;
     
     setLoading(true);
     
@@ -83,17 +86,15 @@ export function FeedItemComponent({ item }: FeedItemProps) {
         const result = await toggleLike(likeableType, item.id);
         
         if ('message' in result) {
-          // Like was removed
           setIsLiked(false);
           setLikesCount(prev => Math.max(0, prev - 1));
         } else {
-          // Like was added
           setIsLiked(true);
           setLikesCount(prev => prev + 1);
         }
         
-        // Add heart beat animation
-        const heartElement = e.currentTarget.querySelector('svg');
+        // Add heart beat animation using cached element
+        const heartElement = buttonEl?.querySelector('svg');
         if (heartElement) {
           heartElement.classList.add('animate-heart-beat');
           setTimeout(() => {
