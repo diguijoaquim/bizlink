@@ -111,6 +111,16 @@ export default function Notifications() {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
+  const deleteNotification = async (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    try { await apiFetch(`/notifications/${id}`, { method: 'DELETE' }); } catch {}
+  };
+
+  const clearAll = async () => {
+    setNotifications([]);
+    try { await apiFetch(`/notifications/`, { method: 'DELETE' }); } catch {}
+  };
+
   const filteredNotifications = notifications.filter(notification => {
     if (activeTab === "unread") return !notification.isRead;
     if (activeTab === "activity") return ["like", "follow", "service"].includes(notification.type);
@@ -129,6 +139,9 @@ export default function Notifications() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {notifications.length > 0 && (
+              <Button variant="outline" size="sm" onClick={clearAll}>Eliminar todas</Button>
+            )}
             {unreadCount > 0 && (
               <Button 
                 variant="outline" 
@@ -218,9 +231,12 @@ export default function Notifications() {
                             <Clock className="h-3 w-3" />
                             <span>{notification.time}</span>
                           </div>
-                          {!notification.isRead && (
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 bg-primary rounded-full"></div>
+                            )}
+                            <Button variant="ghost" size="sm" className="text-xs" onClick={(e)=>{ e.stopPropagation(); deleteNotification(notification.id); }}>Eliminar</Button>
+                          </div>
                         </div>
                       </div>
                     </div>
