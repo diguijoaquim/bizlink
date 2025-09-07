@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, X } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,26 @@ import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, 
 import { Progress } from "@/components/ui/progress";
 
  
-
+ 
 export default function Messages() {
+  const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url);
+  const isVideoUrl = (url: string) => /\.(mp4|webm|ogg)(\?|$)/i.test(url);
+  const isAudioUrl = (url: string) => /\.(mp3|wav|ogg)(\?|$)/i.test(url);
+  const getFileKind = (m: ChatMessageItem): 'image'|'video'|'audio'|'file' => {
+    const ct = (m.content_type || '').toLowerCase();
+    if (ct.startsWith('image/')) return 'image';
+    if (ct.startsWith('video/')) return 'video';
+    if (ct.startsWith('audio/')) return 'audio';
+    const t = (m.text || '').toLowerCase();
+    if (t.startsWith('http')) {
+      if (isImageUrl(t)) return 'image';
+      if (isVideoUrl(t)) return 'video';
+      if (isAudioUrl(t)) return 'audio';
+    }
+    return (m.type === 'file') ? 'file' : 'file';
+  };
+  const getDisplayName = (m: ChatMessageItem) => m.filename || (m.text?.split('/')?.pop()?.split('?')[0] || 'Arquivo');
+
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
@@ -532,8 +550,40 @@ export default function Messages() {
                     {message.reply_to_preview && (
                       <div className={`mb-1 px-2 py-1 rounded ${message.isMe ? 'bg-white/20' : 'bg-background/60'} text-xs italic line-clamp-1`}>↪ {message.reply_to_preview}</div>
                     )}
-                    {message.type === 'file' ? (
-                      <a href={message.text} target="_blank" rel="noreferrer" className="underline break-all">{message.filename || 'Arquivo'}</a>
+                    { (message.type === 'file' || message.content_type || message.text.startsWith('http')) ? (
+                      (() => {
+                        const kind = getFileKind(message);
+                        if (kind === 'image') {
+                          return (
+                            <div className="space-y-1">
+                              <img src={message.text} alt={getDisplayName(message)} className="rounded-lg max-w-[70vw] object-contain" />
+                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                            </div>
+                          );
+                        }
+                        if (kind === 'video') {
+                          return (
+                            <div className="space-y-1">
+                              <video src={message.text} controls className="rounded-lg max-w-[70vw]" />
+                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                            </div>
+                          );
+                        }
+                        if (kind === 'audio') {
+                          return (
+                            <div className="space-y-1">
+                              <audio src={message.text} controls className="w-64" />
+                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="space-y-1">
+                            <div className="text-sm break-all underline"><a href={message.text} target="_blank" rel="noreferrer">{getDisplayName(message)}</a></div>
+                            <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                          </div>
+                        );
+                      })()
                     ) : (
                       <p className="text-sm break-words">{message.text}</p>
                     )}
