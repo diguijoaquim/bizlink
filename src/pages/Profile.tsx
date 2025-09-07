@@ -284,7 +284,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 text-center md:text-left mx-auto max-w-[480px] md:max-w-4xl px-4">
+      <div className="space-y-6 text-center md:text-left">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
@@ -382,7 +382,7 @@ export default function Profile() {
 
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
-          <div className="profile-tabs-container mx-auto max-w-[480px] md:max-w-4xl px-0 md:px-0">
+          <div className="">
             <ProfileTabs
               defaultValue="about"
               items={[
@@ -702,7 +702,7 @@ export default function Profile() {
             </ProfileTabs>
           </div>
         ) : user?.user_type === 'freelancer' ? (
-          <div className="profile-tabs-container mx-auto max-w-[480px] md:max-w-4xl px-0 md:px-0">
+          <div className="">
             <ProfileTabs
               defaultValue="about"
               items={[
@@ -857,7 +857,7 @@ export default function Profile() {
             </ProfileTabs>
           </div>
         ) : (user?.user_type === 'simple') ? (
-          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft mx-auto max-w-[480px] md:max-w-4xl">
+          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft mx-auto max-w-2xl md:max-w-4xl">
             <div className="space-y-6 w-full">
               {/* Informações do Usuário Simples */}
               {!isPublicView && (
