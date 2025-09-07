@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getJobs, 
-  type Job 
+  type Job,
+  toggleLike,
+  getLikesInfo
 } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { Button } from '../components/ui/button';
@@ -18,7 +20,8 @@ import {
   Star,
   Plus,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  Heart
 } from 'lucide-react';
 import { useHome } from '../contexts/HomeContext';
 
@@ -28,6 +31,7 @@ export default function Jobs() {
   const [loading, setLoading] = useState(true);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [jobLikes, setJobLikes] = useState<Record<number, { isLiked: boolean; likesCount: number }>>({});
   const { toast } = useToast();
   const navigate = useNavigate();
   const { hasCompany, currentCompany } = useHome();
@@ -45,6 +49,27 @@ export default function Jobs() {
       setLoading(true);
       const jobsData = await getJobs({ status_filter: 'Ativa' });
       setJobs(jobsData);
+      
+      // Load likes for each job
+      const likesPromises = jobsData.map(async (job) => {
+        try {
+          const likeInfo = await getLikesInfo('job', job.id);
+          return { jobId: job.id, likeInfo };
+        } catch (error) {
+          console.error(`Error loading likes for job ${job.id}:`, error);
+          return { jobId: job.id, likeInfo: { is_liked: false, likes_count: 0 } };
+        }
+      });
+      
+      const likesResults = await Promise.all(likesPromises);
+      const likesMap: Record<number, { isLiked: boolean; likesCount: number }> = {};
+      likesResults.forEach(({ jobId, likeInfo }) => {
+        likesMap[jobId] = {
+          isLiked: likeInfo.is_liked,
+          likesCount: likeInfo.likes_count
+        };
+      });
+      setJobLikes(likesMap);
     } catch (error) {
       console.error('Error loading jobs:', error);
       toast({
@@ -54,6 +79,42 @@ export default function Jobs() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLike = async (jobId: number) => {
+    try {
+      const result = await toggleLike('job', jobId);
+      
+      setJobLikes(prev => {
+        const current = prev[jobId] || { isLiked: false, likesCount: 0 };
+        if ('message' in result) {
+          // Like was removed
+          return {
+            ...prev,
+            [jobId]: {
+              isLiked: false,
+              likesCount: Math.max(0, current.likesCount - 1)
+            }
+          };
+        } else {
+          // Like was added
+          return {
+            ...prev,
+            [jobId]: {
+              isLiked: true,
+              likesCount: current.likesCount + 1
+            }
+          };
+        }
+      });
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir esta vaga",
+        variant: "destructive"
+      });
     }
   };
 
@@ -144,8 +205,8 @@ export default function Jobs() {
               </CardContent>
             </Card>
           ) : (
-                         filteredJobs.map((job) => {
-               return (
+            filteredJobs.map((job) => {
+              return (
                  <Card 
                    key={job.id} 
                    className="hover:shadow-md transition-all duration-200 cursor-pointer border border-border shadow-sm bg-card hover:bg-muted/50 overflow-hidden"
@@ -166,15 +227,15 @@ export default function Jobs() {
                      </div>
                    )}
                    
-                   <CardContent className="p-4">
+                  <CardContent className="p-4">
                      <div className="flex gap-3 items-start">
                        {/* Logo da empresa */}
                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
                          <Briefcase className="h-6 w-6 text-primary" />
-                       </div>
+                      </div>
                        
                        {/* Conteúdo principal */}
-                       <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0">
                          <div className="mb-2">
                            <h3 className="text-base font-semibold text-foreground mb-1 truncate">
                              {job.title}
@@ -205,20 +266,32 @@ export default function Jobs() {
                                <Eye className="h-3 w-3" />
                                {job.views || 0}
                              </span>
-                             {job.is_promoted && (
+                             <span 
+                               className={`flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors ${
+                                 jobLikes[job.id]?.isLiked ? 'text-red-500' : 'text-muted-foreground'
+                               }`}
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleLike(job.id);
+                               }}
+                             >
+                               <Heart className={`h-3 w-3 ${jobLikes[job.id]?.isLiked ? 'fill-current' : ''}`} />
+                               {jobLikes[job.id]?.likesCount || 0}
+                             </span>
+                          {job.is_promoted && (
                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
-                                 <Star className="h-3 w-3 mr-1" />
-                                 Promovida
-                               </Badge>
-                             )}
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   </CardContent>
-                 </Card>
-               );
-             })
+                              <Star className="h-3 w-3 mr-1" />
+                              Promovida
+                            </Badge>
+                          )}
+                                  </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

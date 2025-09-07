@@ -2,9 +2,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, User, Briefcase, Heart, Share2, MessageCircle, MapPin, Phone, Mail, Globe, Star, MoreHorizontal, Bookmark, Send } from "lucide-react";
-import { FeedItem, API_BASE_URL } from "@/lib/api";
+import { FeedItem, API_BASE_URL, toggleLike, getLikesInfo } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface FeedItemProps {
   item: FeedItem;
@@ -12,9 +13,11 @@ interface FeedItemProps {
 
 export function FeedItemComponent({ item }: FeedItemProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likesCount, setLikesCount] = useState(item.likes || 0);
+  const [loading, setLoading] = useState(false);
 
   const toAbsolute = (url: string | null) => {
     if (!url) return "/placeholder.svg";
@@ -43,18 +46,70 @@ export function FeedItemComponent({ item }: FeedItemProps) {
     return [];
   };
 
-  const handleLike = (e: React.MouseEvent) => {
+  // Load initial like state
+  useEffect(() => {
+    const loadLikeState = async () => {
+      try {
+        const likeableType = item.type === 'service' ? 'service' : 
+                           item.type === 'job' ? 'job' : 
+                           item.type === 'company' ? 'company' : null;
+        
+        if (likeableType && item.id) {
+          const likeInfo = await getLikesInfo(likeableType, item.id);
+          setIsLiked(likeInfo.is_liked);
+          setLikesCount(likeInfo.likes_count);
+        }
+      } catch (error) {
+        console.error('Error loading like state:', error);
+      }
+    };
+
+    loadLikeState();
+  }, [item.id, item.type]);
+
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsLiked(!isLiked);
-    setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
     
-    // Add heart beat animation
-    const heartElement = e.currentTarget.querySelector('svg');
-    if (heartElement) {
-      heartElement.classList.add('animate-heart-beat');
-      setTimeout(() => {
-        heartElement.classList.remove('animate-heart-beat');
-      }, 600);
+    if (loading) return;
+    
+    setLoading(true);
+    
+    try {
+      const likeableType = item.type === 'service' ? 'service' : 
+                          item.type === 'job' ? 'job' : 
+                          item.type === 'company' ? 'company' : null;
+      
+      if (likeableType && item.id) {
+        const result = await toggleLike(likeableType, item.id);
+        
+        if ('message' in result) {
+          // Like was removed
+          setIsLiked(false);
+          setLikesCount(prev => Math.max(0, prev - 1));
+        } else {
+          // Like was added
+          setIsLiked(true);
+          setLikesCount(prev => prev + 1);
+        }
+        
+        // Add heart beat animation
+        const heartElement = e.currentTarget.querySelector('svg');
+        if (heartElement) {
+          heartElement.classList.add('animate-heart-beat');
+          setTimeout(() => {
+            heartElement.classList.remove('animate-heart-beat');
+          }, 600);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir este item.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,25 +162,25 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 {item.category}
               </Badge>
               <div className="text-lg font-bold text-primary">
-                {item.price ? `${item.price.toLocaleString('pt-PT')} MT` : 'Preço sob consulta'}
+                  {item.price ? `${item.price.toLocaleString('pt-PT')} MT` : 'Preço sob consulta'}
+                </div>
               </div>
-            </div>
-            
+              
             <h3 className="font-semibold text-foreground mb-2 text-lg">
-              {item.title}
-            </h3>
-            
+                {item.title}
+              </h3>
+              
             <p className="text-foreground mb-3 leading-relaxed">
-              {item.description}
-            </p>
-            
-            {formatTags(item.tags).length > 0 && (
+                {item.description}
+              </p>
+              
+              {formatTags(item.tags).length > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {formatTags(item.tags).slice(0, 5).map((tag: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                    <Badge key={index} variant="outline" className="text-xs">
                     #{tag}
-                  </Badge>
-                ))}
+                    </Badge>
+                  ))}
               </div>
             )}
           </div>
@@ -139,17 +194,18 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                 onClick={() => navigate(`/service/${item.id}`)}
               />
-            </div>
-          )}
-
+                </div>
+              )}
+              
           {/* Actions */}
           <div className="flex items-center justify-between p-4 pt-3">
-            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`}
+                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ${loading ? 'opacity-50' : ''}`}
                 onClick={handleLike}
+                disabled={loading}
               >
                 <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
@@ -240,7 +296,13 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
           <div className="flex items-center justify-between p-4 pt-3">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'}`} onClick={handleLike}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ${loading ? 'opacity-50' : ''}`} 
+                onClick={handleLike}
+                disabled={loading}
+              >
                 <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleComment}>
@@ -268,21 +330,21 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <div className="flex items-center gap-3">
               {item.logo_url ? (
                 <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <img
-                    src={toAbsolute(item.logo_url)}
-                    alt={item.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <img
+                  src={toAbsolute(item.logo_url)}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center">
                   <Building2 className="h-5 w-5 text-white" />
-                </div>
-              )}
+              </div>
+            )}
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-semibold text-foreground">{item.name}</h4>
-                  <Badge variant="secondary" className="text-xs">Empresa</Badge>
+                <Badge variant="secondary" className="text-xs">Empresa</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
@@ -292,13 +354,13 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </div>
-
+              </div>
+              
           {/* Content */}
           <div className="px-4 pb-3">
             <p className="text-foreground mb-3 leading-relaxed">
-              {item.description}
-            </p>
+                {item.description}
+              </p>
           </div>
 
           {/* Cover Image */}
@@ -315,25 +377,25 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
           {/* Company Info */}
           <div className="px-4 py-3 space-y-2">
-            {item.address && (
+                {item.address && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                <span>{item.address}, {item.district}, {item.province}</span>
-              </div>
-            )}
-            {item.email && (
+                    <span>{item.address}, {item.district}, {item.province}</span>
+                  </div>
+                )}
+                {item.email && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
-                <span>{item.email}</span>
-              </div>
-            )}
-            {item.website && (
+                    <span>{item.email}</span>
+                  </div>
+                )}
+                {item.website && (
               <div className="flex items-center gap-2 text-sm text-primary">
                 <Globe className="h-4 w-4" />
-                <span className="truncate">{item.website}</span>
+                    <span className="truncate">{item.website}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
           {/* Actions */}
           <div className="flex items-center justify-between p-4 pt-3 border-t border-border">
@@ -341,10 +403,11 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
+                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ${loading ? 'opacity-50' : ''}`}
                 onClick={handleLike}
+                disabled={loading}
               >
-                <Heart className="h-5 w-5" />
+                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               <Button
                 variant="ghost"
@@ -385,20 +448,20 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                {item.profile_photo_url ? (
-                  <img
-                    src={toAbsolute(item.profile_photo_url)}
-                    alt={item.full_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
+              {item.profile_photo_url ? (
+                <img
+                  src={toAbsolute(item.profile_photo_url)}
+                  alt={item.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
                   <User className="h-5 w-5 text-muted-foreground" />
-                )}
-              </div>
+              )}
+            </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-semibold text-foreground">{item.full_name}</h4>
-                  <Badge variant="secondary" className="text-xs">Utilizador</Badge>
+                <Badge variant="secondary" className="text-xs">Utilizador</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
@@ -408,8 +471,8 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </div>
-
+              </div>
+              
           {/* Cover Image */}
           {item.cover_photo_url && (
             <div className="w-full h-48 overflow-hidden">
@@ -440,10 +503,11 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
+                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ${loading ? 'opacity-50' : ''}`}
                 onClick={handleLike}
+                disabled={loading}
               >
-                <Heart className="h-5 w-5" />
+                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               <Button
                 variant="ghost"
@@ -499,24 +563,24 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </div>
-
+              </div>
+              
           {/* Content */}
           <div className="px-4 pb-3">
             <h3 className="font-semibold text-foreground mb-2 text-lg">
-              {item.title}
-            </h3>
-            
+                {item.title}
+              </h3>
+              
             <p className="text-foreground mb-3 leading-relaxed">
-              {item.description}
-            </p>
-            
-            {item.link && (
+                {item.description}
+              </p>
+              
+              {item.link && (
               <div className="flex items-center gap-2 text-sm text-primary mb-3">
                 <Globe className="h-4 w-4" />
-                <span className="truncate">{item.link}</span>
-              </div>
-            )}
+                  <span className="truncate">{item.link}</span>
+                </div>
+              )}
           </div>
 
           {/* Media */}
@@ -536,10 +600,11 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground"
+                className={`h-8 w-8 ${isLiked ? 'text-red-500' : 'text-muted-foreground'} ${loading ? 'opacity-50' : ''}`}
                 onClick={handleLike}
+                disabled={loading}
               >
-                <Heart className="h-5 w-5" />
+                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
               </Button>
               <Button
                 variant="ghost"

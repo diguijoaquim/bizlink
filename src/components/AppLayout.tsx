@@ -171,6 +171,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <AvatarImage 
                       src={profileSrc}
                       alt={user?.full_name || "Perfil"} 
+                      className="border border-indigo-500"
                     />
                     <AvatarFallback className="text-xs">
                       {fallbackInitial}

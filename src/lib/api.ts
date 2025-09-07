@@ -1099,5 +1099,47 @@ export async function resetPasswordWithToken(params: { token: string; newPasswor
   });
 }
 
+// Like system types and functions
+export interface LikeData {
+  likeable_type: 'service' | 'job' | 'company';
+  likeable_id: number;
+}
+
+export interface LikeResponse {
+  likes_count: number;
+  is_liked: boolean;
+}
+
+export interface LikeOut {
+  id: number;
+  user_id: number;
+  likeable_type: string;
+  likeable_id: number;
+  created_at: string;
+}
+
+// Like a service, job, or company
+export async function toggleLike(likeable_type: 'service' | 'job' | 'company', likeable_id: number): Promise<LikeOut | { message: string; liked: boolean }> {
+  const likeData: LikeData = {
+    likeable_type,
+    likeable_id
+  };
+
+  return await apiFetch('/likes/', {
+    method: 'POST',
+    body: JSON.stringify(likeData),
+  });
+}
+
+// Get likes count and user's like status
+export async function getLikesInfo(likeable_type: 'service' | 'job' | 'company', likeable_id: number): Promise<LikeResponse> {
+  return await apiFetch(`/likes/${likeable_type}/${likeable_id}/count`);
+}
+
+// Get user's likes
+export async function getUserLikes(userId: number): Promise<LikeOut[]> {
+  return await apiFetch(`/likes/user/${userId}`);
+}
+
 
 

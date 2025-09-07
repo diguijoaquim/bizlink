@@ -4,10 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { toggleLike, getLikesInfo } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface ServiceCardProps {
   service: {
-    id: string;
+    id: string | number;
     title: string;
     description: string;
     price: string;
@@ -32,6 +35,60 @@ interface ServiceCardProps {
 
 export function ServiceCard({ service, showActions = false, onEdit, onDelete, onPromote }: ServiceCardProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLiked, setIsLiked] = useState(service.isLiked);
+  const [likesCount, setLikesCount] = useState(service.likes);
+  const [loading, setLoading] = useState(false);
+
+  // Load initial like state
+  useEffect(() => {
+    const loadLikeState = async () => {
+      try {
+        if (service.id) {
+          const likeInfo = await getLikesInfo('service', Number(service.id));
+          setIsLiked(likeInfo.is_liked);
+          setLikesCount(likeInfo.likes_count);
+        }
+      } catch (error) {
+        console.error('Error loading like state:', error);
+      }
+    };
+
+    loadLikeState();
+  }, [service.id]);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (loading) return;
+    
+    setLoading(true);
+    
+    try {
+      if (service.id) {
+        const result = await toggleLike('service', Number(service.id));
+        
+        if ('message' in result) {
+          // Like was removed
+          setIsLiked(false);
+          setLikesCount(prev => Math.max(0, prev - 1));
+        } else {
+          // Like was added
+          setIsLiked(true);
+          setLikesCount(prev => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir este serviço.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCardClick = () => {
     navigate(`/services/${service.id}`);
@@ -184,9 +241,12 @@ export function ServiceCard({ service, showActions = false, onEdit, onDelete, on
           </div>
           
           <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-            <span className="flex items-center">
-              <Heart className="h-3 w-3 mr-1" />
-              {service.likes}
+            <span 
+              className={`flex items-center cursor-pointer hover:text-red-500 transition-colors ${isLiked ? 'text-red-500' : ''}`}
+              onClick={handleLike}
+            >
+              <Heart className={`h-3 w-3 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+              {likesCount}
             </span>
           </div>
         </div>
