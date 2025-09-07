@@ -22,35 +22,50 @@ function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }
   const [dur, setDur] = useState(0);
   const [curr, setCurr] = useState(0);
 
+  // Load UMD script if needed, then init WaveSurfer
   useEffect(() => {
-    let ws: any = null;
-    let mounted = true;
+    let destroyed = false;
+    const ensureScript = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const g: any = (globalThis as any);
+        if (g.WaveSurfer) return resolve();
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.min.js';
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('wavesurfer load failed'));
+        document.head.appendChild(s);
+      });
+    };
+
     (async () => {
       try {
-        const mod = await import('https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js');
-        if (!mounted || !containerRef.current) return;
-        ws = mod.default.create({
+        await ensureScript();
+        if (destroyed || !containerRef.current) return;
+        const g: any = (globalThis as any);
+        const ws = g.WaveSurfer.create({
           container: containerRef.current,
-          waveColor: '#9ca3af',
-          progressColor: '#6366f1',
+          waveColor: '#4F4A85',
+          progressColor: '#383351',
           barWidth: 2,
           barGap: 1,
           height: 40,
           url: src,
         });
-        ws.on('ready', () => { setIsReady(true); setDur(ws.getDuration() || 0); });
-        ws.on('audioprocess', () => { setCurr(ws.getCurrentTime() || 0); });
-        ws.on('play', () => setIsPlaying(true));
-        ws.on('pause', () => setIsPlaying(false));
+        ws.on('ready', () => { if (!destroyed) { setIsReady(true); setDur(ws.getDuration() || 0); } });
+        ws.on('audioprocess', () => { if (!destroyed) setCurr(ws.getCurrentTime() || 0); });
+        ws.on('play', () => { if (!destroyed) setIsPlaying(true); });
+        ws.on('pause', () => { if (!destroyed) setIsPlaying(false); });
         wsRef.current = ws;
-      } catch (e) {
-        // Fallback: simple audio tag if CDN fails
-        setIsReady(false);
+      } catch {
+        // leave wsRef null so controls disable
       }
     })();
+
     return () => {
-      mounted = false;
-      try { ws?.destroy(); } catch {}
+      destroyed = true;
+      try { wsRef.current?.destroy(); } catch {}
+      wsRef.current = null;
     };
   }, [src]);
 
@@ -61,8 +76,8 @@ function ChatWavePlayer({ src, lightText }: { src: string; lightText?: boolean }
   };
 
   const fmt = (s: number) => {
-    const mm = Math.floor(s / 60).toString().padStart(2, '0');
-    const ss = Math.floor(s % 60).toString().padStart(2, '0');
+    const mm = Math.floor((s || 0) / 60).toString().padStart(2, '0');
+    const ss = Math.floor((s || 0) % 60).toString().padStart(2, '0');
     return `${mm}:${ss}`;
   };
 
