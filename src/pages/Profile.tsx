@@ -12,6 +12,7 @@ import { useHome } from "@/contexts/HomeContext";
 import { ProfileSkeleton } from "@/components/Skeleton";
 import { getMyJobs, type Job } from "@/lib/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PortfolioItemCard, JobItemCard } from "@/components/profile";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -283,7 +284,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 text-center md:text-left mx-auto max-w-2xl md:max-w-4xl">
+      <div className="space-y-6 text-center md:text-left">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
@@ -566,47 +567,7 @@ export default function Profile() {
                 {portfolioItems.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {portfolioItems.slice(0, 12).map((item) => (
-                      <div key={item.id} className="bg-card rounded-xl p-4 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
-                        <div className="grid grid-cols-[9rem,1fr] gap-3 items-stretch">
-                          <div className="w-full h-full min-h-[6rem] rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                            {item.media_url ? (
-                              <img
-                                src={item.media_url}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center">
-                                <ImageIcon className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
-                                <p className="text-[11px] text-muted-foreground">Sem Imagem</p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-semibold text-foreground truncate" title={item.title}>{item.title}</h4>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 rounded-md hover:bg-muted">
-                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem onClick={() => navigate(`/portfolio/edit/${item.id}`)}>
-                                    <Edit className="h-4 w-4 mr-2" /> Editar
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeletePortfolioItem(item.id)} className="text-red-600 focus:text-red-600">
-                                    <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <PortfolioItemCard key={item.id} item={item} onEdit={(id)=>navigate(`/portfolio/edit/${id}`)} onDelete={handleDeletePortfolioItem} />
                     ))}
                   </div>
                 )}
@@ -722,32 +683,7 @@ export default function Profile() {
                   ) : myJobs.length > 0 ? (
                     <div className="space-y-3">
                       {myJobs.map((job) => (
-                        <div key={job.id} className="bg-card rounded-xl p-4 border border-border">
-                          <div className="grid grid-cols-[6rem,1fr] gap-3 items-stretch">
-                            <div className="w-full h-full min-h-[4rem] rounded-md overflow-hidden bg-muted flex items-center justify-center">
-                              {job.image_url ? (
-                                <img src={job.image_url} alt={job.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="font-semibold text-foreground truncate">{job.title}</h4>
-                                {job.is_promoted && (
-                                  <span className="text-xs text-yellow-700 bg-yellow-100 rounded px-2 py-0.5 flex items-center gap-1">
-                                    <StarIcon className="h-3 w-3" /> Promovida
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3">
-                                {job.location && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>)}
-                                <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{job.views || 0}</span>
-                                <span>{job.created_at ? new Date(job.created_at).toLocaleDateString('pt-PT') : ''}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                        <JobItemCard key={job.id} job={job} />
                       ))}
                     </div>
                   ) : (
