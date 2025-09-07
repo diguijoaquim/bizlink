@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File, Mic, Square, X } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File as FileIcon, Mic, Square, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,7 @@ export default function Messages() {
       if (isPdfUrl(lower)) return { label: 'PDF', icon: <FileText className="h-3.5 w-3.5" /> };
       if (isVideoUrl(lower)) return { label: 'Vídeo' };
       if (isAudioUrl(lower)) return { label: 'Áudio' };
-      return { label: 'Arquivo', icon: <File className="h-3.5 w-3.5" /> };
+      return { label: 'Arquivo', icon: <FileIcon className="h-3.5 w-3.5" /> };
     }
     return { label: v };
   };
@@ -659,7 +659,7 @@ export default function Messages() {
                               {(isPdfUrl(message.text) || (message.content_type||'').toLowerCase()==='application/pdf') ? (
                                 <FileText className="h-4 w-4" />
                               ) : (
-                                <File className="h-4 w-4" />
+                                <FileIcon className="h-4 w-4" />
                               )}
                               <span>{getDisplayName(message)}</span>
                             </div>
