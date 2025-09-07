@@ -84,7 +84,7 @@ export function InfiniteFeed({ initialQuery = '' }: InfiniteFeedProps) {
   return (
     <div className="w-full max-w-2xl mx-auto space-y-4">
       {/* Search Bar */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 border-b border-border">
+      <div className="sticky top-16 z-40 bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 p-4 border-b border-border">
         <div className="relative">
           <input
             type="text"
