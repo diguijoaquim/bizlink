@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon, Briefcase, Eye, Star as StarIcon } from "lucide-react";
+import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon, Briefcase, Eye, Star as StarIcon, MoreVertical } from "lucide-react";
 import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, uploadUserProfilePhoto, uploadUserCoverPhoto, type CompanyPortfolio } from "@/lib/api";
 import { ProfileServiceCard } from "@/components/ProfileServiceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useHome } from "@/contexts/HomeContext";
 import { ProfileSkeleton } from "@/components/Skeleton";
 import { getMyJobs, type Job } from "@/lib/api";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -550,24 +551,48 @@ export default function Profile() {
 
                 {/* Grid de Projetos (apenas capa e título) */}
                 {portfolioItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {portfolioItems.slice(0, 4).map((item) => (
-                      <div key={item.id} className="bg-card rounded-xl p-4 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors group">
-                        <div className="aspect-video bg-gradient-soft rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                          {item.media_url ? (
-                            <img
-                              src={item.media_url}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="text-center">
-                              <ImageIcon className="h-10 w-10 mx-auto mb-1 text-muted-foreground" />
-                              <p className="text-xs text-muted-foreground">Sem Imagem</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {portfolioItems.slice(0, 12).map((item) => (
+                      <div key={item.id} className="bg-card rounded-xl p-4 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="w-36 h-24 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                            {item.media_url ? (
+                              <img
+                                src={item.media_url}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="text-center">
+                                <ImageIcon className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                                <p className="text-[11px] text-muted-foreground">Sem Imagem</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-semibold text-foreground truncate" title={item.title}>{item.title}</h4>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 rounded-md hover:bg-muted">
+                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={() => navigate(`/portfolio/edit/${item.id}`)}>
+                                    <Edit className="h-4 w-4 mr-2" /> Editar
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDeletePortfolioItem(item.id)} className="text-red-600 focus:text-red-600">
+                                    <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                          )}
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{item.description}</p>
+                            )}
+                          </div>
                         </div>
-                        <h4 className="font-semibold text-foreground">{item.title}</h4>
                       </div>
                     ))}
                   </div>
