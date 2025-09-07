@@ -504,6 +504,10 @@ export interface FeedItem {
   // Portfolio fields
   media_url?: string;
   link?: string;
+  // Poster info
+  poster_type?: 'company' | 'user' | 'freelancer' | null;
+  poster_name?: string | null;
+  poster_avatar?: string | null;
 }
 
 export interface FeedResponse {

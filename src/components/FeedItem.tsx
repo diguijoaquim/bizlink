@@ -136,12 +136,18 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-white" />
-              </div>
+              {item.poster_avatar ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img src={toAbsolute(item.poster_avatar)} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <Briefcase className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-foreground">BizLink</h4>
+                  <h4 className="font-semibold text-foreground">{item.poster_name || 'BizLink'}</h4>
                   {item.is_promoted && (
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                   )}
@@ -255,12 +261,18 @@ export function FeedItemComponent({ item }: FeedItemProps) {
         <CardContent className="p-0">
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-white" />
-              </div>
+              {item.poster_avatar ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img src={toAbsolute(item.poster_avatar)} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 flex items-center justify-center">
+                  <Briefcase className="h-5 w-5 text-white" />
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-foreground">Vaga</h4>
+                  <h4 className="font-semibold text-foreground">{item.poster_name || 'Vaga'}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {item.created_at ? new Date(item.created_at).toLocaleDateString('pt-PT') : 'Hoje'}
