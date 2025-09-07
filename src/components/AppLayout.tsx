@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch, getConversations, connectChatWS } from "@/lib/api";
+import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch, getConversations, connectChatWS, connectNotificationsWS } from "@/lib/api";
 import { useHome } from "@/contexts/HomeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -54,21 +54,26 @@ export function AppLayout({ children }: AppLayoutProps) {
         setUnreadCount(unread);
       } catch {}
       try {
-        const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/notifications/ws?token=${encodeURIComponent(token)}`;
-        socket = new WebSocket(wsUrl);
-        socket.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            if (msg?.event === 'notification') {
-              setUnreadCount((c) => c + 1);
-            }
-          } catch {}
-        };
+        socket = connectNotificationsWS();
+        if (socket) {
+          socket.onmessage = (event) => {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg?.event === 'notification') {
+                setUnreadCount((c) => c + 1);
+              } else if (msg?.event === 'chat') {
+                const convId = Number(msg?.data?.conversation_id);
+                if (activeChatIdRef.current !== convId) {
+                  setChatUnread((c) => c + 1);
+                }
+              }
+            } catch {}
+          };
+        }
       } catch {}
     };
     init();
 
-    // listen updates from notifications page
     const handler = (e: any) => {
       if (typeof e?.detail === 'number') setUnreadCount(e.detail);
     };
@@ -80,43 +85,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
   }, [location.pathname]);
 
-  // Realtime chat unread badge (UI-only counter)
+  // Realtime chat unread badge (use unified WS)
   const [chatUnread, setChatUnread] = useState<number>(0);
   const activeChatIdRef = useRef<number | null>(null);
   useEffect(() => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    let sockets: WebSocket[] = [];
-    let cancelled = false;
-
-    const setup = async () => {
-      try {
-        const convs = await getConversations();
-        if (cancelled) return;
-        const limit = Math.min(convs.length, 20); // avoid opening too many sockets
-        for (let i = 0; i < limit; i++) {
-          const cid = convs[i].id;
-          const ws = connectChatWS(cid);
-          if (!ws) continue;
-          ws.onmessage = (ev) => {
-            try {
-              const msg = JSON.parse(ev.data);
-              if (msg?.event === 'message') {
-                const convId = Number(msg?.data?.conversation_id ?? cid);
-                if (activeChatIdRef.current !== convId) {
-                  setChatUnread((c) => c + 1);
-                }
-              }
-            } catch {}
-          };
-          sockets.push(ws);
-        }
-      } catch {}
-    };
-
-    setup();
-
     const onActive = (e: any) => {
       const val = e?.detail;
       activeChatIdRef.current = (val === null || val === undefined) ? null : Number(val);
@@ -124,15 +96,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     const onClear = () => setChatUnread(0);
     window.addEventListener('chat:active', onActive as any);
     window.addEventListener('chat:clear-unread', onClear as any);
-
     return () => {
-      cancelled = true;
-      sockets.forEach((s) => { try { s.close(); } catch {} });
-      sockets = [];
       window.removeEventListener('chat:active', onActive as any);
       window.removeEventListener('chat:clear-unread', onClear as any);
     };
-  }, [location.pathname]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

@@ -1014,6 +1014,14 @@ export function connectChatWS(conversationId: number): WebSocket | null {
   return new WebSocket(url);
 }
 
+// Unified notifications websocket (notifications + chat events)
+export function connectNotificationsWS(): WebSocket | null {
+  const token = getAuthToken();
+  if (!token) return null;
+  const url = `${API_BASE_URL.replace('http', 'ws')}/notifications/ws?token=${encodeURIComponent(token)}`;
+  return new WebSocket(url);
+}
+
 // Utility: current user id from JWT (sub)
 export function getCurrentUserId(): number | null {
   const token = getAuthToken();
