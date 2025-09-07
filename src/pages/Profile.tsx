@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon } from "lucide-react";
+import { Camera, MapPin, Globe, Mail, Phone, Link as LinkIcon, Building2, Star, Plus, Edit, Trash2, ExternalLink, Calendar, Image as ImageIcon, Briefcase, Eye, Star as StarIcon } from "lucide-react";
 import { apiFetch, API_BASE_URL, deleteService, promoteService, getCompanyPortfolio, deletePortfolioItem, uploadUserProfilePhoto, uploadUserCoverPhoto, type CompanyPortfolio } from "@/lib/api";
 import { ProfileServiceCard } from "@/components/ProfileServiceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useHome } from "@/contexts/HomeContext";
 import { ProfileSkeleton } from "@/components/Skeleton";
+import { getMyJobs, type Job } from "@/lib/api";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -140,6 +141,27 @@ export default function Profile() {
       loadPortfolio();
     }
   }, [currentCompany?.id]);
+
+  const [myJobs, setMyJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadJobs = async () => {
+      if (user?.user_type === 'company' && hasCompany) {
+        try {
+          setJobsLoading(true);
+          const jobs = await getMyJobs();
+          setMyJobs(jobs || []);
+        } catch (e) {
+          console.error('Erro ao carregar vagas:', e);
+          setMyJobs([]);
+        } finally {
+          setJobsLoading(false);
+        }
+      }
+    };
+    loadJobs();
+  }, [user?.user_type, hasCompany]);
 
   // Redirecionar para configuração de perfil se necessário
   // Removido redirecionamento automático para configuração de perfil
@@ -351,6 +373,7 @@ export default function Profile() {
                 <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
+                <TabsTrigger value="my-jobs" className="profile-tabs-trigger">Minhas Vagas</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
@@ -644,6 +667,61 @@ export default function Profile() {
                 )}
               </div>
             </TabsContent>
+            <TabsContent value="my-jobs" className="profile-tabs-content">
+                <div className="space-y-4 w-full">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Minhas Vagas</h3>
+                    <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Criar Vaga
+                    </Button>
+                  </div>
+
+                  {jobsLoading && myJobs.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">Carregando vagas...</p>
+                    </div>
+                  ) : myJobs.length > 0 ? (
+                    <div className="space-y-3">
+                      {myJobs.map((job) => (
+                        <div key={job.id} className="bg-card rounded-xl p-4 border border-border">
+                          <div className="flex gap-3">
+                            <div className="w-24 h-16 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                              {job.image_url ? (
+                                <img src={job.image_url} alt={job.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-semibold text-foreground truncate">{job.title}</h4>
+                                {job.is_promoted && (
+                                  <span className="text-xs text-yellow-700 bg-yellow-100 rounded px-2 py-0.5 flex items-center gap-1">
+                                    <StarIcon className="h-3 w-3" /> Promovida
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-1 text-xs text-muted-foreground flex items-center gap-3">
+                                {job.location && (<span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{job.location}</span>)}
+                                <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{job.views || 0}</span>
+                                <span>{job.created_at ? new Date(job.created_at).toLocaleDateString('pt-PT') : ''}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground mb-4">Ainda não tem vagas publicadas</p>
+                      <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                        Publicar Primeira Vaga
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
           </Tabs>
         </div>
         ) : user?.user_type === 'freelancer' ? (
