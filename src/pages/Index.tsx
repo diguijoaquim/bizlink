@@ -5,7 +5,7 @@ export default function Index() {
   return (
     <AppLayout>
       <div className="">
-        <InfiniteFeed />
+        <InfiniteFeed showSearchAsLink />
       </div>
     </AppLayout>
   );
