@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File as FileIcon, Mic, Square, X } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File as FileIcon, Mic, Square, X, Play, Pause } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,76 @@ import { Progress } from "@/components/ui/progress";
 
  
  
+// Lightweight custom audio player for chat bubbles
+function ChatAudioPlayer({ src, lightText }: { src: string; lightText?: boolean }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) {
+      a.play().catch(() => {});
+    } else {
+      a.pause();
+    }
+  };
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onTime = () => setCurrent(a.currentTime || 0);
+    const onLoaded = () => setDuration(a.duration || 0);
+    a.addEventListener('play', onPlay);
+    a.addEventListener('pause', onPause);
+    a.addEventListener('timeupdate', onTime);
+    a.addEventListener('loadedmetadata', onLoaded);
+    return () => {
+      a.removeEventListener('play', onPlay);
+      a.removeEventListener('pause', onPause);
+      a.removeEventListener('timeupdate', onTime);
+      a.removeEventListener('loadedmetadata', onLoaded);
+    };
+  }, [src]);
+
+  const fmt = (s: number) => {
+    const mm = Math.floor(s / 60).toString().padStart(2, '0');
+    const ss = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
+  const onSeek: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const a = audioRef.current;
+    if (!a) return;
+    const v = Number(e.target.value);
+    a.currentTime = v;
+    setCurrent(v);
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full" onClick={togglePlay}>
+        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      </Button>
+      <input
+        type="range"
+        min={0}
+        max={duration || 0}
+        step={1}
+        value={Math.min(current, duration || 0)}
+        onChange={onSeek}
+        className="w-40 h-1 accent-indigo-500"
+      />
+      <span className={`text-xs ${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(current)} / {fmt(duration || 0)}</span>
+    </div>
+  );
+}
+
 export default function Messages() {
   const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url);
   const isVideoUrl = (url: string) => /\.(mp4|webm|ogg)(\?|$)/i.test(url);
@@ -20,14 +90,15 @@ export default function Messages() {
   const isPdfUrl = (url: string) => /\.(pdf)(\?|$)/i.test(url);
   const getFileKind = (m: ChatMessageItem): 'image'|'video'|'audio'|'file' => {
     const ct = (m.content_type || '').toLowerCase();
-    if (ct.startsWith('image/')) return 'image';
-    if (ct.startsWith('video/')) return 'video';
     if (ct.startsWith('audio/')) return 'audio';
+    if (ct.startsWith('video/')) return 'video';
+    if (ct.startsWith('image/')) return 'image';
     const t = (m.text || '').toLowerCase();
     if (t.startsWith('http')) {
-      if (isImageUrl(t)) return 'image';
-      if (isVideoUrl(t)) return 'video';
+      // Prefer audio first for webm/ogg ambiguity
       if (isAudioUrl(t)) return 'audio';
+      if (isVideoUrl(t)) return 'video';
+      if (isImageUrl(t)) return 'image';
     }
     return (m.type === 'file') ? 'file' : 'file';
   };
@@ -41,8 +112,8 @@ export default function Messages() {
     if (lower.startsWith('http')) {
       if (isImageUrl(lower)) return { label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" /> };
       if (isPdfUrl(lower)) return { label: 'PDF', icon: <FileText className="h-3.5 w-3.5" /> };
-      if (isVideoUrl(lower)) return { label: 'Vídeo' };
       if (isAudioUrl(lower)) return { label: 'Áudio' };
+      if (isVideoUrl(lower)) return { label: 'Vídeo' };
       return { label: 'Arquivo', icon: <FileIcon className="h-3.5 w-3.5" /> };
     }
     return { label: v };
@@ -648,7 +719,7 @@ export default function Messages() {
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <audio src={message.text} controls className="w-64" />
+                              <ChatAudioPlayer src={message.text} lightText={message.isMe} />
                               <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                             </div>
                           );
