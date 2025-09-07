@@ -85,12 +85,12 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-4">
+    <div className="w-full max-w-2xl mx-auto space-y-3">
       {/* Search Bar */}
-      <div className="sticky top-16 z-40 px-3 py-2 border-b border-border flex items-center">
+      <div className=" px-4 py-3 border-b border-border">
         {showSearchAsLink ? (
           <div
-            className="relative h-10 rounded-full bg-muted flex items-center w-full cursor-pointer"
+            className="relative h-10 rounded-full bg-muted flex items-center cursor-pointer"
             onClick={() => navigate('/search')}
           >
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,13 +99,13 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
             <span className="pl-9 pr-3 w-full text-sm text-muted-foreground">Buscar serviços, empresas, pessoas...</span>
           </div>
         ) : (
-          <div className="relative flex items-center w-full h-10">
+          <div className="relative">
             <input
               type="text"
               placeholder="Pesquisar no feed..."
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full h-full px-4 py-2 pl-9 pr-3 bg-muted rounded-full border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+              className="w-full px-4 py-2 pl-9 pr-3 bg-muted rounded-full border border-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
               <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
