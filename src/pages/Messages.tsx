@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile } from "@/lib/api";
+import { Progress } from "@/components/ui/progress";
 
  
 
@@ -31,6 +32,8 @@ export default function Messages() {
   const [recUsers, setRecUsers] = useState<User[]>([]);
   const [recCompanies, setRecCompanies] = useState<Company[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isPeerTyping, setIsPeerTyping] = useState(false);
+  const typingTimeoutRef = useRef<number | null>(null as any);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -172,12 +175,9 @@ export default function Messages() {
     setSelectedChat(String(chatId));
     window.dispatchEvent(new CustomEvent('chat:active', { detail: chatId }));
     window.dispatchEvent(new Event('chat:clear-unread'));
-    // mark as read backend
     try { await markConversationRead(chatId); } catch {}
-    // update local unread count to 0
     setChats(prev => prev.map(c => c.id === chatId ? { ...c, unread_count: 0, last_message_is_unread: false } : c));
     setChatMessages(await getMessages(chatId));
-    // connect websocket
     try { ws?.close(); } catch {}
     const socket = connectChatWS(chatId);
     if (socket) {
@@ -189,14 +189,43 @@ export default function Messages() {
             const myId = getCurrentUserId();
             const isMine = myId !== null && Number(m.sender_id) === Number(myId);
             if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
-              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
+              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false, type: m.type, filename: m.filename, content_type: m.content_type }]);
               window.dispatchEvent(new Event('chat:clear-unread'));
             }
+          } else if (msg?.event === 'typing') {
+            setIsPeerTyping(true);
+            if (typingTimeoutRef.current) window.clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = window.setTimeout(() => setIsPeerTyping(false), 1500);
           }
         } catch {}
       };
       socket.onclose = () => { setWs(null); };
       setWs(socket);
+    }
+  };
+
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const sendTyping = () => {
+    try { ws?.send(JSON.stringify({ event: 'typing' })); } catch {}
+  };
+
+  const handleFilePick = () => fileInputRef.current?.click();
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    if (!selectedChat) return;
+    const cid = parseInt(selectedChat, 10);
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploading(true);
+    try {
+      const res = await sendMessageFile(cid, f);
+      setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename: f.name, content_type: f.type }]);
+    } catch (err) {
+      console.error('file send failed', err);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -206,10 +235,8 @@ export default function Messages() {
     try {
       const text = newMessage.trim();
       setNewMessage("");
-      // optimistic own message primeiro
-      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true }]);
+      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true, type: 'text' }]);
       await sendMessage(cid, text);
-      // Atualizar o preview da última mensagem na lista de conversas
       setChats(prev => prev.map(c => c.id === cid ? { ...c, last_message: text, last_time: new Date().toISOString() } : c));
     } catch (e) {
       console.error('send failed', e);
@@ -458,7 +485,7 @@ export default function Messages() {
                     <h3 className="font-medium text-foreground truncate">{selectedChatData.peer.full_name || selectedChatData.peer.email}</h3>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Conversa
+                    {isPeerTyping ? 'Digitando…' : 'Conversa'}
                   </p>
                 </div>
               </div>
@@ -491,42 +518,34 @@ export default function Messages() {
                 </div>
               ) : (
                 chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                      message.isMe
-                        ? "bg-gradient-primary text-white"
-                        : "bg-muted text-foreground"
-                    }`}
-                  >
-                    <p className="text-sm">{message.text}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        message.isMe ? "text-white/70" : "text-muted-foreground"
-                      }`}
-                    >
+                <div key={message.id} className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
+                    {message.type === 'file' ? (
+                      <a href={message.text} target="_blank" rel="noreferrer" className="underline break-all">{message.filename || 'Arquivo'}</a>
+                    ) : (
+                      <p className="text-sm">{message.text}</p>
+                    )}
+                    <p className={`text-xs mt-1 ${message.isMe ? "text-white/70" : "text-muted-foreground"}`}>
                       {new Date(message.time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}
                     </p>
                   </div>
                 </div>
-              )))
-              }
+                ))}
+              )}
             </div>
 
             {/* Message Input */}
             <div className="fixed bottom-0 left-0 right-0 z-20 bg-card p-4 border-t border-border" style={{ position: 'fixed', bottom: 0 }}>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={handleFilePick} disabled={uploading}>
                   <Paperclip className="h-4 w-4" />
                 </Button>
+                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
                 <div className="flex-1 relative">
                   <Input
                     placeholder="Escreva uma mensagem..."
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => { setNewMessage(e.target.value); sendTyping(); }}
                     className="pr-10"
                   />
                   <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">

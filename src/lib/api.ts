@@ -977,9 +977,12 @@ export type ConversationListItem = {
 
 export type ChatMessageItem = {
   id: number;
-  text: string;
+  text: string; // if file message, contains URL
   time: string;
   isMe: boolean;
+  type?: 'text' | 'file';
+  filename?: string;
+  content_type?: string;
 };
 
 export async function getConversations(): Promise<ConversationListItem[]> {
@@ -998,6 +1001,12 @@ export async function getMessages(conversationId: number): Promise<ChatMessageIt
 export async function sendMessage(conversationId: number, text: string): Promise<{ id: number }> {
   const params = new URLSearchParams({ text });
   return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
+}
+
+export async function sendMessageFile(conversationId: number, file: File): Promise<{ id: number; url: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  return apiFetch(`/chat/conversations/${conversationId}/send-file`, { method: 'POST', body: form });
 }
 
 export async function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {
