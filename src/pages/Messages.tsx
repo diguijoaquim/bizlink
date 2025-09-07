@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ export default function Messages() {
   const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url);
   const isVideoUrl = (url: string) => /\.(mp4|webm|ogg)(\?|$)/i.test(url);
   const isAudioUrl = (url: string) => /\.(mp3|wav|ogg)(\?|$)/i.test(url);
+  const isPdfUrl = (url: string) => /\.(pdf)(\?|$)/i.test(url);
   const getFileKind = (m: ChatMessageItem): 'image'|'video'|'audio'|'file' => {
     const ct = (m.content_type || '').toLowerCase();
     if (ct.startsWith('image/')) return 'image';
@@ -31,6 +32,21 @@ export default function Messages() {
     return (m.type === 'file') ? 'file' : 'file';
   };
   const getDisplayName = (m: ChatMessageItem) => m.filename || (m.text?.split('/')?.pop()?.split('?')[0] || 'Arquivo');
+
+  // Format last message for chat list preview
+  const formatLastMessagePreview = (value?: string): { label: string; icon?: JSX.Element } => {
+    const v = (value || '').trim();
+    if (!v) return { label: '' };
+    const lower = v.toLowerCase();
+    if (lower.startsWith('http')) {
+      if (isImageUrl(lower)) return { label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+      if (isPdfUrl(lower)) return { label: 'PDF', icon: <FileText className="h-3.5 w-3.5" /> };
+      if (isVideoUrl(lower)) return { label: 'Vídeo' };
+      if (isAudioUrl(lower)) return { label: 'Áudio' };
+      return { label: 'Arquivo', icon: <File className="h-3.5 w-3.5" /> };
+    }
+    return { label: v };
+  };
 
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -386,9 +402,15 @@ export default function Messages() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm truncate flex-1 ${chat.last_message_is_unread ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-                        {chat.last_message}
-                      </p>
+                      {(() => {
+                        const p = formatLastMessagePreview(chat.last_message);
+                        return (
+                          <p className={`text-sm truncate flex-1 ${chat.last_message_is_unread ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                            {p.icon && <span className="inline-flex items-center mr-1 align-middle">{p.icon}</span>}
+                            {p.label}
+                          </p>
+                        );
+                      })()}
                       {chat.unread_count && chat.unread_count > 0 && (
                         <span className="ml-2 inline-flex min-w-[18px] h-5 px-1 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
                           {chat.unread_count > 9 ? '9+' : chat.unread_count}
