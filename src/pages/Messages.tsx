@@ -777,9 +777,20 @@ export default function Messages() {
                     className="pr-10"
                     disabled={isRecording}
                   />
-                  <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+                  <Button ref={emojiButtonRef} onClick={(e)=>{ e.stopPropagation(); setShowEmoji(v=>!v); }} variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
                     <Smile className="h-4 w-4" />
                   </Button>
+                  {showEmoji && (
+                    <div ref={emojiPickerRef} className="absolute right-0 bottom-10 z-50 bg-card border border-border rounded-lg p-2 shadow-md w-56">
+                      <div className="grid grid-cols-8 gap-2">
+                        {EMOJI_LIST.map((em) => (
+                          <button key={em.name} onClick={(e)=>{ e.preventDefault(); e.stopPropagation(); pickEmoji(em); }} className="h-7 w-7" title={em.name}>
+                            <img src={`https://emojiapi.dev/api/v1/${em.name}.svg`} alt={em.name} className="h-7 w-7" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <Button onClick={handleSend} className="bg-gradient-primary text-white border-0 hover:opacity-90" disabled={isRecording}>
                   <Send className="h-4 w-4" />
