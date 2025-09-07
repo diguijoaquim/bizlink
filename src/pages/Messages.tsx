@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File } from "lucide-react";
+import { Search, Phone, Video, MoreVertical, Send, Paperclip, Smile, ArrowLeft, SquarePen, Download, Image as ImageIcon, FileText, File, Mic, Square } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import { Progress } from "@/components/ui/progress";
 export default function Messages() {
   const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url);
   const isVideoUrl = (url: string) => /\.(mp4|webm|ogg)(\?|$)/i.test(url);
-  const isAudioUrl = (url: string) => /\.(mp3|wav|ogg)(\?|$)/i.test(url);
+  const isAudioUrl = (url: string) => /\.(mp3|wav|ogg|webm)(\?|$)/i.test(url);
   const isPdfUrl = (url: string) => /\.(pdf)(\?|$)/i.test(url);
   const getFileKind = (m: ChatMessageItem): 'image'|'video'|'audio'|'file' => {
     const ct = (m.content_type || '').toLowerCase();
@@ -68,7 +68,13 @@ export default function Messages() {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const typingTimeoutRef = useRef<number | null>(null as any);
-  const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
+
+  // Audio recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordMs, setRecordMs] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const recordTimerRef = useRef<number | null>(null as any);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -263,6 +269,51 @@ export default function Messages() {
       setUploading(false);
       e.target.value = '';
     }
+  };
+
+  // Audio recording handlers
+  const startRecording = async () => {
+    if (!selectedChat || isRecording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : undefined;
+      const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        try {
+          const blob = new Blob(chunksRef.current, { type: rec.mimeType || 'audio/webm' });
+          const filename = `audio_${Date.now()}.webm`;
+          const file = new File([blob], filename, { type: blob.type });
+          const cid = parseInt(selectedChat!, 10);
+          setUploading(true);
+          const res = await sendMessageFile(cid, file, { reply_to_id: replyTo?.id ?? undefined });
+          setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename, content_type: blob.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+          clearReply();
+        } catch (e) {
+          console.error('audio upload failed', e);
+        } finally {
+          setUploading(false);
+        }
+      };
+      rec.start(100);
+      recorderRef.current = rec;
+      setIsRecording(true);
+      setRecordMs(0);
+      if (recordTimerRef.current) window.clearInterval(recordTimerRef.current);
+      recordTimerRef.current = window.setInterval(() => setRecordMs((ms) => ms + 100), 100);
+    } catch (e) {
+      console.error('mic permission or recorder error', e);
+    }
+  };
+
+  const stopRecording = () => {
+    try {
+      recorderRef.current?.stop();
+      recorderRef.current?.stream.getTracks().forEach(t => t.stop());
+    } catch {}
+    setIsRecording(false);
+    if (recordTimerRef.current) window.clearInterval(recordTimerRef.current);
   };
 
   const handleSend = async () => {
@@ -633,23 +684,36 @@ export default function Messages() {
                   <Button size="icon" variant="ghost" onClick={clearReply}><X className="h-4 w-4" /></Button>
                 </div>
               )}
+              {isRecording && (
+                <div className="mb-2 px-3 py-2 rounded border bg-muted text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    Gravando áudio… {Math.floor(recordMs/1000)}s
+                  </div>
+                  <Button size="icon" variant="destructive" onClick={stopRecording}><Square className="h-4 w-4" /></Button>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" onClick={handleFilePick} disabled={uploading}>
+                <Button variant="ghost" size="icon" onClick={handleFilePick} disabled={uploading || isRecording}>
                   <Paperclip className="h-4 w-4" />
                 </Button>
                 <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+                <Button variant={isRecording?"destructive":"ghost"} size="icon" onClick={isRecording ? stopRecording : startRecording} disabled={uploading}>
+                  {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 <div className="flex-1 relative">
                   <Input
                     placeholder="Escreva uma mensagem..."
                     value={newMessage}
                     onChange={(e) => { setNewMessage(e.target.value); sendTyping(); }}
                     className="pr-10"
+                    disabled={isRecording}
                   />
                   <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
                     <Smile className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button onClick={handleSend} className="bg-gradient-primary text-white border-0 hover:opacity-90">
+                <Button onClick={handleSend} className="bg-gradient-primary text-white border-0 hover:opacity-90" disabled={isRecording}>
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
