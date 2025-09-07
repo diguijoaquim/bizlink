@@ -601,7 +601,14 @@ export default function Messages() {
                         }
                         return (
                           <div className="space-y-1">
-                            <div className="text-sm break-all underline"><a href={message.text} target="_blank" rel="noreferrer">{getDisplayName(message)}</a></div>
+                            <div className="flex items-center gap-2 text-sm break-all">
+                              {(isPdfUrl(message.text) || (message.content_type||'').toLowerCase()==='application/pdf') ? (
+                                <FileText className="h-4 w-4" />
+                              ) : (
+                                <File className="h-4 w-4" />
+                              )}
+                              <span>{getDisplayName(message)}</span>
+                            </div>
                             <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                           </div>
                         );
