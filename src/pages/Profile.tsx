@@ -284,7 +284,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 text-center md:text-left">
+      <div className="space-y-6 text-center md:text-left px-4">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
