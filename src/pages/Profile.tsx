@@ -284,7 +284,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 text-center md:text-left">
+      <div className="space-y-6 text-center md:text-left mx-auto max-w-2xl md:max-w-4xl">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
@@ -382,7 +382,7 @@ export default function Profile() {
 
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
-          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl bg-red-600">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
             <ProfileTabs
               defaultValue="about"
               items={[
