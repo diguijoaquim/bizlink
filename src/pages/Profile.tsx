@@ -283,7 +283,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 text-center md:text-left mx-auto max-w-2xl md:max-w-none md:mx-0">
+      <div className="space-y-6 text-center md:text-left mx-auto max-w-2xl md:max-w-4xl">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
@@ -381,16 +381,16 @@ export default function Profile() {
 
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
-          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-none md:mx-0">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1 justify-items-center mx-auto w-full max-w-sm md:max-w-none">
+              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1 justify-items-center justify-center mx-auto w-full max-w-sm md:max-w-none">
                 <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
                 <TabsTrigger value="my-jobs" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Minhas Vagas</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
-                <div className="space-y-6 w-full">
+                <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                 {/* Descrição da Empresa */}
                 {firstCompany?.description && (
                   <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
@@ -542,7 +542,7 @@ export default function Profile() {
               </div>
             </TabsContent>
             <TabsContent value="portfolio" className="profile-tabs-content">
-              <div className="space-y-6 w-full">
+              <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                 {/* Cabeçalho do Portfolio */}
                 <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
                   <h3 className="text-lg font-semibold text-foreground">Portfólios</h3>
@@ -657,7 +657,7 @@ export default function Profile() {
               </div>
             </TabsContent>
             <TabsContent value="my-services" className="profile-tabs-content">
-              <div className="space-y-4 w-full">
+              <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Meus Serviços</h3>
                   <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
@@ -706,7 +706,7 @@ export default function Profile() {
               </div>
             </TabsContent>
             <TabsContent value="my-jobs" className="profile-tabs-content">
-                <div className="space-y-4 w-full">
+                <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Minhas Vagas</h3>
                     <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
@@ -763,15 +763,15 @@ export default function Profile() {
           </Tabs>
         </div>
         ) : user?.user_type === 'freelancer' ? (
-          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-none md:mx-0">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1 justify-items-center mx-auto w-full max-w-xs md:max-w-none">
+              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1 justify-items-center justify-center mx-auto w-full max-w-xs md:max-w-none">
                 <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
-                <div className="space-y-6 w-full">
+                <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                   {/* Descrição do Freelancer */}
                   {user?.bio && (
                     <div className="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
@@ -853,7 +853,7 @@ export default function Profile() {
                 </div>
               </TabsContent>
               <TabsContent value="portfolio" className="profile-tabs-content">
-                <div className="text-center py-12">
+                <div className="text-center py-12 mx-auto max-w-2xl md:max-w-4xl">
                   <ImageIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                   <h3 className="text-lg font-medium text-foreground mb-2">
                     Portfolio em desenvolvimento
@@ -864,7 +864,7 @@ export default function Profile() {
                 </div>
               </TabsContent>
               <TabsContent value="my-services" className="profile-tabs-content">
-                <div className="space-y-4 w-full">
+                <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Meus Serviços</h3>
                     <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
@@ -915,7 +915,7 @@ export default function Profile() {
             </Tabs>
           </div>
         ) : (user?.user_type === 'simple') ? (
-          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft mx-auto max-w-2xl md:max-w-4xl">
             <div className="space-y-6 w-full">
               {/* Informações do Usuário Simples */}
               {!isPublicView && (
@@ -1043,7 +1043,7 @@ export default function Profile() {
             </div>
           </div>
         ) : (!isPublicView ? (
-          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft">
+          <div className="bg-card rounded-xl p-6 bizlink-shadow-soft mx-auto max-w-2xl md:max-w-4xl">
             <p className="text-muted-foreground">Configure seu perfil para começar a usar o BizLink.</p>
           </div>
         ) : null)}
