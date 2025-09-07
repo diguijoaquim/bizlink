@@ -245,7 +245,7 @@ export function ServiceCard({ service, showActions = false, onEdit, onDelete, on
               className={`flex items-center cursor-pointer hover:text-red-500 transition-colors ${isLiked ? 'text-red-500' : ''}`}
               onClick={handleLike}
             >
-              <Heart className={`h-3 w-3 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+              <Heart className={`h-3 w-3 mr-1`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               {likesCount}
             </span>
           </div>

@@ -275,7 +275,7 @@ export default function Jobs() {
                                  handleLike(job.id);
                                }}
                              >
-                               <Heart className={`h-3 w-3 ${jobLikes[job.id]?.isLiked ? 'fill-current' : ''}`} />
+                               <Heart className={`h-3 w-3`} fill={jobLikes[job.id]?.isLiked ? 'currentColor' : 'none'} strokeWidth={jobLikes[job.id]?.isLiked ? 0 : 2} />
                                {jobLikes[job.id]?.likesCount || 0}
                              </span>
                           {job.is_promoted && (

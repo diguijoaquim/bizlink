@@ -208,7 +208,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 onClick={handleLike}
                 disabled={loading}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               </Button>
               <Button
                 variant="ghost"
@@ -304,7 +304,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 onClick={handleLike}
                 disabled={loading}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleComment}>
                 <MessageCircle className="h-5 w-5" />
@@ -408,7 +408,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 onClick={handleLike}
                 disabled={loading}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               </Button>
               <Button
                 variant="ghost"
@@ -508,7 +508,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 onClick={handleLike}
                 disabled={loading}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               </Button>
               <Button
                 variant="ghost"
@@ -605,7 +605,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 onClick={handleLike}
                 disabled={loading}
               >
-                <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5`} fill={isLiked ? 'currentColor' : 'none'} strokeWidth={isLiked ? 0 : 2} />
               </Button>
               <Button
                 variant="ghost"
