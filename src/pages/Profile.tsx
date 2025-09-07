@@ -554,8 +554,8 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {portfolioItems.slice(0, 12).map((item) => (
                       <div key={item.id} className="bg-card rounded-xl p-4 bizlink-shadow-soft border border-border hover:border-primary/20 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <div className="w-36 h-24 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                        <div className="grid grid-cols-[9rem,1fr] gap-3 items-stretch">
+                          <div className="w-full h-full min-h-[6rem] rounded-md overflow-hidden bg-muted flex items-center justify-center">
                             {item.media_url ? (
                               <img
                                 src={item.media_url}
@@ -710,8 +710,8 @@ export default function Profile() {
                     <div className="space-y-3">
                       {myJobs.map((job) => (
                         <div key={job.id} className="bg-card rounded-xl p-4 border border-border">
-                          <div className="flex gap-3">
-                            <div className="w-24 h-16 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+                          <div className="grid grid-cols-[6rem,1fr] gap-3 items-stretch">
+                            <div className="w-full h-full min-h-[4rem] rounded-md overflow-hidden bg-muted flex items-center justify-center">
                               {job.image_url ? (
                                 <img src={job.image_url} alt={job.title} className="w-full h-full object-cover" />
                               ) : (
