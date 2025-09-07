@@ -46,6 +46,12 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  // Notify app layout about unread changes
+  useEffect(() => {
+    const evt = new CustomEvent('notifications:unread', { detail: unreadCount });
+    window.dispatchEvent(evt);
+  }, [unreadCount]);
+
   // Load from API
   useEffect(() => {
     (async () => {

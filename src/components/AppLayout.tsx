@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Home, Search, MessageCircle, Bell, Menu, X, Briefcase, Image, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { getAuthToken, clearAuthToken, API_BASE_URL } from "@/lib/api";
+import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch } from "@/lib/api";
 import { useHome } from "@/contexts/HomeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -39,6 +39,46 @@ export function AppLayout({ children }: AppLayoutProps) {
     return base ? base.charAt(0).toUpperCase() : "U";
   })();
 
+  // Realtime notifications badge
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  useEffect(() => {
+    let socket: WebSocket | null = null;
+    const init = async () => {
+      const token = getAuthToken();
+      if (!token) return;
+      try {
+        // initial unread count
+        const data = await apiFetch('/notifications/?limit=50');
+        const unread = (data as any[]).filter(n => !n.isRead).length;
+        setUnreadCount(unread);
+      } catch {}
+      try {
+        const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/notifications/ws?token=${encodeURIComponent(token)}`;
+        socket = new WebSocket(wsUrl);
+        socket.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg?.event === 'notification') {
+              setUnreadCount((c) => c + 1);
+            }
+          } catch {}
+        };
+      } catch {}
+    };
+    init();
+
+    // listen updates from notifications page
+    const handler = (e: any) => {
+      if (typeof e?.detail === 'number') setUnreadCount(e.detail);
+    };
+    window.addEventListener('notifications:unread', handler as any);
+
+    return () => {
+      try { socket?.close(); } catch {}
+      window.removeEventListener('notifications:unread', handler as any);
+    };
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Header */}
@@ -49,7 +89,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               <img src={bizlinkLogo} alt="BizLink" className="h-10 w-10" />
               <h1 className="text-xl font-bold gradient-text">BizLink</h1>
             </div>
-            
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
               {navigation.map((item) => (
@@ -65,7 +104,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                     )
                   }
                 >
-                  <item.icon className="h-5 w-5" />
+                  <div className="relative">
+                    {item.name === "Notificações" && unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 inline-block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                    )}
+                    <item.icon className="h-5 w-5" />
+                  </div>
                   <span className="text-sm font-medium">{item.name}</span>
                 </NavLink>
               ))}
@@ -84,7 +128,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Button>
               )}
             </nav>
-
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
@@ -164,18 +207,23 @@ export function AppLayout({ children }: AppLayoutProps) {
                   )
                 }
               >
-                {item.name === "Perfil" ? (
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage 
-                      src={profileSrc}
-                      alt={user?.full_name || "Perfil"} 
-                      className="border border-indigo-500"
-                    />
-                    <AvatarFallback className="text-[10px]">{fallbackInitial}</AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <item.icon className="h-5 w-5" />
-                )}
+                <div className="relative">
+                  {item.name === "Notificações" && unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                  {item.name === "Perfil" ? (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage 
+                        src={profileSrc}
+                        alt={user?.full_name || "Perfil"} 
+                        className="border border-indigo-500"
+                      />
+                      <AvatarFallback className="text-[10px]">{fallbackInitial}</AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <item.icon className="h-5 w-5" />
+                  )}
+                </div>
                 <span className="text-[10px] leading-none">{item.name}</span>
               </NavLink>
             ))}
