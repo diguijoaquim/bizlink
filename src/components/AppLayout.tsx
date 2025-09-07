@@ -41,6 +41,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   // Realtime notifications badge
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const formatBadgeCount = (count: number) => (count > 9 ? "9+" : String(count));
   useEffect(() => {
     let socket: WebSocket | null = null;
     const init = async () => {
@@ -106,7 +107,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                 >
                   <div className="relative">
                     {item.name === "Notificações" && unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 inline-block w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+                      <span className="absolute -top-2 -right-3 inline-flex min-w-[18px] h-4 px-1 items-center justify-center bg-red-500 text-white rounded-full text-[10px] leading-none">
+                        {formatBadgeCount(unreadCount)}
+                      </span>
                     )}
                     <item.icon className="h-5 w-5" />
                   </div>
@@ -209,7 +212,9 @@ export function AppLayout({ children }: AppLayoutProps) {
               >
                 <div className="relative">
                   {item.name === "Notificações" && unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                    <span className="absolute -top-1.5 -right-2 inline-flex min-w-[16px] h-3.5 px-[3px] items-center justify-center bg-red-500 text-white rounded-full text-[9px] leading-none">
+                      {formatBadgeCount(unreadCount)}
+                    </span>
                   )}
                   {item.name === "Perfil" ? (
                     <Avatar className="h-6 w-6">
