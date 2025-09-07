@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { getAuthToken, clearAuthToken, API_BASE_URL, apiFetch, getConversations, connectChatWS, connectNotificationsWS } from "@/lib/api";
+import { getAuthToken, clearAuthToken, apiFetch, connectNotificationsWS, API_BASE_URL } from "@/lib/api";
 import { useHome } from "@/contexts/HomeContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -41,7 +41,10 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   // Realtime notifications badge
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [chatUnread, setChatUnread] = useState<number>(0);
+  const activeChatIdRef = useRef<number | null>(null);
   const formatBadgeCount = (count: number) => (count > 9 ? "9+" : String(count));
+
   useEffect(() => {
     let socket: WebSocket | null = null;
     const init = async () => {
@@ -60,11 +63,15 @@ export function AppLayout({ children }: AppLayoutProps) {
             try {
               const msg = JSON.parse(event.data);
               if (msg?.event === 'notification') {
-                setUnreadCount((c) => c + 1);
-              } else if (msg?.event === 'chat') {
-                const convId = Number(msg?.data?.conversation_id);
-                if (activeChatIdRef.current !== convId) {
-                  setChatUnread((c) => c + 1);
+                // If it's a chat notification, update chat badge; otherwise notifications badge
+                const data = msg?.data;
+                if (data?.type === 'chat') {
+                  const convId = Number(data?.conversation_id);
+                  if (activeChatIdRef.current !== convId) {
+                    setChatUnread((c) => c + 1);
+                  }
+                } else {
+                  setUnreadCount((c) => c + 1);
                 }
               }
             } catch {}
@@ -85,9 +92,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
   }, [location.pathname]);
 
-  // Realtime chat unread badge (use unified WS)
-  const [chatUnread, setChatUnread] = useState<number>(0);
-  const activeChatIdRef = useRef<number | null>(null);
   useEffect(() => {
     const onActive = (e: any) => {
       const val = e?.detail;

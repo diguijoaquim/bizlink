@@ -172,6 +172,7 @@ export default function Messages() {
     setSelectedChat(String(chatId));
     // Inform layout which chat is active (to avoid counting as unread)
     window.dispatchEvent(new CustomEvent('chat:active', { detail: chatId }));
+    window.dispatchEvent(new Event('chat:clear-unread'));
     setChatMessages(await getMessages(chatId));
     // connect websocket
     try { ws?.close(); } catch {}
@@ -247,6 +248,11 @@ export default function Messages() {
       // leaving page clears active chat id
       window.dispatchEvent(new CustomEvent('chat:active', { detail: null }));
     };
+  }, []);
+
+  useEffect(() => {
+    // entering messages page clears global chat badge
+    window.dispatchEvent(new Event('chat:clear-unread'));
   }, []);
 
   const content = (
