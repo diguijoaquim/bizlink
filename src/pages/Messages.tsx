@@ -134,8 +134,47 @@ export default function Messages() {
   const [isPeerTyping, setIsPeerTyping] = useState(false);
   const typingTimeoutRef = useRef<number | null>(null as any);
 
-  // State for reply-to message
-  const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
+  // Emoji picker state
+  const [showEmoji, setShowEmoji] = useState(false);
+  const emojiButtonRef = useRef<HTMLButtonElement | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement | null>(null);
+  const EMOJI_LIST: { name: string; char: string }[] = [
+    { name: 'smile', char: '😄' },
+    { name: 'heart_eyes', char: '😍' },
+    { name: 'thumbs_up', char: '👍' },
+    { name: 'clap', char: '👏' },
+    { name: 'fire', char: '🔥' },
+    { name: 'party_popper', char: '🎉' },
+    { name: 'cry', char: '😢' },
+    { name: 'angry', char: '😠' },
+    { name: 'heart', char: '❤️' },
+    { name: 'ok_hand', char: '👌' },
+    { name: 'raised_hands', char: '🙌' },
+    { name: 'rocket', char: '🚀' },
+    { name: 'microphone', char: '🎤' },
+    { name: 'camera', char: '📷' },
+    { name: 'paperclip', char: '📎' },
+  ];
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!showEmoji) return;
+      const target = e.target as Node;
+      if (
+        emojiPickerRef.current && !emojiPickerRef.current.contains(target) &&
+        emojiButtonRef.current && !emojiButtonRef.current.contains(target)
+      ) {
+        setShowEmoji(false);
+      }
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [showEmoji]);
+
+  const pickEmoji = (em: { name: string; char: string }) => {
+    setNewMessage((prev) => (prev || '') + em.char);
+    setShowEmoji(false);
+  };
 
   // Audio recording state
   const [isRecording, setIsRecording] = useState(false);
@@ -143,6 +182,9 @@ export default function Messages() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const recordTimerRef = useRef<number | null>(null as any);
+
+  // State for reply-to message
+  const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
