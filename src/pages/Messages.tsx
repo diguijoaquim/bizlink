@@ -48,7 +48,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
           progressColor: '#383351',
           barWidth: 2,
           barGap: 1,
-          height: 36,
+          height: 26,
           url: src,
         });
         ws.on('ready', () => { if (!destroyed) { setDur(ws.getDuration() || 0); } });
@@ -83,24 +83,24 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
   const pct = dur > 0 ? (curr / dur) * 100 : 0;
 
   return (
-    <div className={`rounded-2xl ${lightText ? 'bg-white/15' : 'bg-muted'} p-3 w-[260px] max-w-full`}> 
-      <div className="flex items-center gap-3">
-        <Button variant="secondary" size="icon" className="h-9 w-9 rounded-full" onClick={toggle} disabled={!wsRef.current}>
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+    <div className={`rounded-xl ${lightText ? 'bg-white/15' : 'bg-muted'} p-2 w-[200px] max-w-full`}> 
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="icon" className="h-7 w-7 rounded-full" onClick={toggle} disabled={!wsRef.current}>
+          {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </Button>
         <div className="relative flex-1">
-          <div ref={containerRef} className="w-full" />
-          <span className="absolute -top-1.5" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
-            <span className="inline-block h-2.5 w-2.5 bg-sky-500 rounded-full" />
+          <div ref={containerRef} className="w-32" />
+          <span className="absolute -top-1" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
+            <span className="inline-block h-1.5 w-1.5 bg-sky-500 rounded-full" />
           </span>
         </div>
         {avatarUrl && (
-          <img src={avatarUrl} className="h-9 w-9 rounded-full object-cover" />
+          <img src={avatarUrl} className="h-8 w-8 rounded-full object-cover" />
         )}
       </div>
-      <div className="mt-2 flex items-center justify-between text-xs">
+      <div className="mt-1 flex items-center justify-between text-[10px]">
         <span className={`${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(curr)}</span>
-        <Mic className={`${lightText ? 'text-white/80' : 'text-muted-foreground'} h-3.5 w-3.5`} />
+        <Mic className={`${lightText ? 'text-white/80' : 'text-muted-foreground'} h-3 w-3`} />
         <span className={`${lightText ? 'text-white/80' : 'text-muted-foreground'}`}>{fmt(dur)}</span>
       </div>
     </div>
