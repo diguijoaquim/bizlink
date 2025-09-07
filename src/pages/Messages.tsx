@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead } from "@/lib/api";
 
  
 
@@ -170,9 +170,12 @@ export default function Messages() {
 
   const handleOpenChat = async (chatId: number) => {
     setSelectedChat(String(chatId));
-    // Inform layout which chat is active (to avoid counting as unread)
     window.dispatchEvent(new CustomEvent('chat:active', { detail: chatId }));
     window.dispatchEvent(new Event('chat:clear-unread'));
+    // mark as read backend
+    try { await markConversationRead(chatId); } catch {}
+    // update local unread count to 0
+    setChats(prev => prev.map(c => c.id === chatId ? { ...c, unread_count: 0, last_message_is_unread: false } : c));
     setChatMessages(await getMessages(chatId));
     // connect websocket
     try { ws?.close(); } catch {}
@@ -185,10 +188,8 @@ export default function Messages() {
             const m = msg.data;
             const myId = getCurrentUserId();
             const isMine = myId !== null && Number(m.sender_id) === Number(myId);
-            // Ignore only if it's mine; also ensure message belongs to current conversation
             if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
               setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false }]);
-              // Estamos visualizando; não conta como não lida
               window.dispatchEvent(new Event('chat:clear-unread'));
             }
           }
@@ -331,9 +332,14 @@ export default function Messages() {
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground truncate flex-1">
-                            {chat.last_message}
+                      <p className={`text-sm truncate flex-1 ${chat.last_message_is_unread ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                        {chat.last_message}
                       </p>
+                      {chat.unread_count && chat.unread_count > 0 && (
+                        <span className="ml-2 inline-flex min-w-[18px] h-5 px-1 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
+                          {chat.unread_count > 9 ? '9+' : chat.unread_count}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
