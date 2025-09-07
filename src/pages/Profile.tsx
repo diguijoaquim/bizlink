@@ -368,9 +368,9 @@ export default function Profile() {
 
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
-          <div className="profile-tabs-container">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-none md:mx-0">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1">
+              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1 justify-items-center mx-auto w-full max-w-sm md:max-w-none">
                 <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
@@ -750,9 +750,9 @@ export default function Profile() {
           </Tabs>
         </div>
         ) : user?.user_type === 'freelancer' ? (
-          <div className="profile-tabs-container">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-none md:mx-0">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1">
+              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1 justify-items-center mx-auto w-full max-w-xs md:max-w-none">
                 <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
                 <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
                 <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
