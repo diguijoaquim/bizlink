@@ -12,7 +12,7 @@ import { useHome } from "@/contexts/HomeContext";
 import { ProfileSkeleton } from "@/components/Skeleton";
 import { getMyJobs, type Job } from "@/lib/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { PortfolioItemCard, JobItemCard } from "@/components/profile";
+import { PortfolioItemCard, JobItemCard, ProfileTabsList } from "@/components/profile";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -384,12 +384,12 @@ export default function Profile() {
         {user?.user_type === 'company' && hasCompany ? (
           <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1 justify-items-center justify-center mx-auto w-full max-w-sm md:max-w-none">
-                <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
-                <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
-                <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
-                <TabsTrigger value="my-jobs" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Minhas Vagas</TabsTrigger>
-              </TabsList>
+              <ProfileTabsList items={[
+                { value: 'about', label: 'Sobre' },
+                { value: 'portfolio', label: 'Portfolio' },
+                { value: 'my-services', label: 'Meus Serviços' },
+                { value: 'my-jobs', label: 'Minhas Vagas' },
+              ]} columns={4} />
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                 {/* Descrição da Empresa */}
@@ -701,11 +701,11 @@ export default function Profile() {
         ) : user?.user_type === 'freelancer' ? (
           <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1 justify-items-center justify-center mx-auto w-full max-w-xs md:max-w-none">
-                <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
-                <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
-                <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
-              </TabsList>
+              <ProfileTabsList items={[
+                { value: 'about', label: 'Sobre' },
+                { value: 'portfolio', label: 'Portfolio' },
+                { value: 'my-services', label: 'Meus Serviços' },
+              ]} columns={3} />
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full mx-auto max-w-2xl md:max-w-4xl">
                   {/* Descrição do Freelancer */}
