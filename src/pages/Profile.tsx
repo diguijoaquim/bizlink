@@ -269,7 +269,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 text-center md:text-left">
         {/* Cabeçalho estilizado */}
         <div className="relative bizlink-animate-fade-in">
           <div className="relative h-32 md:h-48 rounded-xl overflow-hidden bg-gradient-soft">
@@ -369,11 +369,11 @@ export default function Profile() {
         {user?.user_type === 'company' && hasCompany ? (
           <div className="profile-tabs-container">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list">
-                <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
-                <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
-                <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
-                <TabsTrigger value="my-jobs" className="profile-tabs-trigger">Minhas Vagas</TabsTrigger>
+              <TabsList className="profile-tabs-list grid grid-cols-4 gap-1">
+                <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
+                <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
+                <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
+                <TabsTrigger value="my-jobs" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Minhas Vagas</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
@@ -727,10 +727,10 @@ export default function Profile() {
         ) : user?.user_type === 'freelancer' ? (
           <div className="profile-tabs-container">
             <Tabs defaultValue="about" className="bizlink-animate-slide-up profile-tabs">
-              <TabsList className="profile-tabs-list">
-                <TabsTrigger value="about" className="profile-tabs-trigger">Sobre</TabsTrigger>
-                <TabsTrigger value="portfolio" className="profile-tabs-trigger">Portfolio</TabsTrigger>
-                <TabsTrigger value="my-services" className="profile-tabs-trigger">Meus Serviços</TabsTrigger>
+              <TabsList className="profile-tabs-list grid grid-cols-3 gap-1">
+                <TabsTrigger value="about" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Sobre</TabsTrigger>
+                <TabsTrigger value="portfolio" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Portfolio</TabsTrigger>
+                <TabsTrigger value="my-services" className="profile-tabs-trigger text-[11px] md:text-sm px-2 py-1">Meus Serviços</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="profile-tabs-content">
                 <div className="space-y-6 w-full">
