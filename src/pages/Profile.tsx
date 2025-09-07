@@ -382,7 +382,7 @@ export default function Profile() {
 
         {/* Renderização condicional baseada no tipo de usuário */}
         {user?.user_type === 'company' && hasCompany ? (
-          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl">
+          <div className="profile-tabs-container mx-auto max-w-2xl md:max-w-4xl bg-red-600">
             <ProfileTabs
               defaultValue="about"
               items={[
