@@ -3,14 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Search, ArrowLeft } from 'lucide-react';
 import { getRecipients, startConversation, type User, type Company } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '@/lib/api';
+
+const resolveUrl = (p?: string) => (p ? (p.startsWith('http') ? p : `${API_BASE_URL}${p}`) : undefined);
 
 export default function ChatSearch() {
   const [q, setQ] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const [starting, setStarting] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   const load = async (query?: string) => {
     setLoading(true);
@@ -74,7 +77,7 @@ export default function ChatSearch() {
             <div className="divide-y border rounded-lg">
               {companies.map((c) => (
                 <div key={c.id} role="button" aria-label={`Conversar com ${c.name}`} className="p-3 flex items-center gap-3 cursor-pointer select-none active:opacity-80" onClick={() => openChatWithUser(c.owner_id)}>
-                  <img src={c.logo_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={resolveUrl(c.logo_url) || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-10 h-10 rounded-full object-cover" />
                   <div className="min-w-0">
                     <div className="font-medium truncate">{c.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{c.description || 'Empresa'}</div>
@@ -91,7 +94,7 @@ export default function ChatSearch() {
             <div className="divide-y border rounded-lg">
               {users.map((u) => (
                 <div key={u.id} role="button" aria-label={`Conversar com ${u.full_name || u.email}`} className="p-3 flex items-center gap-3 cursor-pointer select-none active:opacity-80" onClick={() => openChatWithUser(u.id)}>
-                  <img src={(u as any).display_photo_url || u.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={resolveUrl((u as any).display_photo_url) || resolveUrl(u.profile_photo_url) || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-10 h-10 rounded-full object-cover" />
                   <div className="min-w-0">
                     <div className="font-medium truncate">{(u as any).display_name || u.full_name || u.email}</div>
                     <div className="text-xs text-muted-foreground truncate">{u.user_type}</div>
