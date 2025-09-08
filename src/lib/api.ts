@@ -107,6 +107,18 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
     });
     
     if (!res.ok) {
+      // if unauthorized/expired, clear token and redirect to login
+      if (res.status === 401 || res.status === 403) {
+        try { clearAuthToken(); } catch {}
+        try {
+          // prevent redirect loops on auth pages
+          const onAuthPage = typeof window !== 'undefined' && (/\/login|\/register/.test(window.location.pathname));
+          if (!onAuthPage) {
+            // small delay to allow any toasts
+            setTimeout(() => { window.location.href = '/login'; }, 50);
+          }
+        } catch {}
+      }
       const error = await res.json().catch(() => ({}));
       const detail = (error && (error.detail || error.message))
         ? (typeof (error.detail || error.message) === 'string' ? (error.detail || error.message) : JSON.stringify(error.detail || error.message))
