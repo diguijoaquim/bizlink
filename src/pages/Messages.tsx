@@ -1014,7 +1014,7 @@ export default function Messages() {
                     {message.job_ref && (
                       <RefCard kind="job" refId={message.job_ref} fetcher={getJobByRef} cache={refCache} setCache={setRefCache} isMe={!!message.isMe} />
                     )}
-                    { (message.type === 'file' || message.content_type || message.text.startsWith('http')) ? (
+                    { (message.type === 'file' || message.content_type || message.text.startsWith('http') || message.text.startsWith('/')) ? (
                       (() => {
                         const kind = getFileKind(message);
                         if (kind === 'image') {
@@ -1212,7 +1212,7 @@ function RefCard({ kind, refId, fetcher, cache, setCache, isMe }: { kind: 'servi
     <div className={`mb-2 rounded-md overflow-hidden border ${isMe ? 'border-white/30' : 'border-border'} bg-card text-foreground`}
          style={{ maxWidth: '18rem' }}>
       {data.image_url && (
-        <img src={data.image_url} alt={data.title} className="w-full h-28 object-cover" />
+        <img src={resolveUrl(data.image_url)} alt={data.title} className="w-full h-28 object-cover" />
       )}
       <div className="p-2 space-y-1">
         <div className="font-medium text-sm truncate">{data.title}</div>
