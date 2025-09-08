@@ -86,11 +86,6 @@ export default function Companies() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-semibold text-foreground truncate">{c.name}</h3>
-                      {c.website && (
-                        <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-7 w-7 rounded-full hover:bg-muted">
-                          {getSiteIcon(c.website)}
-                        </a>
-                      )}
                     </div>
                     {c.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{c.description}</p>
