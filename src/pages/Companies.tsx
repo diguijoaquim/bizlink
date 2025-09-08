@@ -6,27 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Building2, MapPin, Globe, Search, ArrowLeft } from 'lucide-react';
-import { getCompanies, type Company, API_BASE_URL } from '@/lib/api';
+import { type Company, API_BASE_URL } from '@/lib/api';
+import { useHome } from '@/contexts/HomeContext';
 
 export default function Companies() {
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { companies, companiesLoaded, loadCompaniesOnce } = useHome();
   const [filtered, setFiltered] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loading = !companiesLoaded;
   const [q, setQ] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await getCompanies();
-        setCompanies(data);
-        setFiltered(data);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  useEffect(() => { loadCompaniesOnce(); }, [loadCompaniesOnce]);
+  useEffect(() => { setFiltered(companies); }, [companies]);
 
   useEffect(() => {
     const term = q.trim().toLowerCase();

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { apiFetch, getCompanyServices, Service, Company, getUserByIdPublic, getUserBySlug } from '@/lib/api';
+import { apiFetch, getCompanyServices, Service, Company, getUserByIdPublic, getUserBySlug, getFeed, type FeedItem, getConversations, type ConversationListItem, getJobs, type Job, getCompanies } from '@/lib/api';
 
 interface User {
   id: number;
@@ -31,6 +31,19 @@ interface HomeContextType {
   displayName: string | undefined;
   displayAvatar: string | undefined;
   displayCover: string | undefined;
+  // cached data
+  feedItems: FeedItem[];
+  feedLoaded: boolean;
+  loadFeedOnce: () => Promise<void>;
+  conversations: ConversationListItem[];
+  conversationsLoaded: boolean;
+  loadConversationsOnce: () => Promise<void>;
+  jobs: Job[];
+  jobsLoaded: boolean;
+  loadJobsOnce: () => Promise<void>;
+  companies: Company[];
+  companiesLoaded: boolean;
+  loadCompaniesOnce: () => Promise<void>;
 }
 
 const HomeContext = createContext<HomeContextType | null>(null);
@@ -54,6 +67,15 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
   const [hasCompany, setHasCompany] = useState(false);
   const [services, setServices] = useState<Service[]>([]);
   const [servicesLoading, setServicesLoading] = useState(false);
+  // caches
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedLoaded, setFeedLoaded] = useState(false);
+  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoaded, setJobsLoaded] = useState(false);
+  const [companiesList, setCompaniesList] = useState<Company[]>([]);
+  const [companiesLoaded, setCompaniesLoaded] = useState(false);
 
   const currentCompany = user?.companies?.[0] || null;
   const displayName = currentCompany?.name || user?.full_name || user?.email;
@@ -112,6 +134,47 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     await loadUserData();
   };
 
+  // one-time loaders
+  const loadFeedOnce = async () => {
+    if (feedLoaded) return;
+    try {
+      const resp = await getFeed(undefined, 10);
+      setFeedItems(resp.items || []);
+    } finally {
+      setFeedLoaded(true);
+    }
+  };
+
+  const loadConversationsOnce = async () => {
+    if (conversationsLoaded) return;
+    try {
+      const list = await getConversations();
+      setConversations(list || []);
+    } finally {
+      setConversationsLoaded(true);
+    }
+  };
+
+  const loadJobsOnce = async () => {
+    if (jobsLoaded) return;
+    try {
+      const list = await getJobs({ status_filter: 'Ativa' });
+      setJobs(list || []);
+    } finally {
+      setJobsLoaded(true);
+    }
+  };
+
+  const loadCompaniesOnce = async () => {
+    if (companiesLoaded) return;
+    try {
+      const list = await getCompanies();
+      setCompaniesList(list || []);
+    } finally {
+      setCompaniesLoaded(true);
+    }
+  };
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -136,6 +199,18 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     displayName,
     displayAvatar,
     displayCover,
+    feedItems,
+    feedLoaded,
+    loadFeedOnce,
+    conversations,
+    conversationsLoaded,
+    loadConversationsOnce,
+    jobs,
+    jobsLoaded,
+    loadJobsOnce,
+    companies: companiesList,
+    companiesLoaded,
+    loadCompaniesOnce,
   };
 
   return (

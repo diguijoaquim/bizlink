@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  getJobs, 
   type Job,
   toggleLike,
   getLikesInfo,
@@ -31,8 +30,9 @@ const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
 const toAbsolute = (url?: string) => (url ? (url.startsWith('http') ? url : `${API_BASE_URL}${url}`) : undefined);
 
 export default function Jobs() {
+  const { jobs: jobsCtx, jobsLoaded, loadJobsOnce } = useHome();
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loading = !jobsLoaded;
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [jobLikes, setJobLikes] = useState<Record<number, { isLiked: boolean; likesCount: number }>>({});
@@ -40,9 +40,8 @@ export default function Jobs() {
   const navigate = useNavigate();
   const { hasCompany, currentCompany } = useHome();
 
-  useEffect(() => {
-    loadJobs();
-  }, []);
+  useEffect(() => { loadJobsOnce(); }, [loadJobsOnce]);
+  useEffect(() => { setJobs(jobsCtx); }, [jobsCtx]);
 
   useEffect(() => {
     applyFilters();
@@ -50,12 +49,8 @@ export default function Jobs() {
 
   const loadJobs = async () => {
     try {
-      setLoading(true);
-      const jobsData = await getJobs({ status_filter: 'Ativa' });
-      setJobs(jobsData);
-      
       // Load likes for each job
-      const likesPromises = jobsData.map(async (job) => {
+      const likesPromises = (jobsCtx || []).map(async (job) => {
         try {
           const likeInfo = await getLikesInfo('job', job.id);
           return { jobId: job.id, likeInfo };
@@ -81,9 +76,7 @@ export default function Jobs() {
         description: "Não foi possível carregar as vagas",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
-    }
+    } finally {}
   };
 
   const handleLike = async (jobId: number) => {
