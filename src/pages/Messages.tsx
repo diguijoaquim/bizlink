@@ -15,75 +15,123 @@ import { Progress } from "@/components/ui/progress";
  
 // WaveSurfer-based audio player (card style)
 function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?: boolean; avatarUrl?: string }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const wsRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [dur, setDur] = useState(0);
   const [curr, setCurr] = useState(0);
 
-  useEffect(() => {
-    let destroyed = false;
-    const ensureScript = (): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        const g: any = (globalThis as any);
-        if (g.WaveSurfer) return resolve();
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.min.js';
-        s.async = true;
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error('wavesurfer load failed'));
-        document.head.appendChild(s);
-      });
+  // Draw static bars and progress overlay on a small canvas (SoundCloud-style)
+  const barWidth = 2;
+  const barGap = 1;
+  const barRadius = 2;
+  const height = 26;
+  const waveColor = '#4F4A85';
+  const progressColor = '#383351';
+
+  const seededRandom = (seed: number) => {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return () => (s = (s * 16807) % 2147483647) / 2147483647;
+  };
+
+  const drawBars = (progressRatio = 0) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const width = canvas.width;
+    ctx.clearRect(0, 0, width, height);
+    const numBars = Math.floor(width / (barWidth + barGap));
+    // pseudo-random, seeded by src hash
+    const hash = Array.from(src).reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0);
+    const rnd = seededRandom(Math.abs(hash));
+
+    const drawBar = (x: number, h: number, color: string) => {
+      const y = (height - h) / 2;
+      const r = Math.min(barRadius, barWidth / 2, h / 2);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      // rounded rect
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + barWidth - r, y);
+      ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + r);
+      ctx.lineTo(x + barWidth, y + h - r);
+      ctx.quadraticCurveTo(x + barWidth, y + h, x + barWidth - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      ctx.fill();
     };
 
-    (async () => {
-      try {
-        await ensureScript();
-        if (destroyed || !containerRef.current) return;
-        const g: any = (globalThis as any);
-        // Create an audio element to avoid CORS and autoplay issues
-        const audio = new Audio();
-        audio.src = src;
-        audio.preload = 'metadata';
-        audio.crossOrigin = 'anonymous';
-        audioRef.current = audio;
-        const ws = g.WaveSurfer.create({
-          container: containerRef.current,
-          waveColor: '#4F4A85',
-          progressColor: '#383351',
-          barWidth: 2,
-          barGap: 1,
-          barRadius: 2,
-          height: 26,
-          media: audio,
-        });
-        // Time/duration events from the media element
-        const onLoaded = () => { if (!destroyed) setDur(audio.duration || 0); };
-        const onTime = () => { if (!destroyed) setCurr(audio.currentTime || 0); };
-        const onPlay = () => { if (!destroyed) setIsPlaying(true); };
-        const onPause = () => { if (!destroyed) setIsPlaying(false); };
-        audio.addEventListener('loadedmetadata', onLoaded);
-        audio.addEventListener('timeupdate', onTime);
-        audio.addEventListener('play', onPlay);
-        audio.addEventListener('pause', onPause);
-        wsRef.current = ws;
-      } catch {}
-    })();
+    const maxH = height * 0.9;
+    const minH = height * 0.2;
+    for (let i = 0; i < numBars; i++) {
+      const x = i * (barWidth + barGap);
+      const h = Math.max(minH, rnd() * maxH);
+      drawBar(x, h, waveColor);
+    }
+
+    // overlay progress
+    const progressX = Math.floor(progressRatio * width);
+    if (progressX > 0) {
+      // Clip and redraw bars in progress color
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, progressX, height);
+      ctx.clip();
+      // redraw same bars in progress color
+      const rnd2 = seededRandom(Math.abs(hash));
+      for (let i = 0; i < numBars; i++) {
+        const x = i * (barWidth + barGap);
+        const h = Math.max(minH, rnd2() * maxH);
+        drawBar(x, h, progressColor);
+      }
+      ctx.restore();
+    }
+  };
+
+  useEffect(() => {
+    const a = new Audio();
+    a.src = src;
+    a.preload = 'metadata';
+    a.crossOrigin = 'anonymous';
+    audioRef.current = a;
+
+    const onLoaded = () => { setDur(a.duration || 0); drawBars(0); };
+    const onTime = () => { const t = a.currentTime || 0; setCurr(t); drawBars(dur > 0 ? t / dur : 0); };
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+
+    a.addEventListener('loadedmetadata', onLoaded);
+    a.addEventListener('timeupdate', onTime);
+    a.addEventListener('play', onPlay);
+    a.addEventListener('pause', onPause);
+
+    // initial canvas size
+    const c = canvasRef.current;
+    if (c) {
+      // devicePixelRatio for crisp bars
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const cssW = c.clientWidth || 144;
+      c.width = Math.floor(cssW * dpr);
+      c.height = Math.floor(height * dpr);
+      c.style.height = `${height}px`;
+      c.getContext('2d')?.scale(dpr, dpr);
+    }
 
     return () => {
-      destroyed = true;
-      try { wsRef.current?.destroy(); } catch {}
-      wsRef.current = null;
-      try {
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.src = '';
-        }
-      } catch {}
+      try { a.pause(); } catch {}
+      a.src = '';
       audioRef.current = null;
+      a.removeEventListener('loadedmetadata', onLoaded);
+      a.removeEventListener('timeupdate', onTime);
+      a.removeEventListener('play', onPlay);
+      a.removeEventListener('pause', onPause);
     };
-  }, [src]);
+  }, [src, dur]);
 
   const toggle = () => {
     const a = audioRef.current;
@@ -97,17 +145,12 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     return `${mm}:${ss}`;
   };
 
-  const pct = dur > 0 ? (curr / dur) * 100 : 0;
-
   return (
     <div className={`rounded-xl ${lightText ? 'bg-white/15' : 'bg-card'} p-2 w-[220px] max-w-full shadow-sm border border-border/50`}> 
       <div className="flex items-center gap-2">
         <button onClick={toggle} disabled={!audioRef.current} className={`h-7 w-7 rounded-full grid place-items-center text-white ${lightText ? 'bg-white/30' : 'bg-gradient-to-br from-indigo-500 to-violet-500'} shadow`}>{isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
         <div className="relative flex-1">
-          <div ref={containerRef} className="w-36" />
-          <span className="absolute -top-1" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
-            <span className="inline-block h-1.5 w-1.5 bg-sky-500 rounded-full" />
-          </span>
+          <canvas ref={canvasRef} className="w-36" />
         </div>
         {avatarUrl && (
           <img src={avatarUrl} className="h-8 w-8 rounded-full object-cover border border-white/20" />
