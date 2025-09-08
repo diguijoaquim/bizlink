@@ -159,7 +159,7 @@ export default function Jobs() {
 
   return (
     <AppLayout>
-      <div className="space-y-4">
+      <div className="space-y-4 px-4">
         {/* Search Bar */}
         <div className="flex items-center space-x-3">
           <Button
@@ -210,8 +210,8 @@ export default function Jobs() {
             </Card>
           ) : (
             filteredJobs.map((job) => {
-              const companyName = (job as any).company_name || (job as any).company?.name || 'Empresa';
-              const companyLogo = toAbsolute((job as any).company_logo_url || (job as any).company?.logo_url);
+              const posterName = (job as any).poster_name || (job as any).company_name || (job as any).company?.name || 'Empresa';
+              const posterAvatar = toAbsolute((job as any).poster_avatar || (job as any).company_logo_url || (job as any).company?.logo_url);
               return (
                 <Card
                   key={job.id}
@@ -232,13 +232,13 @@ export default function Jobs() {
                     {/* Empresa */}
                     <div className="mt-2 flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                        {companyLogo ? (
-                          <img src={companyLogo} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={companyName} className="w-full h-full object-cover" />
+                        {posterAvatar ? (
+                          <img src={posterAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={posterName} className="w-full h-full object-cover" />
                         ) : (
                           <Briefcase className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
-                      <span className="text-sm text-muted-foreground truncate">{companyName}</span>
+                      <span className="text-sm text-muted-foreground truncate">{posterName}</span>
                     </div>
 
                     {/* Metas/badges */}
