@@ -153,7 +153,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-3">
               {item.poster_avatar ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden">
+                <div className={`w-10 h-10 rounded-full overflow-hidden ${(item.poster_type==='company') ? 'avatar-company' : (item.poster_type==='freelancer' ? 'avatar-freelancer' : '')}`}>
                   <img src={toAbsolute(item.poster_avatar)} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
                 </div>
               ) : (
@@ -373,7 +373,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           <div className="flex items-center justify-between p-4 pb-3">
             <div className="flex items-center gap-3">
               {item.logo_url ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden">
+                <div className="w-10 h-10 rounded-full overflow-hidden avatar-company">
                 <img
                   src={toAbsolute(item.logo_url)}
                   onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}

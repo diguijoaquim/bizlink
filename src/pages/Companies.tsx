@@ -63,7 +63,7 @@ export default function Companies() {
             <Card key={c.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex gap-4 items-start">
-                  <div className="w-24 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  <div className="w-24 h-24 rounded-md overflow-hidden bg-muted flex-shrink-0 avatar-company">
                     <img src={toAbsolute(c.logo_url)} alt={c.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">

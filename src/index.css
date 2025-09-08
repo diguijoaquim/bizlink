@@ -373,6 +373,15 @@ All colors MUST be HSL.
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+
+  /* Avatar styles by type */
+  .avatar-company {
+    border: 2px solid hsl(var(--bizlink-indigo));
+  }
+  .avatar-freelancer {
+    border: 2px solid transparent;
+    border-image: linear-gradient(135deg, hsl(var(--bizlink-violet)), hsl(var(--bizlink-pink)) ) 1;
+  }
 }
 
 @layer utilities {

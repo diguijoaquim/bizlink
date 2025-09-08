@@ -703,7 +703,7 @@ export default function Messages() {
                           src={resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url) || DEFAULT_AVATAR}
                           onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                           alt={chat.peer.full_name || chat.peer.email}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className={`w-12 h-12 rounded-full object-cover ${(chat as any).peer?.user_type==='freelancer' ? 'avatar-freelancer' : 'avatar-company'}`}
                     />
                   </div>
 
@@ -845,7 +845,7 @@ export default function Messages() {
                     src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) || DEFAULT_AVATAR}
                     onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                     alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
-                    className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                    className={`w-10 h-10 rounded-full object-cover cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
                   />
                 </div>
                 <div className="min-w-0">

@@ -224,7 +224,7 @@ export default function Jobs() {
 
                     {/* Empresa */}
                     <div className="mt-2 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center avatar-company">
                         {posterAvatar ? (
                           <img src={posterAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={posterName} className="w-full h-full object-cover" />
                         ) : (
