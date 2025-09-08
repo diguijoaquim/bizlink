@@ -1032,11 +1032,13 @@ export async function sendMessage(conversationId: number, text: string, options?
 
 // Helper para gerar referência de serviço/vaga automaticamente
 export function generateServiceRef(service: Service): string {
-  return `service_${service.id}_${service.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  // Return canonical frontend path; backend will extract numeric ID
+  return `/services/${service.id}`;
 }
 
 export function generateJobRef(job: Job): string {
-  return `job_${job.id}_${job.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  // Return canonical frontend path; backend will extract numeric ID
+  return `/jobs/${job.id}`;
 }
 
 export async function sendMessageFile(conversationId: number, file: File, options?: { reply_to_id?: number; service_ref?: string; job_ref?: string }): Promise<{ id: number; url: string }> {
