@@ -19,6 +19,8 @@ export function FeedItemComponent({ item }: FeedItemProps) {
   const [likesCount, setLikesCount] = useState(item.likes || 0);
   const [loading, setLoading] = useState(false);
 
+  const DEFAULT_AVATAR = "https://www.skyvenda.com/avatar.png";
+
   const toAbsolute = (url: string | null) => {
     if (!url) return "/placeholder.svg";
     if (url.startsWith('http')) return url;
@@ -138,7 +140,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <div className="flex items-center gap-3">
               {item.poster_avatar ? (
                 <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <img src={toAbsolute(item.poster_avatar)} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
+                  <img src={toAbsolute(item.poster_avatar)} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
@@ -263,7 +265,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
             <div className="flex items-center gap-3">
               {item.poster_avatar ? (
                 <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <img src={toAbsolute(item.poster_avatar)} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
+                  <img src={toAbsolute(item.poster_avatar)} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={item.poster_name || 'Poster'} className="w-full h-full object-cover" />
                 </div>
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-pink-600 flex items-center justify-center">
@@ -352,6 +354,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 <div className="w-10 h-10 rounded-full overflow-hidden">
                 <img
                   src={toAbsolute(item.logo_url)}
+                  onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                   alt={item.name}
                   className="w-full h-full object-cover"
                 />
@@ -471,6 +474,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               {item.profile_photo_url ? (
                 <img
                   src={toAbsolute(item.profile_photo_url)}
+                  onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                   alt={item.full_name}
                   className="w-full h-full object-cover"
                 />
