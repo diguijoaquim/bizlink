@@ -726,11 +726,14 @@ export default function Messages() {
                           </p>
                         );
                       })()}
-                      {chat.unread_count && chat.unread_count > 0 && (
-                        <span className="ml-2 inline-flex min-w-[18px] h-5 px-1 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
-                          {chat.unread_count > 9 ? '9+' : chat.unread_count}
-                        </span>
-                      )}
+                      {(() => {
+                        const unread = Number((chat as any).unread_count ?? 0);
+                        return unread > 0 ? (
+                          <span className="ml-2 inline-flex min-w-[18px] h-5 px-1 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
+                            {unread > 9 ? '9+' : unread}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
                 </div>
