@@ -331,6 +331,25 @@ export default function Messages() {
   const { displayAvatar } = useHome() as any;
   const peerAvatar = resolveUrl(((selectedChatData as any)?.peer?.display_photo_url) || selectedChatData?.peer?.profile_photo_url) || DEFAULT_AVATAR;
   const myAvatar = resolveUrl(displayAvatar) || DEFAULT_AVATAR;
+  const [peerType, setPeerType] = useState<string | null>(null);
+
+  // Load peer user_type to label header (empresa/freelancer/usuário)
+  useEffect(() => {
+    const loadPeerType = async () => {
+      try {
+        const id = selectedChatData?.peer?.id;
+        if (id) {
+          const u = await getUserByIdPublic(id);
+          setPeerType((u as any)?.user_type || null);
+        } else {
+          setPeerType(null);
+        }
+      } catch {
+        setPeerType(null);
+      }
+    };
+    loadPeerType();
+  }, [selectedChatData?.peer?.id]);
 
   // Load users/companies when component mounts
   useEffect(() => {
@@ -855,7 +874,7 @@ export default function Messages() {
                     </button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {isPeerTyping ? 'Digitando…' : 'Conversa'}
+                    {isPeerTyping ? 'Digitando…' : (peerType === 'company' ? 'Empresa' : peerType === 'freelancer' ? 'Freelancer' : 'Usuário')}
                   </p>
                 </div>
               </div>
