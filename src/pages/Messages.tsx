@@ -99,15 +99,37 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     a.preload = 'metadata';
     audioRef.current = a;
 
-    const onLoaded = () => { setDur(a.duration || 0); drawBars(0); };
-    const onTime = () => { const t = a.currentTime || 0; setCurr(t); drawBars(dur > 0 ? t / dur : 0); };
+    const onLoaded = () => { const d = a.duration || 0; setDur(d); drawBars(0); };
+    const onDuration = () => { const d = a.duration || 0; if (d && d !== dur) setDur(d); };
+    const onTime = () => { const t = a.currentTime || 0; setCurr(t); const d = a.duration || dur; drawBars(d > 0 ? t / d : 0); };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
 
     a.addEventListener('loadedmetadata', onLoaded);
+    a.addEventListener('durationchange', onDuration);
+    a.addEventListener('canplay', onDuration);
     a.addEventListener('timeupdate', onTime);
     a.addEventListener('play', onPlay);
     a.addEventListener('pause', onPause);
+
+    // Force browser to load metadata and, if needed, probe duration by a short play
+    try { a.load(); } catch {}
+    setTimeout(() => {
+      if (!a.duration || !isFinite(a.duration)) {
+        const handleProbe = () => {
+          if (a.duration && isFinite(a.duration)) {
+            setDur(a.duration);
+            a.pause();
+            a.currentTime = 0;
+            a.removeEventListener('timeupdate', handleProbe);
+          }
+        };
+        a.addEventListener('timeupdate', handleProbe);
+        const p = a.play();
+        if (p && (p as any).catch) (p as any).catch(() => {});
+        setTimeout(() => { try { a.pause(); } catch {} }, 400);
+      }
+    }, 200);
 
     // initial canvas size (once)
     const c = canvasRef.current;
@@ -127,6 +149,8 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
       a.src = '';
       audioRef.current = null;
       a.removeEventListener('loadedmetadata', onLoaded);
+      a.removeEventListener('durationchange', onDuration);
+      a.removeEventListener('canplay', onDuration);
       a.removeEventListener('timeupdate', onTime);
       a.removeEventListener('play', onPlay);
       a.removeEventListener('pause', onPause);
