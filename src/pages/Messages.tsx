@@ -245,8 +245,9 @@ export default function Messages() {
   const [recipientFilter, setRecipientFilter] = useState<'all'|'company'|'freelancer'|'simple'>('all');
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
+  const { conversations, conversationsLoaded, loadConversationsOnce } = useHome() as any;
   const [chats, setChats] = useState<ConversationListItem[]>([]);
-  const [chatLoading, setChatLoading] = useState(true);
+  const chatLoading = !conversationsLoaded;
   const [chatMessages, setChatMessages] = useState<ChatMessageItem[]>([]);
   const [startOpen, setStartOpen] = useState(false);
   const [recLoading, setRecLoading] = useState(false);
@@ -335,8 +336,11 @@ export default function Messages() {
   useEffect(() => {
     loadUsers();
     loadCompanies();
-    loadConversations();
-  }, []);
+    loadConversationsOnce();
+  }, [loadConversationsOnce]);
+
+  // hydrate chat list from context
+  useEffect(() => { setChats(conversations || []); }, [conversations]);
 
   // Apply filter from query string (?filter=company|freelancer|simple)
   useEffect(() => {
@@ -434,15 +438,8 @@ export default function Messages() {
   };
 
   const loadConversations = async () => {
-    try {
-      setChatLoading(true);
-      const data = await getConversations();
-      setChats(data);
-    } catch (e) {
-      console.error('Error loading conversations', e);
-    } finally {
-      setChatLoading(false);
-    }
+    // kept for places that expect it; delegates to context loader
+    await loadConversationsOnce();
   };
 
   const startChatWithUser = async (user: User) => {
