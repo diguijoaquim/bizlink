@@ -34,10 +34,10 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.description || !formData.price || !formData.category) {
+    if (!formData.title || !formData.description || !formData.category) {
       toast({
         title: "Erro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
+        description: "Por favor, preencha os campos obrigatórios (preço é opcional).",
         variant: "destructive",
       });
       return;
@@ -49,7 +49,7 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
       await createService({
         title: formData.title,
         description: formData.description,
-        price: formData.price,
+        price: formData.price || undefined,
         category: formData.category,
         tags: formData.tags,
         company_id: 1, // TODO: Get from user context

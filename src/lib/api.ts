@@ -325,7 +325,7 @@ export interface Service {
   id: number;
   title: string;
   description: string;
-  price: string;
+  price?: string;
   category: string;
   tags: string;
   status: string;
@@ -345,7 +345,7 @@ export interface Service {
 export const createService = async (input: {
   title: string;
   description: string;
-  price: string;
+  price?: string | number;
   category: string;
   tags: string[];
   company_id: number;
@@ -357,7 +357,9 @@ export const createService = async (input: {
   
   formData.append('title', input.title);
   formData.append('description', input.description);
-  formData.append('price', input.price);
+  if (input.price !== undefined && String(input.price).trim() !== '') {
+    formData.append('price', String(input.price));
+  }
   formData.append('category', input.category);
   formData.append('tags', `{${input.tags.join(',')}}`);
   formData.append('company_id', input.company_id.toString());
@@ -426,7 +428,7 @@ export const getService = async (id: number): Promise<Service> => {
 export const updateService = async (id: number, input: {
   title?: string;
   description?: string;
-  price?: string;
+  price?: string | number;
   category?: string;
   tags?: string[];
   status?: string;
@@ -437,7 +439,7 @@ export const updateService = async (id: number, input: {
   
   if (input.title !== undefined) formData.append('title', input.title);
   if (input.description !== undefined) formData.append('description', input.description);
-  if (input.price !== undefined) formData.append('price', input.price);
+  if (input.price !== undefined) formData.append('price', String(input.price));
   if (input.category !== undefined) formData.append('category', input.category);
   if (input.tags !== undefined) formData.append('tags', `{${input.tags.join(',')}}`);
   if (input.status !== undefined) formData.append('status', input.status);
