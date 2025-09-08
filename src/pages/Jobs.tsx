@@ -4,7 +4,8 @@ import {
   getJobs, 
   type Job,
   toggleLike,
-  getLikesInfo
+  getLikesInfo,
+  API_BASE_URL
 } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { Button } from '../components/ui/button';
@@ -25,6 +26,9 @@ import {
 } from 'lucide-react';
 import { useHome } from '../contexts/HomeContext';
 
+
+const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
+const toAbsolute = (url?: string) => (url ? (url.startsWith('http') ? url : `${API_BASE_URL}${url}`) : undefined);
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -191,7 +195,7 @@ export default function Jobs() {
 
 
         {/* Jobs List */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredJobs.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -206,88 +210,64 @@ export default function Jobs() {
             </Card>
           ) : (
             filteredJobs.map((job) => {
+              const companyName = (job as any).company_name || (job as any).company?.name || 'Empresa';
+              const companyLogo = toAbsolute((job as any).company_logo_url || (job as any).company?.logo_url);
               return (
-                 <Card 
-                   key={job.id} 
-                   className="hover:shadow-md transition-all duration-200 cursor-pointer border border-border shadow-sm bg-card hover:bg-muted/50 overflow-hidden"
-                   onClick={() => navigate(`/jobs/${job.id}`)}
-                 >
-                   {/* Imagem da vaga */}
-                   {job.image_url ? (
-                     <div className="w-full h-48 overflow-hidden">
-                       <img 
-                         src={job.image_url} 
-                         alt={job.title}
-                         className="w-full h-full object-cover"
-                       />
-                     </div>
-                   ) : (
-                     <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                       <Briefcase className="h-16 w-16 text-white/80" />
-                     </div>
-                   )}
-                   
+                <Card
+                  key={job.id}
+                  className="hover:shadow-md transition-colors cursor-pointer border border-border bg-card"
+                  onClick={() => navigate(`/jobs/${job.id}`)}
+                >
                   <CardContent className="p-4">
-                     <div className="flex gap-3 items-start">
-                       {/* Logo da empresa */}
-                       <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center flex-shrink-0">
-                         <Briefcase className="h-6 w-6 text-primary" />
+                    {/* Título e pill Remoto */}
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-base font-semibold text-foreground leading-snug pr-2">
+                        {job.title}
+                      </h3>
+                      {job.remote_work && (
+                        <Badge variant="outline" className="text-xs px-2 py-0 whitespace-nowrap">Remoto</Badge>
+                      )}
+                    </div>
+
+                    {/* Empresa */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                        {companyLogo ? (
+                          <img src={companyLogo} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt={companyName} className="w-full h-full object-cover" />
+                        ) : (
+                          <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </div>
-                       
-                       {/* Conteúdo principal */}
-                      <div className="flex-1 min-w-0">
-                         <div className="mb-2">
-                           <h3 className="text-base font-semibold text-foreground mb-1 truncate">
-                             {job.title}
-                           </h3>
-                           <p className="text-sm text-muted-foreground mb-2">
-                             {(job as any).company_name || 'Empresa'}
-                           </p>
-                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                             {job.location && (
-                               <span className="flex items-center gap-1">
-                                 <MapPin className="h-3 w-3" />
-                                 {job.location}
-                               </span>
-                             )}
-                             {job.remote_work && (
-                               <Badge variant="outline" className="text-xs px-2 py-0">
-                                 Remoto
-                               </Badge>
-                             )}
-                           </div>
-                         </div>
-                         
-                         {/* Mini info */}
-                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                           <span>{formatDate(job.created_at)}</span>
-                           <div className="flex items-center gap-3">
-                             <span className="flex items-center gap-1">
-                               <Eye className="h-3 w-3" />
-                               {job.views || 0}
-                             </span>
-                             <span 
-                               className={`flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors ${
-                                 jobLikes[job.id]?.isLiked ? 'text-red-500' : 'text-muted-foreground'
-                               }`}
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleLike(job.id);
-                               }}
-                             >
-                               <Heart className={`h-3 w-3`} fill={jobLikes[job.id]?.isLiked ? 'currentColor' : 'none'} strokeWidth={jobLikes[job.id]?.isLiked ? 0 : 2} />
-                               {jobLikes[job.id]?.likesCount || 0}
-                               <span className="text-[10px] leading-none">likes</span>
-                             </span>
-                          {job.is_promoted && (
-                               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
-                              <Star className="h-3 w-3 mr-1" />
-                              Promovida
-                            </Badge>
-                          )}
-                                  </div>
-                        </div>
-                      </div>
+                      <span className="text-sm text-muted-foreground truncate">{companyName}</span>
+                    </div>
+
+                    {/* Metas/badges */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {job.location && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-muted text-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {job.location}
+                        </span>
+                      )}
+                      <span className="text-xs px-2 py-1 rounded-full bg-muted text-foreground">
+                        {formatDate(job.created_at)}
+                      </span>
+                      {job.is_promoted && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 flex items-center gap-1">
+                          <Star className="h-3 w-3" /> Promovida
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Rodapé: views/likes */}
+                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{job.views || 0}</span>
+                      <span
+                        className={`flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors ${jobLikes[job.id]?.isLiked ? 'text-red-500' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); handleLike(job.id); }}
+                      >
+                        <Heart className={`h-3 w-3`} fill={jobLikes[job.id]?.isLiked ? 'currentColor' : 'none'} strokeWidth={jobLikes[job.id]?.isLiked ? 0 : 2} />
+                        {jobLikes[job.id]?.likesCount || 0}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
