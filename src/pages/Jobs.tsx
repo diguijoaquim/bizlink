@@ -262,7 +262,7 @@ export default function Jobs() {
                     <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{job.views || 0}</span>
                       <span
-                        className={`flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors ${jobLikes[job.id]?.isLiked ? 'text-red-500' : ''}`}
+                        className={`flex items-center gap-1 cursor-pointer hover:text-red-500 transition-colors select-none ${jobLikes[job.id]?.isLiked ? 'text-red-500' : ''}`}
                         onClick={(e) => { e.stopPropagation(); handleLike(job.id); }}
                       >
                         <Heart className={`h-3 w-3`} fill={jobLikes[job.id]?.isLiked ? 'currentColor' : 'none'} strokeWidth={jobLikes[job.id]?.isLiked ? 0 : 2} />
