@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL, getServiceByRef, getJobByRef, generateServiceRef, generateJobRef } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
 import { useHome } from '@/contexts/HomeContext';
 
@@ -479,6 +479,38 @@ export default function Messages() {
       loadConversations();
     } catch (e) {
       console.error('Failed to start chat with user', e);
+    }
+  };
+
+  // Função para iniciar chat com referência de serviço/vaga
+  const startChatWithReference = async (userId: number, serviceRef?: string, jobRef?: string, initialMessage?: string) => {
+    try {
+      const { id } = await startConversation(userId);
+      setChats(prev => {
+        if (prev.some(c => c.id === id)) return prev;
+        const optimistic = {
+          id,
+          peer: { id: userId, full_name: '', email: '', profile_photo_url: '' },
+          last_message: initialMessage || '',
+          last_time: new Date().toISOString(),
+        };
+        return [optimistic, ...prev];
+      });
+      
+      // Se tem referência, enviar mensagem inicial com a ref
+      if (serviceRef || jobRef) {
+        const message = initialMessage || `Olá! Gostaria de saber mais sobre ${serviceRef ? 'este serviço' : 'esta vaga'}.`;
+        await sendMessage(id, message, { 
+          service_ref: serviceRef, 
+          job_ref: jobRef 
+        });
+      }
+      
+      await handleOpenChat(id);
+      setStartOpen(false);
+      loadConversations();
+    } catch (e) {
+      console.error('Failed to start chat with reference', e);
     }
   };
 

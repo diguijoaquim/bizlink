@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getJob, getCompanies, type Job, type Company } from '../lib/api';
+import { getJob, getCompanies, type Job, type Company, startChatWithJobRef } from '../lib/api';
 import { useToast } from '../hooks/use-toast';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -17,7 +17,8 @@ import {
   Edit,
   Briefcase,
   Globe,
-  Building
+  Building,
+  MessageCircle
 } from 'lucide-react';
 import { useHome } from '../contexts/HomeContext';
 
@@ -81,6 +82,20 @@ export default function JobDetail() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleStartChat = async () => {
+    if (!job || !company) return;
+    try {
+      await startChatWithJobRef(job, company.owner_id);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a conversa.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -272,29 +287,39 @@ export default function JobDetail() {
           </Card>
 
           {/* Ações */}
-          {user && company && user.id === company.owner_id && (
           <Card>
             <CardHeader>
               <CardTitle>Ações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline">
-                <Users className="h-4 w-4 mr-2" />
-                Ver Candidatos
-              </Button>
-              
-              <Button className="w-full" variant="outline">
-                <Star className="h-4 w-4 mr-2" />
-                {job.is_promoted ? 'Remover Promoção' : 'Promover Vaga'}
-              </Button>
-              
-              <Button className="w-full" variant="outline">
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Vaga
-              </Button>
+              {user && company && user.id === company.owner_id ? (
+                <>
+                  <Button className="w-full" variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Ver Candidatos
+                  </Button>
+                  
+                  <Button className="w-full" variant="outline">
+                    <Star className="h-4 w-4 mr-2" />
+                    {job.is_promoted ? 'Remover Promoção' : 'Promover Vaga'}
+                  </Button>
+                  
+                  <Button className="w-full" variant="outline">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar Vaga
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  className="w-full bg-gradient-primary text-white border-0 hover:opacity-90"
+                  onClick={handleStartChat}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Conversar sobre esta vaga
+                </Button>
+              )}
             </CardContent>
           </Card>
-          )}
         </div>
       </div>
       </div>

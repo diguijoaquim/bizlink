@@ -1030,6 +1030,15 @@ export async function sendMessage(conversationId: number, text: string, options?
   return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
 }
 
+// Helper para gerar referência de serviço/vaga automaticamente
+export function generateServiceRef(service: Service): string {
+  return `service_${service.id}_${service.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+}
+
+export function generateJobRef(job: Job): string {
+  return `job_${job.id}_${job.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+}
+
 export async function sendMessageFile(conversationId: number, file: File, options?: { reply_to_id?: number; service_ref?: string; job_ref?: string }): Promise<{ id: number; url: string }> {
   const form = new FormData();
   form.append('file', file);
@@ -1047,6 +1056,31 @@ export async function getServiceByRef(ref: string): Promise<Service> {
 
 export async function getJobByRef(ref: string): Promise<Job> {
   return apiFetch(`/chat/job-by-ref?ref=${encodeURIComponent(ref)}`);
+}
+
+// Função para iniciar chat com referência (para usar em outras páginas)
+export async function startChatWithServiceRef(service: Service, ownerId: number, initialMessage?: string): Promise<void> {
+  const serviceRef = generateServiceRef(service);
+  const message = initialMessage || `Olá! Gostaria de saber mais sobre o serviço "${service.title}".`;
+  
+  const conv = await startConversation(ownerId);
+  if (conv?.id) {
+    await sendMessage(conv.id, message, { service_ref: serviceRef });
+    // Redirecionar para o chat
+    window.location.href = `/messages?open=${conv.id}`;
+  }
+}
+
+export async function startChatWithJobRef(job: Job, ownerId: number, initialMessage?: string): Promise<void> {
+  const jobRef = generateJobRef(job);
+  const message = initialMessage || `Olá! Gostaria de saber mais sobre a vaga "${job.title}".`;
+  
+  const conv = await startConversation(ownerId);
+  if (conv?.id) {
+    await sendMessage(conv.id, message, { job_ref: jobRef });
+    // Redirecionar para o chat
+    window.location.href = `/messages?open=${conv.id}`;
+  }
 }
 
 export async function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {

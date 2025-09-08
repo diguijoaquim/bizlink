@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { getService, Service } from "@/lib/api";
+import { getService, Service, startChatWithServiceRef } from "@/lib/api";
 
 const ServiceDetail = () => {
   const { id, slug } = useParams();
@@ -59,6 +59,20 @@ const ServiceDetail = () => {
       title: "Redirecionando...",
       description: `Abrindo ${type} para contato com a empresa.`,
     });
+  };
+
+  const handleStartChat = async () => {
+    if (!service) return;
+    try {
+      await startChatWithServiceRef(service, service.company_id);
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a conversa.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -172,23 +186,32 @@ const ServiceDetail = () => {
             </div>
 
             {/* Contact Buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               <Button 
-                variant="outline" 
-                className="h-10"
-                onClick={() => handleContact('WhatsApp')}
+                className="h-10 bg-gradient-primary text-white border-0 hover:opacity-90"
+                onClick={handleStartChat}
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
-                WhatsApp
+                Conversar sobre este serviço
               </Button>
-              <Button 
-                variant="outline" 
-                className="h-10"
-                onClick={() => handleContact('Telefone')}
-              >
-                <Phone className="h-4 w-4 mr-2" />
-                Ligar
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  variant="outline" 
+                  className="h-10"
+                  onClick={() => handleContact('WhatsApp')}
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-10"
+                  onClick={() => handleContact('Telefone')}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Ligar
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
