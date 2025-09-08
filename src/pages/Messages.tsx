@@ -109,24 +109,8 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     a.addEventListener('play', onPlay);
     a.addEventListener('pause', onPause);
 
-    // Force browser to load metadata and, if needed, probe duration by a short play
+    // Load metadata only (no autoplay).
     try { a.load(); } catch {}
-    setTimeout(() => {
-      if (!a.duration || !isFinite(a.duration)) {
-        const handleProbe = () => {
-          if (a.duration && isFinite(a.duration)) {
-            setDur(a.duration);
-            a.pause();
-            a.currentTime = 0;
-            a.removeEventListener('timeupdate', handleProbe);
-          }
-        };
-        a.addEventListener('timeupdate', handleProbe);
-        const p = a.play();
-        if (p && (p as any).catch) (p as any).catch(() => {});
-        setTimeout(() => { try { a.pause(); } catch {} }, 400);
-      }
-    }, 200);
 
     // initial canvas size (once)
     const c = canvasRef.current;
