@@ -17,11 +17,11 @@ import { Progress } from "@/components/ui/progress";
 function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?: boolean; avatarUrl?: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const wsRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [dur, setDur] = useState(0);
   const [curr, setCurr] = useState(0);
 
-  // Load UMD script if needed, then init WaveSurfer
   useEffect(() => {
     let destroyed = false;
     const ensureScript = (): Promise<void> => {
@@ -42,6 +42,12 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
         await ensureScript();
         if (destroyed || !containerRef.current) return;
         const g: any = (globalThis as any);
+        // Create an audio element to avoid CORS and autoplay issues
+        const audio = new Audio();
+        audio.src = src;
+        audio.preload = 'metadata';
+        audio.crossOrigin = 'anonymous';
+        audioRef.current = audio;
         const ws = g.WaveSurfer.create({
           container: containerRef.current,
           waveColor: '#4F4A85',
@@ -50,29 +56,39 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
           barGap: 1,
           barRadius: 2,
           height: 26,
-          url: src,
+          media: audio,
         });
-        ws.on('ready', () => { if (!destroyed) { setDur(ws.getDuration() || 0); } });
-        ws.on('audioprocess', () => { if (!destroyed) setCurr(ws.getCurrentTime() || 0); });
-        ws.on('play', () => { if (!destroyed) setIsPlaying(true); });
-        ws.on('pause', () => { if (!destroyed) setIsPlaying(false); });
+        // Time/duration events from the media element
+        const onLoaded = () => { if (!destroyed) setDur(audio.duration || 0); };
+        const onTime = () => { if (!destroyed) setCurr(audio.currentTime || 0); };
+        const onPlay = () => { if (!destroyed) setIsPlaying(true); };
+        const onPause = () => { if (!destroyed) setIsPlaying(false); };
+        audio.addEventListener('loadedmetadata', onLoaded);
+        audio.addEventListener('timeupdate', onTime);
+        audio.addEventListener('play', onPlay);
+        audio.addEventListener('pause', onPause);
         wsRef.current = ws;
-      } catch {
-        // leave wsRef null so controls disable
-      }
+      } catch {}
     })();
 
     return () => {
       destroyed = true;
       try { wsRef.current?.destroy(); } catch {}
       wsRef.current = null;
+      try {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        }
+      } catch {}
+      audioRef.current = null;
     };
   }, [src]);
 
   const toggle = () => {
-    const ws = wsRef.current;
-    if (!ws) return;
-    if (ws.isPlaying()) ws.pause(); else ws.play();
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) a.play().catch(()=>{}); else a.pause();
   };
 
   const fmt = (s: number) => {
@@ -86,7 +102,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
   return (
     <div className={`rounded-xl ${lightText ? 'bg-white/15' : 'bg-card'} p-2 w-[220px] max-w-full shadow-sm border border-border/50`}> 
       <div className="flex items-center gap-2">
-        <button onClick={toggle} disabled={!wsRef.current} className={`h-7 w-7 rounded-full grid place-items-center text-white ${lightText ? 'bg-white/30' : 'bg-gradient-to-br from-indigo-500 to-violet-500'} shadow`}>{isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
+        <button onClick={toggle} disabled={!audioRef.current} className={`h-7 w-7 rounded-full grid place-items-center text-white ${lightText ? 'bg-white/30' : 'bg-gradient-to-br from-indigo-500 to-violet-500'} shadow`}>{isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
         <div className="relative flex-1">
           <div ref={containerRef} className="w-36" />
           <span className="absolute -top-1" style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}>
