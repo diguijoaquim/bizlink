@@ -210,15 +210,40 @@ export default function Messages() {
     if (ct.startsWith('video/')) return 'video';
     if (ct.startsWith('image/')) return 'image';
     const t = (m.text || '').toLowerCase();
-    if (t.startsWith('http')) {
-      // Prefer audio first for webm/ogg ambiguity
-      if (isAudioUrl(t)) return 'audio';
-      if (isVideoUrl(t)) return 'video';
-      if (isImageUrl(t)) return 'image';
+    const consider = t.startsWith('http') || t.startsWith('/') ? t : '';
+    if (consider) {
+      // For /chat/file?path=... extract the filename from path param
+      try {
+        const u = new URL(consider.startsWith('http') ? consider : `${API_BASE_URL}${consider}`);
+        const pathParam = u.searchParams.get('path');
+        const target = pathParam || u.pathname;
+        if (isAudioUrl(target.toLowerCase())) return 'audio';
+        if (isVideoUrl(target.toLowerCase())) return 'video';
+        if (isImageUrl(target.toLowerCase())) return 'image';
+      } catch {}
     }
-    return (m.type === 'file') ? 'file' : 'file';
+    return 'file';
   };
-  const getDisplayName = (m: ChatMessageItem) => m.filename || (m.text?.split('/')?.pop()?.split('?')[0] || 'Arquivo');
+  const getDisplayName = (m: ChatMessageItem) => {
+    if (m.filename) return m.filename;
+    const txt = m.text || '';
+    try {
+      if (txt.startsWith('/')) {
+        const u = new URL(`${API_BASE_URL}${txt}`);
+        const pathParam = u.searchParams.get('path');
+        if (pathParam) {
+          const seg = pathParam.split('/')?.pop() || '';
+          return seg || 'Arquivo';
+        }
+        return u.pathname.split('/')?.pop() || 'Arquivo';
+      }
+      if (txt.startsWith('http')) {
+        const u = new URL(txt);
+        return u.pathname.split('/')?.pop() || 'Arquivo';
+      }
+    } catch {}
+    return txt.split('/')?.pop()?.split('?')[0] || 'Arquivo';
+  };
 
   // Format last message for chat list preview
   const formatLastMessagePreview = (value?: string): { label: string; icon?: JSX.Element } => {
@@ -360,8 +385,15 @@ export default function Messages() {
     loadConversationsOnce();
   }, [loadConversationsOnce]);
 
-  // hydrate chat list from context
-  useEffect(() => { setChats(conversations || []); }, [conversations]);
+  // hydrate chat list from context and keep sorted by last_time desc
+  useEffect(() => {
+    const arr = (conversations || []).slice().sort((a, b) => {
+      const ta = a.last_time ? new Date(a.last_time).getTime() : 0;
+      const tb = b.last_time ? new Date(b.last_time).getTime() : 0;
+      return tb - ta;
+    });
+    setChats(arr);
+  }, [conversations]);
 
   // Apply filter from query string (?filter=company|freelancer|simple)
   useEffect(() => {
@@ -545,7 +577,16 @@ export default function Messages() {
             const myId = getCurrentUserId();
             const isMine = myId !== null && Number(m.sender_id) === Number(myId);
             if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
-              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false, type: m.type, filename: m.filename, content_type: m.content_type, service_ref: m.service_ref, job_ref: m.job_ref }]);
+              const nowTime = m.time || new Date().toISOString();
+              setChatMessages(prev => [
+                ...prev,
+                { id: m.id, text: m.text, time: nowTime, isMe: false, type: m.type, filename: m.filename, content_type: m.content_type, service_ref: m.service_ref, job_ref: m.job_ref }
+              ]);
+              // bump chat to top with latest preview
+              setChats(prev => {
+                const updated = prev.map(c => c.id === chatId ? { ...c, last_message: m.text, last_time: nowTime, last_message_is_unread: false } : c);
+                return updated.slice().sort((a, b) => (b.last_time ? new Date(b.last_time).getTime() : 0) - (a.last_time ? new Date(a.last_time).getTime() : 0));
+              });
               window.dispatchEvent(new Event('chat:clear-unread'));
             }
           } else if (msg?.event === 'typing') {
@@ -576,7 +617,12 @@ export default function Messages() {
     setUploading(true);
     try {
       const res = await sendMessageFile(cid, f, { reply_to_id: replyTo?.id ?? undefined });
-      setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename: f.name, content_type: f.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+      const now = new Date().toISOString();
+      setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: now, isMe: true, type: 'file', filename: f.name, content_type: f.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+      setChats(prev => {
+        const updated = prev.map(c => c.id === cid ? { ...c, last_message: res.url, last_time: now } : c);
+        return updated.slice().sort((a, b) => (b.last_time ? new Date(b.last_time).getTime() : 0) - (a.last_time ? new Date(a.last_time).getTime() : 0));
+      });
       clearReply();
     } catch (err) {
       console.error('file send failed', err);
@@ -603,7 +649,12 @@ export default function Messages() {
           const cid = parseInt(selectedChat!, 10);
           setUploading(true);
           const res = await sendMessageFile(cid, file, { reply_to_id: replyTo?.id ?? undefined });
-          setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: new Date().toISOString(), isMe: true, type: 'file', filename, content_type: blob.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+          const now = new Date().toISOString();
+          setChatMessages(prev => [...prev, { id: res.id, text: res.url, time: now, isMe: true, type: 'file', filename, content_type: blob.type, reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+          setChats(prev => {
+            const updated = prev.map(c => c.id === cid ? { ...c, last_message: res.url, last_time: now } : c);
+            return updated.slice().sort((a, b) => (b.last_time ? new Date(b.last_time).getTime() : 0) - (a.last_time ? new Date(a.last_time).getTime() : 0));
+          });
           clearReply();
         } catch (e) {
           console.error('audio upload failed', e);
@@ -637,9 +688,13 @@ export default function Messages() {
     try {
       const text = newMessage.trim();
       setNewMessage("");
-      setChatMessages(prev => [...prev, { id: Date.now(), text, time: new Date().toISOString(), isMe: true, type: 'text', reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
+      const now = new Date().toISOString();
+      setChatMessages(prev => [...prev, { id: Date.now(), text, time: now, isMe: true, type: 'text', reply_to_id: replyTo?.id ?? null, reply_to_preview: replyTo?.preview ?? null }]);
       await sendMessage(cid, text, { reply_to_id: replyTo?.id });
-      setChats(prev => prev.map(c => c.id === cid ? { ...c, last_message: text, last_time: new Date().toISOString() } : c));
+      setChats(prev => {
+        const updated = prev.map(c => c.id === cid ? { ...c, last_message: text, last_time: now } : c);
+        return updated.slice().sort((a, b) => (b.last_time ? new Date(b.last_time).getTime() : 0) - (a.last_time ? new Date(a.last_time).getTime() : 0));
+      });
       clearReply();
     } catch (e) {
       console.error('send failed', e);
