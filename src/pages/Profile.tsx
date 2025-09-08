@@ -196,10 +196,8 @@ export default function Profile() {
   const firstCompany = currentCompany;
   const showingCompanyMedia = user?.user_type === 'company' && !!firstCompany;
   
-  const toAbsolute = (url?: string) => {
-    if (!url) return undefined;
-    return url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
-  };
+  const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
+  const toAbsolute = (url?: string) => (url ? (url.startsWith('http') ? url : `${API_BASE_URL}${url}`) : undefined);
 
   async function updateCompanyImage(type: "cover" | "logo", file: File) {
     if (!firstCompany?.id) return;
@@ -295,6 +293,7 @@ export default function Profile() {
               <img
                 src={resolvedCoverUrl}
                 alt="Capa"
+                onError={(e)=>{ (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : null}
@@ -311,7 +310,7 @@ export default function Profile() {
               <div className="relative">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-background shadow-bizlink-soft bg-gradient-soft overflow-hidden flex items-center justify-center text-lg font-bold relative">
                   {resolvedAvatarUrl ? (
-                    <img src={resolvedAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={resolvedAvatarUrl || DEFAULT_AVATAR} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <span>{displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}</span>
                   )}
