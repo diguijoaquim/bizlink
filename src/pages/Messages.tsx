@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
 
+// Resolve backend-relative URLs to absolute
+const resolveUrl = (p?: string) => (p ? (p.startsWith('http') ? p : `${API_BASE_URL}${p}`) : undefined);
+
  
  
 // WaveSurfer-based audio player (card style)
