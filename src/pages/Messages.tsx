@@ -767,9 +767,9 @@ export default function Messages() {
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${i % 2 === 0 ? "bg-muted" : "bg-primary/10"}`}>
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-3 w-16 mt-1" />
-                      </div>
-                    </div>
-                  ))}
+                  </div>
+                </div>
+              ))}
                 </div>    
               ) : (
                 chatMessages.map((message) => (

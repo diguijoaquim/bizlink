@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bizlink-v1';
+const CACHE_NAME = 'bizlink-v2';
 const urlsToCache = [
   '/',
   '/explore',
@@ -6,54 +6,41 @@ const urlsToCache = [
   '/profile',
   '/messages',
   '/notifications',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/icon-192.png',
   '/icon-512.png',
   '/offline.html'
 ];
 
-// Install event - cache resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)).catch(()=>{})
   );
 });
 
-// Fetch event - serve from cache when offline
 self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    // Se for navegação, tenta buscar, se falhar mostra offline.html
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match('/offline.html'))
-    );
-  } else {
-    // Para outros requests (css/js/img), tenta cache primeiro
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return response || fetch(event.request);
-      })
-    );
+  try {
+    const req = event.request;
+    const url = new URL(req.url);
+    // Never intercept cross-origin requests (e.g., Google Cloud Storage audio/images)
+    if (url.origin !== self.location.origin) {
+      return; // let the browser handle it
+    }
+
+    if (req.mode === 'navigate') {
+      event.respondWith(fetch(req).catch(() => caches.match('/offline.html')));
+    } else {
+      event.respondWith(
+        caches.match(req).then((response) => response || fetch(req)).catch(() => fetch(req))
+      );
+    }
+  } catch (e) {
+    // No-op to avoid console noise
   }
 });
 
-
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((cacheNames) => Promise.all(cacheNames.map((name) => name !== CACHE_NAME ? caches.delete(name) : undefined)))
   );
-
 });
 
