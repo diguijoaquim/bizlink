@@ -33,6 +33,7 @@ export default function ChatSearch() {
   const openChatWithUser = async (userId: number) => {
     try {
       const { id } = await startConversation(userId);
+      try { sessionStorage.setItem('pendingOpenChatId', String(id)); } catch {}
       navigate(`/messages?open=${id}`);
     } catch {}
   };

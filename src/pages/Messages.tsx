@@ -345,6 +345,16 @@ export default function Messages() {
       if (Number.isFinite(cid)) {
         handleOpenChat(cid);
       }
+    } else {
+      // fallback: session flag from ChatSearch
+      try {
+        const pending = sessionStorage.getItem('pendingOpenChatId');
+        if (pending) {
+          const cid = parseInt(pending, 10);
+          if (Number.isFinite(cid)) handleOpenChat(cid);
+          sessionStorage.removeItem('pendingOpenChatId');
+        }
+      } catch {}
     }
   }, [location.search]);
 
