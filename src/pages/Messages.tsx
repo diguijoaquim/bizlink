@@ -20,6 +20,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
   const [isPlaying, setIsPlaying] = useState(false);
   const [dur, setDur] = useState(0);
   const [curr, setCurr] = useState(0);
+  const isDraggingRef = useRef(false);
 
   // Draw static bars and progress overlay on a small canvas (SoundCloud-style)
   const barWidth = 2;
@@ -40,7 +41,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const width = canvas.width;
+    const width = canvas.width / (Math.max(1, window.devicePixelRatio || 1));
     ctx.clearRect(0, 0, width, height);
     const numBars = Math.floor(width / (barWidth + barGap));
     // pseudo-random, seeded by src hash
@@ -78,18 +79,13 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     const progressX = Math.floor(progressRatio * width);
     if (progressX > 0) {
       // Clip and redraw bars in progress color
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, progressX, height);
-      ctx.clip();
-      // redraw same bars in progress color
       const rnd2 = seededRandom(Math.abs(hash));
-      for (let i = 0; i < numBars; i++) {
+      const clipNumBars = Math.ceil(progressX / (barWidth + barGap));
+      for (let i = 0; i < clipNumBars; i++) {
         const x = i * (barWidth + barGap);
         const h = Math.max(minH, rnd2() * maxH);
         drawBar(x, h, progressColor);
       }
-      ctx.restore();
     }
   };
 
@@ -99,9 +95,9 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     a.preload = 'metadata';
     audioRef.current = a;
 
-    const onLoaded = () => { const d = a.duration || 0; setDur(d); drawBars(0); };
-    const onDuration = () => { const d = a.duration || 0; if (d && d !== dur) setDur(d); };
-    const onTime = () => { const t = a.currentTime || 0; setCurr(t); const d = a.duration || dur; drawBars(d > 0 ? t / d : 0); };
+    const onLoaded = () => { const d = Number.isFinite(a.duration) ? a.duration : 0; setDur(d); drawBars(0); };
+    const onDuration = () => { const d = Number.isFinite(a.duration) ? a.duration : 0; if (d && d !== dur) setDur(d); };
+    const onTime = () => { const t = Number.isFinite(a.currentTime) ? a.currentTime : 0; const d = Number.isFinite(a.duration) ? a.duration : dur; setCurr(t); drawBars(d > 0 ? t / d : 0); };
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
 
@@ -157,20 +153,39 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     };
   }, [src]);
 
+  // Scrub on click/drag
+  useEffect(() => {
+    const c = canvasRef.current;
+    const a = audioRef.current;
+    if (!c || !a) return;
+    const getRatio = (clientX: number) => {
+      const rect = c.getBoundingClientRect();
+      const x = Math.min(Math.max(0, clientX - rect.left), rect.width);
+      return rect.width > 0 ? x / rect.width : 0;
+    };
+    const onDown = (e: MouseEvent) => { isDraggingRef.current = true; const r = getRatio(e.clientX); if (dur > 0) { a.currentTime = r * dur; drawBars(r); } };
+    const onMove = (e: MouseEvent) => { if (!isDraggingRef.current) return; const r = getRatio(e.clientX); if (dur > 0) { a.currentTime = r * dur; drawBars(r); } };
+    const onUp = () => { isDraggingRef.current = false; };
+    c.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      c.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dur]);
+
   const toggle = () => {
     const a = audioRef.current;
     if (!a) return;
-    // Force load if needed, then play
-    if (a.paused) {
-      try { a.play().catch(()=>{}); } catch {}
-    } else {
-      try { a.pause(); } catch {}
-    }
+    if (a.paused) { try { a.play().catch(()=>{}); } catch {} } else { try { a.pause(); } catch {} }
   };
 
-  const fmt = (s: number) => {
-    const mm = Math.floor((s || 0) / 60).toString().padStart(2, '0');
-    const ss = Math.floor((s || 0) % 60).toString().padStart(2, '0');
+  const fmt = (val: number) => {
+    const s = Number.isFinite(val) && val > 0 ? val : 0;
+    const mm = Math.floor(s / 60).toString().padStart(2, '0');
+    const ss = Math.floor(s % 60).toString().padStart(2, '0');
     return `${mm}:${ss}`;
   };
 
@@ -179,7 +194,7 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
       <div className="flex items-center gap-2">
         <button onClick={toggle} disabled={!audioRef.current} className={`h-7 w-7 rounded-full grid place-items-center text-white ${lightText ? 'bg-white/30' : 'bg-gradient-to-br from-indigo-500 to-violet-500'} shadow`}>{isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}</button>
         <div className="relative flex-1">
-          <canvas ref={canvasRef} className="w-36" />
+          <canvas ref={canvasRef} className="w-36 cursor-pointer" />
         </div>
         {avatarUrl && (
           <img src={avatarUrl} className="h-8 w-8 rounded-full object-cover border border-white/20" />
@@ -873,7 +888,6 @@ export default function Messages() {
                           return (
                             <div className="space-y-1">
                               <ChatWavePlayer src={message.text} lightText={message.isMe} avatarUrl={selectedChatData.peer.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} />
-                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                             </div>
                           );
                         }
