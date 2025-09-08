@@ -965,22 +965,22 @@ export default function Messages() {
                         if (kind === 'image') {
                           return (
                             <div className="space-y-1">
-                              <img onClick={() => openImage(message.text)} src={message.text} alt={getDisplayName(message)} className="rounded-lg max-w-[70vw] max-h-64 object-cover cursor-zoom-in" />
+                              <img onClick={() => openImage(resolveUrl(message.text)!)} src={resolveUrl(message.text)} alt={getDisplayName(message)} className="rounded-lg max-w-[70vw] max-h-64 object-cover cursor-zoom-in" />
                             </div>
                           );
                         }
                         if (kind === 'video') {
                           return (
                             <div className="space-y-1">
-                              <video src={message.text} controls className="rounded-lg max-w-[70vw]" />
-                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                              <video src={resolveUrl(message.text)} controls className="rounded-lg max-w-[70vw]" />
+                              <a href={resolveUrl(message.text)} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                             </div>
                           );
                         }
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <ChatWavePlayer src={message.text} lightText={message.isMe} avatarUrl={message.isMe ? myAvatar : peerAvatar} />
+                              <ChatWavePlayer src={resolveUrl(message.text)!} lightText={message.isMe} avatarUrl={message.isMe ? myAvatar : peerAvatar} />
                             </div>
                           );
                         }
@@ -994,7 +994,7 @@ export default function Messages() {
                               )}
                               <span>{getDisplayName(message)}</span>
                             </div>
-                            <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                            <a href={resolveUrl(message.text)} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
                           </div>
                         );
                       })()
