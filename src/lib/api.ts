@@ -178,6 +178,9 @@ export type Job = {
   image_url?: string;
   created_at: string;
   updated_at: string;
+  // Extras retornados pelo backend para exibição
+  poster_name?: string;
+  poster_avatar?: string;
 };
 
 export type CompanyPortfolio = {
