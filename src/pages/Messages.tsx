@@ -844,7 +844,7 @@ export default function Messages() {
                 </Button>
                 <div className="relative">
                   <img
-                    onClick={()=>navigate(`/profile/${selectedChatData.peer.id}`)}
+                    onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
                     src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) || DEFAULT_AVATAR}
                     onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                     alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
@@ -853,7 +853,7 @@ export default function Messages() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center space-x-1 min-w-0">
-                    <button onClick={()=>navigate(`/profile/${selectedChatData.peer.id}`)} className="font-medium text-foreground truncate hover:underline text-left">
+                    <button onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)} className="font-medium text-foreground truncate hover:underline text-left">
                       {(selectedChatData as any).peer.display_name || selectedChatData.peer.full_name || selectedChatData.peer.email}
                     </button>
                   </div>
