@@ -308,6 +308,8 @@ export default function Messages() {
 
   // State for reply-to message
   const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
+  // Cache para referências de serviço/vaga no chat
+  const [refCache, setRefCache] = useState<Record<string, any>>({});
 
   const [imageViewSrc, setImageViewSrc] = useState<string | null>(null);
   const openImage = (src: string) => { setImageViewSrc(src); try { window.history.pushState({ image: true }, ''); } catch {} };
@@ -949,6 +951,13 @@ export default function Messages() {
                   <div onDoubleClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
                     {message.reply_to_preview && (
                       <div className={`mb-1 px-2 py-1 rounded ${message.isMe ? 'bg-white/20' : 'bg-background/60'} text-xs italic line-clamp-1`}>↪ {message.reply_to_preview}</div>
+                    )}
+                    {/* Renderizar cartão de referência (serviço/vaga) quando presente */}
+                    {message.service_ref && (
+                      <RefCard kind="service" refId={message.service_ref} fetcher={getServiceByRef} cache={refCache} setCache={setRefCache} isMe={!!message.isMe} />
+                    )}
+                    {message.job_ref && (
+                      <RefCard kind="job" refId={message.job_ref} fetcher={getJobByRef} cache={refCache} setCache={setRefCache} isMe={!!message.isMe} />
                     )}
                     { (message.type === 'file' || message.content_type || message.text.startsWith('http')) ? (
                       (() => {
