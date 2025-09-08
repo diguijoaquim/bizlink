@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
 
+const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
 // Resolve backend-relative URLs to absolute
 const resolveUrl = (p?: string) => (p ? (p.startsWith('http') ? p : `${API_BASE_URL}${p}`) : undefined);
 
@@ -700,7 +701,8 @@ export default function Messages() {
                 <div className="flex items-start space-x-3">
                   <div className="relative">
                     <img
-                          src={resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url) || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                          src={resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url) || DEFAULT_AVATAR}
+                          onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                           alt={chat.peer.full_name || chat.peer.email}
                       className="w-12 h-12 rounded-full object-cover"
                     />
@@ -838,7 +840,8 @@ export default function Messages() {
                 <div className="relative">
                   <img
                     onClick={()=>navigate(`/profile/${selectedChatData.peer.id}`)}
-                    src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                    src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) || DEFAULT_AVATAR}
+                    onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
                     alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
                     className="w-10 h-10 rounded-full object-cover cursor-pointer"
                   />
