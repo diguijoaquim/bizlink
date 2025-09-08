@@ -21,6 +21,20 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
   const DEFAULT_AVATAR = "https://www.skyvenda.com/avatar.png";
 
+  const openChatWithPoster = async () => {
+    try {
+      const posterUserId = (item as any).poster_user_id;
+      if (!posterUserId) return;
+      const { startConversation } = await import('@/lib/api');
+      const conv = await startConversation(Number(posterUserId));
+      if (conv?.id) {
+        navigate(`/messages?open=${conv.id}`);
+      }
+    } catch (e) {
+      console.error('Falha ao iniciar chat com o anunciante:', e);
+    }
+  };
+
   const toAbsolute = (url: string | null) => {
     if (!url) return "/placeholder.svg";
     if (url.startsWith('http')) return url;
@@ -167,13 +181,21 @@ export function FeedItemComponent({ item }: FeedItemProps) {
           {/* Content */}
           <div className="px-4 pb-3">
             <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {item.category}
-                  </Badge>
-              <div className="text-lg font-bold text-primary">
-                  {item.price ? `${item.price.toLocaleString('pt-PT')} MT` : 'Preço sob consulta'}
+              {item.category && (
+                <Badge variant="secondary" className="text-xs">
+                  {item.category}
+                </Badge>
+              )}
+              {item.price ? (
+                <div className="text-lg font-bold text-primary">
+                  {`${item.price.toLocaleString('pt-PT')} MT`}
                 </div>
-              </div>
+              ) : (
+                <button type="button" onClick={openChatWithPoster} className="text-lg font-bold text-primary underline underline-offset-2">
+                  Preço sob consulta
+                </button>
+              )}
+            </div>
               
             <h3 className="font-semibold text-foreground mb-2 text-lg">
                 {item.title}
