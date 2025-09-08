@@ -179,6 +179,16 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     loadUserData();
   }, []);
 
+  // Preload common datasets in background so pages open instantly later
+  useEffect(() => {
+    // fire-and-forget; loaders are idempotent via *Loaded flags
+    loadFeedOnce();
+    loadJobsOnce();
+    loadCompaniesOnce();
+    loadConversationsOnce();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@');
     if (isProfileRoute) {

@@ -3,6 +3,7 @@ import { FeedItemComponent } from './FeedItem';
 import { FeedSkeletonList } from './FeedSkeleton';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getFeed, type FeedItem, type FeedResponse } from '@/lib/api';
+import { useHome } from '@/contexts/HomeContext';
 import { useNavigate } from 'react-router-dom';
 
 interface InfiniteFeedProps {
@@ -11,8 +12,9 @@ interface InfiniteFeedProps {
 }
 
 export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: InfiniteFeedProps) {
+  const { feedItems, feedLoaded, loadFeedOnce } = useHome();
   const [items, setItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!feedLoaded);
   const [hasMore, setHasMore] = useState(true);
   const [lastId, setLastId] = useState<number | undefined>();
   const [query, setQuery] = useState(initialQuery);
@@ -50,7 +52,11 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
     threshold: 200
   });
 
-  // Load initial data
+  // hydrate from context and ensure preload
+  useEffect(() => { loadFeedOnce(); }, [loadFeedOnce]);
+  useEffect(() => { if (feedLoaded && items.length === 0) setItems(feedItems); }, [feedLoaded, feedItems]);
+
+  // Load initial data (fallback)
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -85,7 +91,7 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-3">
+    <div className="w-full max-w-2xl mx-auto ">
       {/* Search Bar */}
       <div className=" px-4 py-3 border-b border-border">
         {showSearchAsLink ? (
