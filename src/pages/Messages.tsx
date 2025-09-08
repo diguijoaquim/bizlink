@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
+import { useHome } from '@/contexts/HomeContext';
 
 const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
 // Resolve backend-relative URLs to absolute
@@ -326,8 +327,9 @@ export default function Messages() {
   }, [selectedChat, imageViewSrc]);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
-
-  const location = useLocation();
+  const { displayAvatar } = useHome() as any;
+  const peerAvatar = resolveUrl(((selectedChatData as any)?.peer?.display_photo_url) || selectedChatData?.peer?.profile_photo_url) || DEFAULT_AVATAR;
+  const myAvatar = resolveUrl(displayAvatar) || DEFAULT_AVATAR;
 
   // Load users/companies when component mounts
   useEffect(() => {
@@ -889,7 +891,10 @@ export default function Messages() {
                 </div>    
               ) : (
                 chatMessages.map((message) => (
-                <div key={message.id} className={`flex ${message.isMe ? "justify-end" : "justify-start"}`}>
+                <div key={message.id} className={`flex items-end gap-2 ${message.isMe ? "justify-end" : "justify-start"}`}>
+                  {!message.isMe && (
+                    <img src={peerAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} className="w-6 h-6 rounded-full" />
+                  )}
                   <div onDoubleClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
                     {message.reply_to_preview && (
                       <div className={`mb-1 px-2 py-1 rounded ${message.isMe ? 'bg-white/20' : 'bg-background/60'} text-xs italic line-clamp-1`}>↪ {message.reply_to_preview}</div>
@@ -915,7 +920,7 @@ export default function Messages() {
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <ChatWavePlayer src={message.text} lightText={message.isMe} avatarUrl={selectedChatData.peer.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} />
+                              <ChatWavePlayer src={message.text} lightText={message.isMe} avatarUrl={message.isMe ? myAvatar : peerAvatar} />
                             </div>
                           );
                         }
@@ -940,6 +945,9 @@ export default function Messages() {
                       {new Date(message.time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}
                     </p>
                   </div>
+                  {message.isMe && (
+                    <img src={myAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} className="w-6 h-6 rounded-full" />
+                  )}
                 </div>
                 ))
               )}
