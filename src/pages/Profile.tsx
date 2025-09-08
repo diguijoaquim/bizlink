@@ -331,6 +331,28 @@ export default function Profile() {
                       {firstCompany?.name || displayName || user?.email}
                     </h1>
                     <div className="flex items-center text-muted-foreground mt-2 gap-3">
+                      {(() => {
+                        const t = user?.user_type;
+                        if (t === 'company') {
+                          return (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border border-indigo-500/60 text-indigo-700 bg-indigo-50 dark:bg-indigo-900/20">
+                              <Building2 className="h-3.5 w-3.5" /> Empresa
+                            </span>
+                          );
+                        }
+                        if (t === 'freelancer') {
+                          return (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-violet-700 border border-violet-500/60" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(236,72,153,0.12))' }}>
+                              <StarIcon className="h-3.5 w-3.5" /> Freelancer
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border border-muted text-muted-foreground bg-muted/40">
+                            <span className="inline-block w-3.5 h-3.5 rounded-full bg-muted-foreground/60" /> Usuário
+                          </span>
+                        );
+                      })()}
                       <div className="flex items-center">
                         <MapPin className="h-4 w-4 mr-1" />
                         <span>
