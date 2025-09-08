@@ -304,8 +304,22 @@ export default function Messages() {
   const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
 
   const [imageViewSrc, setImageViewSrc] = useState<string | null>(null);
-  const openImage = (src: string) => setImageViewSrc(src);
+  const openImage = (src: string) => { setImageViewSrc(src); try { window.history.pushState({ image: true }, ''); } catch {} };
   const closeImage = () => setImageViewSrc(null);
+
+  // Intercept native back to close overlays or return to chat list
+  useEffect(() => {
+    const onPop = () => {
+      if (imageViewSrc) { setImageViewSrc(null); return; }
+      if (selectedChat) {
+        setSelectedChat(null);
+        // blur any focused input to avoid keyboard issues
+        try { (document.activeElement as HTMLElement)?.blur(); } catch {}
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [selectedChat, imageViewSrc]);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
@@ -445,6 +459,7 @@ export default function Messages() {
 
   const handleOpenChat = async (chatId: number) => {
     setSelectedChat(String(chatId));
+    try { window.history.pushState({ chatOpen: true }, ''); } catch {}
     window.dispatchEvent(new CustomEvent('chat:active', { detail: chatId }));
     window.dispatchEvent(new Event('chat:clear-unread'));
     try { await markConversationRead(chatId); } catch {}
