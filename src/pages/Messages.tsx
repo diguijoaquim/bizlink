@@ -945,9 +945,6 @@ export default function Messages() {
                       {new Date(message.time).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}
                     </p>
                   </div>
-                  {message.isMe && (
-                    <img src={myAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} className="w-6 h-6 rounded-full" />
-                  )}
                 </div>
                 ))
               )}
