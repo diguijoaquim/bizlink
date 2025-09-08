@@ -511,7 +511,7 @@ export default function Messages() {
             const myId = getCurrentUserId();
             const isMine = myId !== null && Number(m.sender_id) === Number(myId);
             if (!isMine && String(m.conversation_id ?? chatId) === String(chatId)) {
-              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false, type: m.type, filename: m.filename, content_type: m.content_type }]);
+              setChatMessages(prev => [...prev, { id: m.id, text: m.text, time: m.time, isMe: false, type: m.type, filename: m.filename, content_type: m.content_type, service_ref: m.service_ref, job_ref: m.job_ref }]);
               window.dispatchEvent(new Event('chat:clear-unread'));
             }
           } else if (msg?.event === 'typing') {
@@ -1093,4 +1093,43 @@ export default function Messages() {
   );
 
   return content;
+}
+
+// Lightweight inline component to render referenced Service/Job
+function RefCard({ kind, refId, fetcher, cache, setCache, isMe }: { kind: 'service' | 'job'; refId: string; fetcher: (r: string)=>Promise<any>; cache: Record<string, any>; setCache: (updater: any)=>void; isMe: boolean; }) {
+  const navigate = useNavigate();
+  const data = cache[`${kind}:${refId}`];
+  useEffect(() => {
+    let active = true;
+    if (!data) {
+      fetcher(refId).then((res) => {
+        if (!active) return;
+        setCache((prev: Record<string, any>) => ({ ...prev, [`${kind}:${refId}`]: res }));
+      }).catch(() => {});
+    }
+    return () => { active = false; };
+  }, [refId]);
+  if (!data) {
+    return <div className={`mb-2 rounded-md ${isMe ? 'bg-white/15' : 'bg-background/70'} p-2 text-xs`}>Carregando {kind}…</div>;
+  }
+  return (
+    <div className={`mb-2 rounded-md overflow-hidden border ${isMe ? 'border-white/30' : 'border-border'} bg-card text-foreground`}
+         style={{ maxWidth: '18rem' }}>
+      {data.image_url && (
+        <img src={data.image_url} alt={data.title} className="w-full h-28 object-cover" />
+      )}
+      <div className="p-2 space-y-1">
+        <div className="font-medium text-sm truncate">{data.title}</div>
+        {typeof data.price !== 'undefined' && data.price !== null && (
+          <div className="text-xs text-muted-foreground">{Number(data.price).toLocaleString('pt-PT')} MT</div>
+        )}
+        <div className="pt-1">
+          <button className={`text-xs underline ${isMe ? 'text-white' : 'text-primary'}`}
+                  onClick={(e)=>{ e.stopPropagation(); navigate(kind === 'service' ? `/services/${data.id}` : `/jobs/${data.id}`); }}>
+            Ver {kind === 'service' ? 'serviço' : 'vaga'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

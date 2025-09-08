@@ -1005,6 +1005,8 @@ export type ChatMessageItem = {
   content_type?: string;
   reply_to_id?: number | null;
   reply_to_preview?: string | null;
+  service_ref?: string | null;
+  job_ref?: string | null;
 };
 
 export async function getConversations(): Promise<ConversationListItem[]> {
@@ -1020,18 +1022,31 @@ export async function getMessages(conversationId: number): Promise<ChatMessageIt
   return apiFetch(`/chat/conversations/${conversationId}/messages`);
 }
 
-export async function sendMessage(conversationId: number, text: string, options?: { reply_to_id?: number }): Promise<{ id: number }> {
+export async function sendMessage(conversationId: number, text: string, options?: { reply_to_id?: number; service_ref?: string; job_ref?: string }): Promise<{ id: number }> {
   const params = new URLSearchParams({ text });
   if (options?.reply_to_id !== undefined) params.append('reply_to', String(options.reply_to_id));
+  if (options?.service_ref) params.append('service_ref', options.service_ref);
+  if (options?.job_ref) params.append('job_ref', options.job_ref);
   return apiFetch(`/chat/conversations/${conversationId}/send?${params.toString()}`, { method: 'POST' });
 }
 
-export async function sendMessageFile(conversationId: number, file: File, options?: { reply_to_id?: number }): Promise<{ id: number; url: string }> {
+export async function sendMessageFile(conversationId: number, file: File, options?: { reply_to_id?: number; service_ref?: string; job_ref?: string }): Promise<{ id: number; url: string }> {
   const form = new FormData();
   form.append('file', file);
   const url = new URL(`${API_BASE_URL}/chat/conversations/${conversationId}/send-file`);
   if (options?.reply_to_id !== undefined) url.searchParams.set('reply_to', String(options.reply_to_id));
+  if (options?.service_ref) url.searchParams.set('service_ref', options.service_ref);
+  if (options?.job_ref) url.searchParams.set('job_ref', options.job_ref);
   return apiFetch(url.toString().replace(API_BASE_URL, ''), { method: 'POST', body: form });
+}
+
+// Lookup by reference for chat attachments
+export async function getServiceByRef(ref: string): Promise<Service> {
+  return apiFetch(`/chat/service-by-ref?ref=${encodeURIComponent(ref)}`);
+}
+
+export async function getJobByRef(ref: string): Promise<Job> {
+  return apiFetch(`/chat/job-by-ref?ref=${encodeURIComponent(ref)}`);
 }
 
 export async function markConversationRead(conversationId: number): Promise<{ ok: boolean }> {
