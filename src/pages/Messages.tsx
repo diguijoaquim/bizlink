@@ -27,8 +27,9 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
   const barGap = 1;
   const barRadius = 2;
   const height = 26;
-  const waveColor = '#4F4A85';
-  const progressColor = '#383351';
+  // Colors adapt to background: if it's my message (lightText), use white bars
+  const waveColor = lightText ? 'rgba(255,255,255,0.55)' : '#4F4A85';
+  const progressColor = lightText ? 'rgba(255,255,255,0.95)' : '#383351';
 
   const seededRandom = (seed: number) => {
     let s = seed % 2147483647;
