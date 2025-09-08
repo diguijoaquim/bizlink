@@ -35,6 +35,11 @@ export default function Companies() {
     return url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
   };
 
+  const toWebsite = (url?: string | null) => {
+    if (!url) return undefined;
+    return url.startsWith('http') ? url : `http://${url}`;
+  };
+
   return (
     <AppLayout>
       <div className="space-y-4">
@@ -69,7 +74,11 @@ export default function Companies() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-semibold text-foreground truncate">{c.name}</h3>
-                      {c.website && <Badge variant="outline">Website</Badge>}
+                      {c.website && (
+                        <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer">
+                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">Website</Badge>
+                        </a>
+                      )}
                     </div>
                     {c.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{c.description}</p>
@@ -79,7 +88,9 @@ export default function Companies() {
                         <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{c.district}{c.province ? `, ${c.province}` : ''}</span>
                       )}
                       {c.website && (
-                        <span className="flex items-center gap-1"><Globe className="h-4 w-4" />{c.website}</span>
+                        <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+                          <Globe className="h-4 w-4" />{c.website.replace(/^https?:\/\//, '')}
+                        </a>
                       )}
                     </div>
                   </div>
