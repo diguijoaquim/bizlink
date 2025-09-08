@@ -890,9 +890,12 @@ export default function Messages() {
               ))}
                 </div>    
               ) : (
-                chatMessages.map((message) => (
+                chatMessages.map((message, idx) => {
+                  const next = chatMessages[idx + 1];
+                  const showLeftAvatar = !message.isMe && (!next || next.isMe);
+                  return (
                 <div key={message.id} className={`flex items-end gap-2 ${message.isMe ? "justify-end" : "justify-start"}`}>
-                  {!message.isMe && (
+                  {showLeftAvatar && (
                     <img src={peerAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} className="w-6 h-6 rounded-full" />
                   )}
                   <div onDoubleClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
@@ -946,7 +949,8 @@ export default function Messages() {
                     </p>
                   </div>
                 </div>
-                ))
+                  );
+                })
               )}
             </div>
 
