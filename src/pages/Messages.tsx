@@ -97,7 +97,6 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     const a = new Audio();
     a.src = src;
     a.preload = 'metadata';
-    a.crossOrigin = 'anonymous';
     audioRef.current = a;
 
     const onLoaded = () => { setDur(a.duration || 0); drawBars(0); };
@@ -110,16 +109,17 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
     a.addEventListener('play', onPlay);
     a.addEventListener('pause', onPause);
 
-    // initial canvas size
+    // initial canvas size (once)
     const c = canvasRef.current;
     if (c) {
-      // devicePixelRatio for crisp bars
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const cssW = c.clientWidth || 144;
       c.width = Math.floor(cssW * dpr);
       c.height = Math.floor(height * dpr);
       c.style.height = `${height}px`;
-      c.getContext('2d')?.scale(dpr, dpr);
+      const ctx = c.getContext('2d');
+      if (ctx) ctx.scale(dpr, dpr);
+      drawBars(0);
     }
 
     return () => {
@@ -131,12 +131,17 @@ function ChatWavePlayer({ src, lightText, avatarUrl }: { src: string; lightText?
       a.removeEventListener('play', onPlay);
       a.removeEventListener('pause', onPause);
     };
-  }, [src, dur]);
+  }, [src]);
 
   const toggle = () => {
     const a = audioRef.current;
     if (!a) return;
-    if (a.paused) a.play().catch(()=>{}); else a.pause();
+    // Force load if needed, then play
+    if (a.paused) {
+      try { a.play().catch(()=>{}); } catch {}
+    } else {
+      try { a.pause(); } catch {}
+    }
   };
 
   const fmt = (s: number) => {
