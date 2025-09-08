@@ -872,8 +872,7 @@ export default function Messages() {
                         if (kind === 'image') {
                           return (
                             <div className="space-y-1">
-                              <img src={message.text} alt={getDisplayName(message)} className="rounded-lg max-w-[70vw] object-contain" />
-                              <a href={message.text} download className={`inline-flex items-center gap-1 text-xs ${message.isMe ? 'text-white/80' : 'text-foreground'} underline`}><Download className="h-3 w-3" />Baixar</a>
+                              <img onClick={() => openImage(message.text)} src={message.text} alt={getDisplayName(message)} className="rounded-lg max-w-[70vw] max-h-64 object-cover cursor-zoom-in" />
                             </div>
                           );
                         }
@@ -1029,6 +1028,14 @@ export default function Messages() {
           )}
         </DialogContent>
       </Dialog>
+      {imageViewSrc && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center" onClick={closeImage}>
+          <button className="absolute top-4 right-4 bg-white/90 rounded-full p-2 shadow" onClick={(e)=>{ e.stopPropagation(); closeImage(); }}>
+            <X className="h-5 w-5" />
+          </button>
+          <img src={imageViewSrc} className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg" onClick={(e)=>e.stopPropagation()} />
+        </div>
+      )}
     </>
   );
 
