@@ -439,9 +439,9 @@ export default function Messages() {
     }
   };
 
-  const startChatWithUser = (user: User) => {
-    startConversation(user.id).then(async ({ id }) => {
-      // Optimistically add conversation to list if missing
+  const startChatWithUser = async (user: User) => {
+    try {
+      const { id } = await startConversation(user.id);
       setChats(prev => {
         if (prev.some(c => c.id === id)) return prev;
         const optimistic = {
@@ -453,15 +453,18 @@ export default function Messages() {
         return [optimistic, ...prev];
       });
       await handleOpenChat(id);
-      // Refresh conversations in background to sync last_message
+      setStartOpen(false);
       loadConversations();
-    }).catch(console.error);
+    } catch (e) {
+      console.error('Failed to start chat with user', e);
+    }
   };
 
   const startChatWithCompany = async (company: Company) => {
     try {
       const owner = await getUserByIdPublic(company.owner_id);
-      startChatWithUser(owner as unknown as User);
+      await startChatWithUser(owner as unknown as User);
+      setStartOpen(false);
     } catch (e) {
       console.error('Failed to start chat with company owner', e);
     }
