@@ -15,7 +15,7 @@ interface AppLayoutProps {
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Explorar", href: "/explore", icon: Search },
+  { name: "Empresas", href: "/companies", icon: Building2 },
   { name: "Vagas", href: "/jobs", icon: Briefcase },
   { name: "Chat", href: "/messages", icon: MessageCircle },
   { name: "Notificações", href: "/notifications", icon: Bell },
