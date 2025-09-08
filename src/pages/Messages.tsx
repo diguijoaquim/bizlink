@@ -806,14 +806,17 @@ export default function Messages() {
                 </Button>
                 <div className="relative">
                   <img
+                    onClick={()=>navigate(`/profile/${selectedChatData.peer.id}`)}
                     src={selectedChatData.peer.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
                     alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover cursor-pointer"
                   />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center space-x-1 min-w-0">
-                    <h3 className="font-medium text-foreground truncate">{selectedChatData.peer.full_name || selectedChatData.peer.email}</h3>
+                    <button onClick={()=>navigate(`/profile/${selectedChatData.peer.id}`)} className="font-medium text-foreground truncate hover:underline text-left">
+                      {selectedChatData.peer.full_name || selectedChatData.peer.email}
+                    </button>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {isPeerTyping ? 'Digitando…' : 'Conversa'}
