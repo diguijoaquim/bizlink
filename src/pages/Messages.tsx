@@ -319,6 +319,10 @@ export default function Messages() {
   // State for reply-to message
   const [replyTo, setReplyTo] = useState<{ id: number; preview: string } | null>(null);
 
+  const [imageViewSrc, setImageViewSrc] = useState<string | null>(null);
+  const openImage = (src: string) => setImageViewSrc(src);
+  const closeImage = () => setImageViewSrc(null);
+
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
 
   const location = useLocation();
