@@ -41,7 +41,8 @@ export default function CreateJob() {
     location: '',
     remote_work: false,
     status: 'Ativa',
-    is_promoted: false
+    is_promoted: false,
+    category: undefined as any
   });
   
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -115,7 +116,8 @@ export default function CreateJob() {
         location: job.location || '',
         remote_work: job.remote_work,
         status: job.status,
-        is_promoted: job.is_promoted
+        is_promoted: job.is_promoted,
+        category: (job as any).category || ''
       });
     } catch (error) {
       console.error('Error loading job:', error);
@@ -177,7 +179,8 @@ export default function CreateJob() {
           status: formData.status,
           is_promoted: formData.is_promoted,
           company_id: formData.company_id,
-          image: imageFile || undefined
+          image: imageFile || undefined,
+          category: (formData as any).category || undefined
         });
         toast({
           title: "Sucesso",
@@ -346,6 +349,19 @@ export default function CreateJob() {
                           rows={6}
                           className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
                           required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="category" className="text-sm font-semibold text-gray-700 mb-2 block">
+                          Categoria
+                        </Label>
+                        <Input
+                          id="category"
+                          value={(formData as any).category || ''}
+                          onChange={(e) => handleInputChange('category' as any, e.target.value)}
+                          placeholder="Ex: TI, Marketing, Vendas..."
+                          className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
 

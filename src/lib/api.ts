@@ -176,6 +176,7 @@ export type Job = {
   applications: number;
   is_promoted: boolean;
   image_url?: string;
+  category?: string;
   created_at: string;
   updated_at: string;
   // Extras retornados pelo backend para exibição
@@ -690,6 +691,7 @@ export async function createJob(input: {
   is_promoted?: boolean;
   company_id: number;
   image?: File;
+  category?: string;
 }): Promise<Job> {
   const formData = new FormData();
   
@@ -698,6 +700,7 @@ export async function createJob(input: {
   formData.append('company_id', input.company_id.toString());
   formData.append('status', input.status || 'Ativa');
   formData.append('is_promoted', input.is_promoted ? '1' : '0');
+  if (input.category) formData.append('category', input.category);
   
   if (input.location) {
     formData.append('location', input.location);
