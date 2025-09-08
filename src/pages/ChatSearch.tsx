@@ -87,13 +87,13 @@ export default function ChatSearch() {
 
         {users.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold mb-2">Usuários</h3>
+            <h3 className="text-sm font-semibold mb-2">Destinatários</h3>
             <div className="divide-y border rounded-lg">
               {users.map((u) => (
                 <div key={u.id} role="button" aria-label={`Conversar com ${u.full_name || u.email}`} className="p-3 flex items-center gap-3 cursor-pointer select-none active:opacity-80" onClick={() => openChatWithUser(u.id)}>
-                  <img src={u.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-10 h-10 rounded-full object-cover" />
+                  <img src={(u as any).display_photo_url || u.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-10 h-10 rounded-full object-cover" />
                   <div className="min-w-0">
-                    <div className="font-medium truncate">{u.full_name || u.email}</div>
+                    <div className="font-medium truncate">{(u as any).display_name || u.full_name || u.email}</div>
                     <div className="text-xs text-muted-foreground truncate">{u.user_type}</div>
                   </div>
                 </div>
