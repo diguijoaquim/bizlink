@@ -191,6 +191,7 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
 
   useEffect(() => {
     const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@');
+    // Evitar refetch desnecessário no home ou em rotas comuns; só atualiza em perfil
     if (isProfileRoute) {
       loadUserData();
     }

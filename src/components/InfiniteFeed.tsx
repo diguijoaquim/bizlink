@@ -56,15 +56,22 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
   useEffect(() => { loadFeedOnce(); }, [loadFeedOnce]);
   useEffect(() => { if (feedLoaded && items.length === 0) setItems(feedItems); }, [feedLoaded, feedItems]);
 
-  // Load initial data (fallback)
+  // Load initial data (fallback when not already cached or when searching)
   useEffect(() => {
+    if (feedLoaded && !query) {
+      // already have cache; ensure UI shows it and don't refetch
+      setItems(feedItems);
+      setLoading(false);
+      setLastId(undefined);
+      setHasMore(true);
+      return;
+    }
     const loadInitialData = async () => {
       try {
         setLoading(true);
         setItems([]);
         setLastId(undefined);
         setHasMore(true);
-        
         const response: FeedResponse = await getFeed(undefined, 10);
         const shuffled = [...response.items].sort(() => Math.random() - 0.5);
         setItems(shuffled);
@@ -76,9 +83,8 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
         setLoading(false);
       }
     };
-
     loadInitialData();
-  }, [query]);
+  }, [query, feedLoaded, feedItems]);
 
   // Search functionality (used only when not link-mode)
   const handleSearch = async (searchQuery: string) => {
