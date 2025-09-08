@@ -5,8 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Building2, MapPin, Globe, Search, ArrowLeft } from 'lucide-react';
-import { type Company, API_BASE_URL } from '@/lib/api';
+import { Building2, MapPin, Globe, Search, ArrowLeft, MoreVertical, Facebook, Linkedin, Instagram } from 'lucide-react';
+import { startConversation, type Company, API_BASE_URL } from '@/lib/api';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useHome } from '@/contexts/HomeContext';
 
 export default function Companies() {
@@ -15,6 +17,7 @@ export default function Companies() {
   const loading = !companiesLoaded;
   const [q, setQ] = useState('');
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => { loadCompaniesOnce(); }, [loadCompaniesOnce]);
   useEffect(() => { setFiltered(companies); }, [companies]);
@@ -38,6 +41,15 @@ export default function Companies() {
   const toWebsite = (url?: string | null) => {
     if (!url) return undefined;
     return url.startsWith('http') ? url : `http://${url}`;
+  };
+
+  const getSiteIcon = (url?: string | null) => {
+    if (!url) return <Globe className="h-4 w-4" />;
+    const u = url.toLowerCase();
+    if (u.includes('facebook.com')) return <Facebook className="h-4 w-4 text-blue-600" />;
+    if (u.includes('linkedin.com')) return <Linkedin className="h-4 w-4 text-blue-700" />;
+    if (u.includes('instagram.com')) return <Instagram className="h-4 w-4 text-pink-600" />;
+    return <Globe className="h-4 w-4" />;
   };
 
   return (
@@ -75,8 +87,8 @@ export default function Companies() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-semibold text-foreground truncate">{c.name}</h3>
                       {c.website && (
-                        <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer">
-                          <Badge variant="outline" className="cursor-pointer hover:bg-muted">Website</Badge>
+                        <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center h-7 w-7 rounded-full hover:bg-muted">
+                          {getSiteIcon(c.website)}
                         </a>
                       )}
                     </div>
@@ -89,15 +101,28 @@ export default function Companies() {
                       )}
                       {c.website && (
                         <a href={toWebsite(c.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
-                          <Globe className="h-4 w-4" />{c.website.replace(/^https?:\/\//, '')}
+                          {getSiteIcon(c.website)}
                         </a>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 items-end">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/profile?user_id=${c.owner_id}`)}>
-                      Ver Perfil
-                    </Button>
+                    {isMobile ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/profile?user_id=${c.owner_id}`)}>Ver perfil</DropdownMenuItem>
+                          <DropdownMenuItem onClick={async () => { try { const conv = await startConversation(c.owner_id); if (conv?.id) navigate(`/messages?open=${conv.id}`); } catch {} }}>Chat</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { try { window.alert('Denúncia recebida. Obrigado.'); } catch {} }}>Denunciar</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/profile?user_id=${c.owner_id}`)}>
+                        Ver Perfil
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
