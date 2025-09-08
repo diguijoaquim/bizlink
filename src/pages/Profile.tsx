@@ -25,7 +25,10 @@ export default function Profile() {
     servicesLoading, 
     loadServices: reloadServices,
     currentCompany,
-    refreshData
+    refreshData,
+    displayName,
+    displayAvatar,
+    displayCover
   } = useHome();
 
   const [saving, setSaving] = useState(false);
@@ -310,7 +313,7 @@ export default function Profile() {
                   {resolvedAvatarUrl ? (
                     <img src={resolvedAvatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <span>{user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}</span>
+                    <span>{displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}</span>
                   )}
                   {!isPublicView && (
                     <button
@@ -326,7 +329,7 @@ export default function Profile() {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between">
                   <div>
                     <h1 className="text-2xl font-bold text-foreground">
-                      {firstCompany?.name || user?.full_name || user?.email}
+                      {firstCompany?.name || displayName || user?.email}
                     </h1>
                     <div className="flex items-center text-muted-foreground mt-2 gap-3">
                       <div className="flex items-center">

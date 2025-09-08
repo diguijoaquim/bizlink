@@ -19,22 +19,18 @@ interface User {
 }
 
 interface HomeContextType {
-  // User data
   user: User | null;
   userLoading: boolean;
   hasCompany: boolean;
-  
-  // Services data
   services: Service[];
   servicesLoading: boolean;
-  
-  // Functions
   loadUserData: () => Promise<void>;
   loadServices: () => Promise<void>;
   refreshData: () => Promise<void>;
-  
-  // Company helpers
   currentCompany: Company | null;
+  displayName: string | undefined;
+  displayAvatar: string | undefined;
+  displayCover: string | undefined;
 }
 
 const HomeContext = createContext<HomeContextType | null>(null);
@@ -60,12 +56,13 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
   const [servicesLoading, setServicesLoading] = useState(false);
 
   const currentCompany = user?.companies?.[0] || null;
+  const displayName = currentCompany?.name || user?.full_name || user?.email;
+  const displayAvatar = currentCompany?.logo_url || user?.profile_photo_url;
+  const displayCover = currentCompany?.cover_url || user?.cover_photo_url;
 
   const loadUserData = async () => {
     try {
-      console.log('HomeContext: Loading user data...');
       setUserLoading(true);
-      // Public profile view via query or slug
       const params = new URLSearchParams(window.location.search);
       const userIdParam = params.get('user_id');
       const slugMatch = window.location.pathname.match(/^\/profile\/([^/]+)$/);
@@ -77,13 +74,9 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
       } else {
         userData = await apiFetch('/users/me');
       }
-      console.log('HomeContext: User data loaded:', userData);
-      
       setUser(userData);
       const owned = Array.isArray(userData?.companies) && userData.companies.length > 0;
       setHasCompany(owned);
-      
-      // Auto-load services if user has a company
       if (owned && userData?.companies?.[0]?.id) {
         await loadServicesInternal(userData.companies[0].id);
       }
@@ -98,10 +91,8 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
 
   const loadServicesInternal = async (companyId: number) => {
     try {
-      console.log('HomeContext: Loading services for company:', companyId);
       setServicesLoading(true);
       const companyServices = await getCompanyServices(companyId);
-      console.log('HomeContext: Services loaded:', companyServices);
       setServices(companyServices);
     } catch (error) {
       console.error('HomeContext: Error loading services:', error);
@@ -121,12 +112,10 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     await loadUserData();
   };
 
-  // Initialize data on mount
   useEffect(() => {
     loadUserData();
   }, []);
 
-  // Reload user when navigating to a different profile context
   useEffect(() => {
     const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@');
     if (isProfileRoute) {
@@ -144,6 +133,9 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     loadServices,
     refreshData,
     currentCompany,
+    displayName,
+    displayAvatar,
+    displayCover,
   };
 
   return (

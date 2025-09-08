@@ -25,14 +25,14 @@ const navigation = [
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useHome();
+  const { user, displayAvatar } = useHome();
   const isMobile = useIsMobile();
   const isChatRoute = location.pathname.startsWith("/messages") || location.pathname.startsWith("/chat");
   const showHeader = !(isChatRoute && isMobile);
   const showBottomNav = !(isChatRoute && isMobile);
 
-  const profileSrc = user?.profile_photo_url
-    ? (user.profile_photo_url.startsWith("http") ? user.profile_photo_url : `${API_BASE_URL}${user.profile_photo_url}`)
+  const profileSrc = (displayAvatar || user?.profile_photo_url)
+    ? ((displayAvatar || user?.profile_photo_url)!.startsWith("http") ? (displayAvatar || user?.profile_photo_url)! : `${API_BASE_URL}${displayAvatar || user?.profile_photo_url}`)
     : undefined;
   const fallbackInitial = (() => {
     const base = (user?.full_name || user?.email || "U").trim();
