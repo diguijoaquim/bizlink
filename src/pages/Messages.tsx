@@ -942,7 +942,7 @@ export default function Messages() {
         {selectedChat && selectedChatData ? (
           <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className={`${isMobile ? 'fixed top-0' : 'sticky top-0'} left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between`} style={isMobile ? { position: 'fixed', top: 0 } : undefined}>
+            <div className={`${fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between`} style={isMobile ? { position: 'fixed', top: 0 } : undefined}>
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
                   <ArrowLeft size={24} />
