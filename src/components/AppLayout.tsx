@@ -113,7 +113,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img src={bizlinkLogo} alt="BizLink" className="h-10 w-10" />
               <h1 className="text-xl font-bold gradient-text">BizLink MZ</h1>
             </div>
             {/* Desktop Navigation */}
