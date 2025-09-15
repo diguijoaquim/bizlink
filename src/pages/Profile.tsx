@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import "@/styles/tabs.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +16,7 @@ import { PortfolioItemCard, JobItemCard, ProfileTabsList, ProfileTabs } from "@/
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { toast } = useToast();
   const { 
     user, 
@@ -42,8 +43,8 @@ export default function Profile() {
   const [portfolioItems, setPortfolioItems] = useState<CompanyPortfolio[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
-  // Verificar se é visão pública (perfil de outra pessoa)
-  const isPublicView = typeof window !== 'undefined' && (window.location.pathname.startsWith('/@') || new URLSearchParams(window.location.search).has('user_id'));
+  // Verificar se é visão pública (perfil de outra pessoa): quando há slug na rota
+  const isPublicView = !!slug;
   const needsProfileSetup = (!user?.user_type || 
     user.user_type === 'simple' && !user.full_name ||
     !user?.province || 
@@ -646,12 +647,14 @@ export default function Profile() {
               </TabsContent>
               <TabsContent value="my-services" className="profile-tabs-content">
                 <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Meus Serviços</h3>
-                    <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
-                      Gerir Serviços
-                    </Button>
-                  </div>
+                  {!isPublicView && (
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Meus Serviços</h3>
+                      <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
+                        Gerir Serviços
+                      </Button>
+                    </div>
+                  )}
                   
                   {servicesLoading && services.length === 0 ? (
                     <div className="text-center py-8">
@@ -685,24 +688,32 @@ export default function Profile() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">Ainda não tem serviços publicados</p>
-                      <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
-                        Publicar Primeiro Serviço
-                      </Button>
-                    </div>
+                    !isPublicView ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">Ainda não tem serviços publicados</p>
+                        <Button onClick={() => navigate('/my-services')} className="bg-gradient-primary text-white border-0">
+                          Publicar Primeiro Serviço
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">Sem serviços para mostrar</p>
+                      </div>
+                    )
                   )}
                 </div>
               </TabsContent>
               <TabsContent value="my-jobs" className="profile-tabs-content">
                 <div className="space-y-4 w-full mx-auto max-w-2xl md:max-w-4xl">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold">Minhas Vagas</h3>
-                    <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Vaga
-                    </Button>
-                  </div>
+                  {!isPublicView && (
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Minhas Vagas</h3>
+                      <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Vaga
+                      </Button>
+                    </div>
+                  )}
 
                   {jobsLoading && myJobs.length === 0 ? (
                     <div className="text-center py-8">
@@ -715,12 +726,18 @@ export default function Profile() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">Ainda não tem vagas publicadas</p>
-                      <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
-                        Publicar Primeira Vaga
-                      </Button>
-                    </div>
+                    !isPublicView ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">Ainda não tem vagas publicadas</p>
+                        <Button onClick={() => navigate('/jobs/create')} className="bg-gradient-primary text-white border-0">
+                          Publicar Primeira Vaga
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground mb-4">Sem vagas para mostrar</p>
+                      </div>
+                    )
                   )}
                 </div>
               </TabsContent>
