@@ -3,6 +3,7 @@ export const API_BASE_URL = "https://bizlink-production.up.railway.app";
 export type LoginResponse = {
   access_token: string;
   token_type: string;
+  refresh_token?: string;
 };
 
 export async function loginWithPassword(email: string, password: string): Promise<LoginResponse> {
@@ -74,65 +75,84 @@ export function saveAuthToken(token: string) {
   localStorage.setItem("auth_token", token);
 }
 
+export function saveRefreshToken(token: string) {
+  localStorage.setItem("refresh_token", token);
+}
+
 export function getAuthToken(): string | null {
   return localStorage.getItem("auth_token");
 }
 
+export function getRefreshToken(): string | null {
+  return localStorage.getItem("refresh_token");
+}
+
 export function clearAuthToken() {
   localStorage.removeItem("auth_token");
+  localStorage.removeItem("refresh_token");
 }
 
 export async function apiFetch(input: string, init: RequestInit = {}) {
-  const token = getAuthToken();
-  const headers = new Headers(init.headers);
-  
-  // Add auth token if it exists
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-    // Headers específicos para usuários autenticados
-    headers.set("Cache-Control", "no-cache, no-store, must-revalidate, private");
-    headers.set("Pragma", "no-cache");
-  }
-  
-  // Don't set Content-Type for FormData - let the browser set it with the boundary
-  if (!(init.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
-  }
-  
-  try {
-    const res = await fetch(`${API_BASE_URL}${input.startsWith('/') ? input : `/${input}`}`, { 
-      ...init, 
-      headers,
-      credentials: 'include'
-    });
+  const makeRequest = async (): Promise<Response> => {
+    const token = getAuthToken();
+    const headers = new Headers(init.headers);
     
-    if (!res.ok) {
-      // if unauthorized/expired, clear token and redirect to login
-      if (res.status === 401 || res.status === 403) {
-        try { clearAuthToken(); } catch {}
-        try {
-          // prevent redirect loops on auth pages
-          const onAuthPage = typeof window !== 'undefined' && (/\/login|\/register/.test(window.location.pathname));
-          if (!onAuthPage) {
-            // small delay to allow any toasts
-            setTimeout(() => { window.location.href = '/login'; }, 50);
-          }
-        } catch {}
-      }
-      const error = await res.json().catch(() => ({}));
-      const detail = (error && (error.detail || error.message))
-        ? (typeof (error.detail || error.message) === 'string' ? (error.detail || error.message) : JSON.stringify(error.detail || error.message))
-        : `Request failed with status ${res.status}`;
-      throw new Error(detail);
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate, private");
+      headers.set("Pragma", "no-cache");
     }
-    
-    // Handle empty response
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  } catch (error) {
-    console.error('API request failed:', error);
-    throw error;
+    if (!(init.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
+    }
+    const url = `${API_BASE_URL}${input.startsWith('/') ? input : `/${input}`}`;
+    return fetch(url, { ...init, headers, credentials: 'include' });
+  };
+
+  let res = await makeRequest();
+  if (res.status === 401 || res.status === 403) {
+    // Try refresh once
+    const refresh = getRefreshToken();
+    if (refresh) {
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refresh }),
+          credentials: 'include'
+        });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          if (data?.access_token) saveAuthToken(data.access_token);
+          if (data?.refresh_token) saveRefreshToken(data.refresh_token);
+          // retry original
+          res = await makeRequest();
+        }
+      } catch (e) {
+        // fall through to redirect
+      }
+    }
   }
+
+  if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      try { clearAuthToken(); } catch {}
+      try {
+        const onAuthPage = typeof window !== 'undefined' && (/\/login|\/register/.test(window.location.pathname));
+        if (!onAuthPage) {
+          setTimeout(() => { window.location.href = '/login'; }, 50);
+        }
+      } catch {}
+    }
+    const error = await res.json().catch(() => ({} as any));
+    const detail = (error && (error.detail || error.message))
+      ? (typeof (error.detail || error.message) === 'string' ? (error.detail || error.message) : JSON.stringify(error.detail || error.message))
+      : `Request failed with status ${res.status}`;
+    throw new Error(detail);
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export type Company = {

@@ -42,7 +42,7 @@ export default function Profile() {
   const [portfolioItems, setPortfolioItems] = useState<CompanyPortfolio[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
-  // Verificar se o usuário precisa configurar o perfil
+  // Verificar se é visão pública (perfil de outra pessoa)
   const isPublicView = typeof window !== 'undefined' && (window.location.pathname.startsWith('/@') || new URLSearchParams(window.location.search).has('user_id'));
   const needsProfileSetup = (!user?.user_type || 
     user.user_type === 'simple' && !user.full_name ||
@@ -679,6 +679,7 @@ export default function Profile() {
                             onEdit={handleEditService}
                             onDelete={handleDeleteService}
                             onPromote={(id, promote) => handlePromoteService(id, promote)}
+                            canManage={!isPublicView}
                           />
                         );
                       })}

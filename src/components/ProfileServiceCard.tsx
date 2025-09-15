@@ -19,9 +19,10 @@ interface ProfileServiceCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onPromote: (id: string, promote: boolean) => void;
+  canManage?: boolean;
 }
 
-export function ProfileServiceCard({ service, onEdit, onDelete, onPromote }: ProfileServiceCardProps) {
+export function ProfileServiceCard({ service, onEdit, onDelete, onPromote, canManage = true }: ProfileServiceCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-bizlink-soft transition-all duration-200 bg-card border border-border">
       <CardContent className="p-0">
@@ -73,31 +74,33 @@ export function ProfileServiceCard({ service, onEdit, onDelete, onPromote }: Pro
                 </div>
               </div>
               
-              {/* Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40 bg-background border border-border shadow-lg">
-                  <DropdownMenuItem onClick={() => onEdit(service.id)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onPromote(service.id, !service.is_promoted)}>
-                    <Zap className="mr-2 h-4 w-4" />
-                    {service.is_promoted ? 'Remover Turbinado' : 'Turbinar'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onDelete(service.id)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Deletar
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Menu (only for owner) */}
+              {canManage && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40 bg-background border border-border shadow-lg">
+                    <DropdownMenuItem onClick={() => onEdit(service.id)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onPromote(service.id, !service.is_promoted)}>
+                      <Zap className="mr-2 h-4 w-4" />
+                      {service.is_promoted ? 'Remover Turbinado' : 'Turbinar'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onDelete(service.id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Deletar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </div>

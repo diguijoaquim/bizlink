@@ -135,21 +135,21 @@ export default function JobDetail() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 md:mb-8">
           <Button
             variant="outline"
             onClick={() => navigate('/jobs')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full md:w-auto"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar às Vagas
           </Button>
           
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-gray-900">{job.title}</h1>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">{job.title}</h1>
               {job.is_promoted && (
                 <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                   <Star className="h-3 w-3 mr-1" />
@@ -162,9 +162,9 @@ export default function JobDetail() {
             </div>
             
             {company && (
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-gray-600 truncate">
                 <Building className="h-4 w-4" />
-                <span className="font-medium">{company.name}</span>
+                <span className="font-medium truncate">{company.name}</span>
               </div>
             )}
           </div>
@@ -172,7 +172,7 @@ export default function JobDetail() {
           {user && company && user.id === company.owner_id && (
             <Button
               onClick={() => navigate(`/jobs/edit/${job.id}`)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full md:w-auto"
             >
               <Edit className="h-4 w-4" />
               Editar Vaga
@@ -180,9 +180,9 @@ export default function JobDetail() {
           )}
         </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* Conteúdo Principal */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Informações da Vaga */}
           <Card>
             <CardHeader>
@@ -190,7 +190,7 @@ export default function JobDetail() {
             </CardHeader>
             <CardContent>
               {job.description ? (
-                <p className="text-gray-700 leading-relaxed">{job.description}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line break-words">{job.description}</p>
               ) : (
                 <p className="text-gray-500 italic">Nenhuma descrição fornecida.</p>
               )}
@@ -205,7 +205,7 @@ export default function JobDetail() {
               <CardTitle>Estatísticas</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="text-center p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Eye className="h-5 w-5 text-blue-600" />
@@ -227,7 +227,7 @@ export default function JobDetail() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Informações Rápidas */}
           <Card>
             <CardHeader>
@@ -239,7 +239,7 @@ export default function JobDetail() {
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm font-medium text-gray-900">Localização</p>
-                    <p className="text-sm text-gray-600">{job.location}</p>
+                    <p className="text-sm text-gray-600 break-words">{job.location}</p>
                   </div>
                 </div>
               )}

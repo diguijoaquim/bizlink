@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import bizlinkLogo from "@/assets/bizlink-logo.png";
-import { loginWithPassword, saveAuthToken, loginWithGoogle } from "@/lib/api";
+import { loginWithPassword, saveAuthToken, loginWithGoogle, saveRefreshToken } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
 
 export default function Login() {
@@ -25,6 +25,7 @@ export default function Login() {
     try {
       const res = await loginWithPassword(email, password);
       saveAuthToken(res.access_token);
+      if (res.refresh_token) saveRefreshToken(res.refresh_token);
       try { toast({ title: "Login efetuado" }); } catch {}
       // Redireciona para tela inicial com reload real
       window.location.href = "/";
@@ -68,6 +69,7 @@ export default function Login() {
                 
                 const res = await loginWithGoogle(mockCredential);
                 saveAuthToken(res.access_token);
+                if (res.refresh_token) saveRefreshToken(res.refresh_token);
                 try { toast({ title: "Login com Google efetuado" }); } catch {}
                 // Redireciona para tela inicial com reload real
                 window.location.href = "/";
