@@ -164,6 +164,15 @@ export default function Register() {
             Já tem conta? <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
           </p>
         </div>
+        
+        {/* Footer */}
+        <div className="text-center mt-8 text-xs text-muted-foreground">
+          <p>Ao continuar, você concorda com nossos</p>
+          <p>
+            <Link to="/terms" className="hover:underline">Termos de Serviço</Link> e{" "}
+            <Link to="/privacy" className="hover:underline">Política de Privacidade</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
