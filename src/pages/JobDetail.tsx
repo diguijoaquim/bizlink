@@ -135,7 +135,7 @@ export default function JobDetail() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 md:mb-8">
           <Button
@@ -179,6 +179,50 @@ export default function JobDetail() {
             </Button>
           )}
         </div>
+
+      {/* Mobile quick facts */}
+      <div className="md:hidden space-y-3 mb-4">
+        <details className="bg-card rounded-lg border border-border">
+          <summary className="px-4 py-3 font-medium cursor-pointer">Informações Rápidas</summary>
+          <div className="px-4 pb-3 space-y-3">
+            {job.location && (
+              <div className="flex items-center gap-3">
+                <MapPin className="h-4 w-4 text-gray-500" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Localização</p>
+                  <p className="text-sm text-gray-600 break-words">{job.location}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <Globe className="h-4 w-4 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Trabalho Remoto</p>
+                <p className="text-sm text-gray-600">{job.remote_work ? 'Disponível' : 'Não disponível'}</p>
+              </div>
+            </div>
+          </div>
+        </details>
+        <details className="bg-card rounded-lg border border-border">
+          <summary className="px-4 py-3 font-medium cursor-pointer">Datas</summary>
+          <div className="px-4 pb-3 space-y-3">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Publicada em</p>
+                <p className="text-sm text-gray-600">{formatDateTime(job.created_at)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Última atualização</p>
+                <p className="text-sm text-gray-600">{formatDateTime(job.updated_at)}</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* Conteúdo Principal */}
@@ -226,8 +270,8 @@ export default function JobDetail() {
           </Card>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4 md:space-y-6">
+        {/* Sidebar (hidden on mobile, info available above) */}
+        <div className="hidden md:flex md:flex-col space-y-4 md:space-y-6">
           {/* Informações Rápidas */}
           <Card>
             <CardHeader>
@@ -322,6 +366,21 @@ export default function JobDetail() {
           </Card>
         </div>
       </div>
+      </div>
+
+      {/* Sticky bottom action bar (mobile) */}
+      <div className="md:hidden fixed inset-x-0 bottom-0 bg-background/95 backdrop-blur border-t border-border p-3">
+        {user && company && user.id === company.owner_id ? (
+          <Button className="w-full" onClick={() => navigate(`/jobs/edit/${job.id}`)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Vaga
+          </Button>
+        ) : (
+          <Button className="w-full bg-gradient-primary text-white border-0 hover:opacity-90" onClick={handleStartChat}>
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Conversar sobre esta vaga
+          </Button>
+        )}
       </div>
     </AppLayout>
   );
