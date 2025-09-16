@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, Trash2, TrendingUp, Plus, MoreVertical, BarChart3, Eye, Users, Star } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, Plus, MoreVertical, BarChart3, Eye, Users, Star, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { PublishServiceModal } from "@/components/PublishServiceModal";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { apiFetch, getCompanies, getCompanyServices, getCompanyServiceStats, Service, Company, API_BASE_URL, deleteService, promoteService } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useHome } from "@/contexts/HomeContext";
 
 
@@ -18,6 +19,7 @@ export default function MyServices() {
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<{ total: number; active: number; promoted: number; views: number } | null>(null);
@@ -26,8 +28,18 @@ export default function MyServices() {
   const { user } = useHome();
 
   const loadServices = async () => {
-    const companyId = (user?.companies && user.companies[0]?.id) || companies[0]?.id;
-    if (!companyId) return;
+    // Prefer companies owned by the logged-in user
+    const mineFromUser = (user?.companies || []).filter((c: any) => Number(c.owner_id) === Number(user?.id));
+    const mineFromState = companies.filter((c: any) => Number(c.owner_id) === Number(user?.id));
+    const chosenCompany = selectedCompanyId
+      ? (mineFromUser.concat(mineFromState)).find(c => c.id === selectedCompanyId) || null
+      : (mineFromUser[0]) || (mineFromState[0]) || null;
+    const companyId = chosenCompany?.id || selectedCompanyId || null;
+    if (!companyId) {
+      setServices([]);
+      setStats({ total: 0, active: 0, promoted: 0, views: 0 });
+      return;
+    }
     try {
       const [servicesData, statsData] = await Promise.all([
         getCompanyServices(companyId),
@@ -84,8 +96,12 @@ export default function MyServices() {
     const loadData = async () => {
       try {
         if (user?.companies && user.companies.length > 0) {
-          setCompanies(user.companies as unknown as Company[]);
-          const companyId = user.companies[0].id;
+          const mine = user?.id ? (user.companies as any[]).filter(c => Number(c.owner_id) === Number(user.id)) : (user.companies as any[]);
+          setCompanies(mine as unknown as Company[]);
+          const chosen = (selectedCompanyId && mine.find(c => c.id === selectedCompanyId)) || mine[0];
+          if (!chosen) { setServices([]); setStats({ total: 0, active: 0, promoted: 0, views: 0 }); setSelectedCompanyId(null); setLoading(false); return; }
+          setSelectedCompanyId(prev => prev && mine.some(c => c.id === prev) ? prev : chosen.id);
+          const companyId = chosen.id;
           const [servicesData, statsData] = await Promise.all([
             getCompanyServices(companyId),
             getCompanyServiceStats(companyId)
@@ -96,10 +112,12 @@ export default function MyServices() {
           const companiesData = await getCompanies();
           // Prefer companies owned by current user
           const mine = user?.id ? companiesData.filter((c: any) => Number(c.owner_id) === Number(user.id)) : companiesData;
-          setCompanies(mine.length > 0 ? mine : companiesData);
-          const pick = (mine.length > 0 ? mine : companiesData);
+          setCompanies(mine.length > 0 ? mine : []);
+          const pick = (mine.length > 0 ? mine : []);
           if (pick.length > 0) {
-            const companyId = pick[0].id;
+            const chosen = (selectedCompanyId && pick.find(c => c.id === selectedCompanyId)) || pick[0];
+            setSelectedCompanyId(prev => prev && pick.some(c => c.id === prev) ? prev : chosen.id);
+            const companyId = chosen.id;
             const [servicesData, statsData] = await Promise.all([
               getCompanyServices(companyId),
               getCompanyServiceStats(companyId)
@@ -108,6 +126,7 @@ export default function MyServices() {
             setStats(statsData);
           } else {
             setStats({ total: 0, active: 0, promoted: 0, views: 0 });
+            setSelectedCompanyId(null);
           }
         }
       } catch (error) {
@@ -137,12 +156,14 @@ export default function MyServices() {
           try {
             const list = await getCompanies();
             const mine = user?.id ? list.filter((c: any) => Number(c.owner_id) === Number(user.id)) : list;
-            setCompanies(mine.length > 0 ? mine : list);
-            const pick = (mine.length > 0 ? mine : list);
+            setCompanies(mine.length > 0 ? mine : []);
+            const pick = (mine.length > 0 ? mine : []);
             if (pick.length > 0) {
+              const chosen = pick[0];
+              setSelectedCompanyId(chosen.id);
               const [servicesData, statsData] = await Promise.all([
-                getCompanyServices(pick[0].id),
-                getCompanyServiceStats(list[0].id)
+                getCompanyServices(chosen.id),
+                getCompanyServiceStats(chosen.id)
               ]);
               setServices(servicesData);
               setStats(statsData);
@@ -198,19 +219,35 @@ export default function MyServices() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between animate-fade-in">
-          <div>
+        <div className="flex items-center justify-between gap-3 flex-wrap animate-fade-in">
+          <div className="min-w-[200px]">
             <h1 className="text-2xl md:text-3xl font-bold">Meus Serviços</h1>
             <p className="text-muted-foreground text-sm">Gerencie e promova os seus serviços</p>
           </div>
-          <Button 
-            onClick={() => setIsPublishModalOpen(true)}
-            className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300"
-            size="sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Publicar
-          </Button>
+          <div className="flex items-center gap-3">
+            {companies.length > 0 && (
+              <Select value={selectedCompanyId ? String(selectedCompanyId) : undefined} onValueChange={(v) => { setSelectedCompanyId(Number(v)); loadServices(); }}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Selecionar empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button 
+              onClick={() => setIsPublishModalOpen(true)}
+              className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Publicar
+            </Button>
+          </div>
         </div>
 
         {/* Mobile-First Tabs */}
@@ -326,7 +363,23 @@ export default function MyServices() {
 
           {/* Services List Tab */}
           <TabsContent value="services" className="space-y-4 mt-6">
-
+            {/* No company owned state */}
+            {companies.length === 0 && (
+              <Card>
+                <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-md bg-muted">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold">Nenhuma empresa associada</div>
+                      <div className="text-sm text-muted-foreground">Crie uma empresa para publicar e gerir serviços.</div>
+                    </div>
+                  </div>
+                  <Button onClick={() => navigate('/create-company')} className="bg-gradient-primary text-white border-0">Criar empresa</Button>
+                </CardContent>
+              </Card>
+            )}
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
