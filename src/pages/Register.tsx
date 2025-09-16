@@ -21,6 +21,16 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    // Client-side validation
+    const emailRegex = /[^@\s]+@[^@\s]+\.[^@\s]+/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Informe um email válido.");
+      return;
+    }
+    if ((password || '').length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     setLoading(true);
     try {
       await registerUser({ email, full_name: fullName || undefined, password });
@@ -29,7 +39,12 @@ export default function Register() {
       try { toast({ title: "Conta criada com sucesso" }); } catch {}
       navigate("/profile");
     } catch (err: any) {
-      setError(err?.message || "Falha ao registar");
+      const msg = String(err?.message || '').toLowerCase();
+      if (msg.includes('already registered') || msg.includes('400')) {
+        setError('Este email já está registado. Tente entrar ou recuperar a senha.');
+      } else {
+        setError(err?.message || 'Falha ao registar');
+      }
     } finally {
       setLoading(false);
     }

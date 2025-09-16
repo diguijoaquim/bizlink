@@ -93,6 +93,17 @@ export function clearAuthToken() {
 }
 
 export async function apiFetch(input: string, init: RequestInit = {}) {
+  const translateError = (status: number, detail: string): string => {
+    const d = (detail || '').toLowerCase();
+    if (status === 0) return 'Falha de rede. Verifique sua conexão.';
+    if (status === 401 || status === 403) return 'Não autenticado. Por favor, entre novamente.';
+    if (status === 404) return 'Recurso não encontrado.';
+    if (status === 422) return 'Dados inválidos. Verifique os campos e tente novamente.';
+    if (d.includes('incorrect email or password')) return 'Email ou senha incorretos.';
+    if (d.includes('email already registered') || d.includes('already registered')) return 'Este email já está registado.';
+    if (d.includes('password') && d.includes('short')) return 'A senha é muito curta.';
+    return detail || `Erro inesperado (${status}).`;
+  };
   const makeRequest = async (): Promise<Response> => {
     const token = getAuthToken();
     const headers = new Headers(init.headers);
@@ -145,10 +156,10 @@ export async function apiFetch(input: string, init: RequestInit = {}) {
       } catch {}
     }
     const error = await res.json().catch(() => ({} as any));
-    const detail = (error && (error.detail || error.message))
+    const rawDetail = (error && (error.detail || error.message))
       ? (typeof (error.detail || error.message) === 'string' ? (error.detail || error.message) : JSON.stringify(error.detail || error.message))
       : `Request failed with status ${res.status}`;
-    throw new Error(detail);
+    throw new Error(translateError(res.status, rawDetail));
   }
 
   const text = await res.text();

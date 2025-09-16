@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createService } from "@/lib/api";
+import { useHome } from "@/contexts/HomeContext";
 
 interface PublishServiceModalProps {
   open: boolean;
@@ -17,6 +18,8 @@ interface PublishServiceModalProps {
 
 export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalProps) => {
   const { toast } = useToast();
+  const { user } = useHome() as any;
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,13 +49,23 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
     setIsLoading(true);
 
     try {
+      const companyId = user?.companies && user.companies[0]?.id;
+      if (!companyId) {
+        toast({
+          title: "Sem empresa",
+          description: "Associe ou crie uma empresa antes de publicar um serviço.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
       await createService({
         title: formData.title,
         description: formData.description,
         price: formData.price || undefined,
         category: formData.category,
         tags: formData.tags,
-        company_id: 1, // TODO: Get from user context
+        company_id: companyId,
         image: imageFile || undefined,
         status: "Ativo",
         is_promoted: false,

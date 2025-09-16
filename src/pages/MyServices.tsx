@@ -94,9 +94,12 @@ export default function MyServices() {
           setStats(statsData);
         } else {
           const companiesData = await getCompanies();
-          setCompanies(companiesData);
-          if (companiesData.length > 0) {
-            const companyId = companiesData[0].id;
+          // Prefer companies owned by current user
+          const mine = user?.id ? companiesData.filter((c: any) => Number(c.owner_id) === Number(user.id)) : companiesData;
+          setCompanies(mine.length > 0 ? mine : companiesData);
+          const pick = (mine.length > 0 ? mine : companiesData);
+          if (pick.length > 0) {
+            const companyId = pick[0].id;
             const [servicesData, statsData] = await Promise.all([
               getCompanyServices(companyId),
               getCompanyServiceStats(companyId)
@@ -124,9 +127,31 @@ export default function MyServices() {
 
   const handleModalChange = (open: boolean) => {
     setIsPublishModalOpen(open);
-    if (!open && companies.length > 0) {
-      // Reload services when modal closes
-      loadServices();
+    if (!open) {
+      // If we already have a company, reload its services
+      if (companies.length > 0) {
+        loadServices();
+      } else {
+        // Try to fetch user's companies (useful when the first service was just published)
+        (async () => {
+          try {
+            const list = await getCompanies();
+            const mine = user?.id ? list.filter((c: any) => Number(c.owner_id) === Number(user.id)) : list;
+            setCompanies(mine.length > 0 ? mine : list);
+            const pick = (mine.length > 0 ? mine : list);
+            if (pick.length > 0) {
+              const [servicesData, statsData] = await Promise.all([
+                getCompanyServices(pick[0].id),
+                getCompanyServiceStats(list[0].id)
+              ]);
+              setServices(servicesData);
+              setStats(statsData);
+            }
+          } catch (e) {
+            console.error('Failed to reload companies/services after publish', e);
+          }
+        })();
+      }
     }
   };
 

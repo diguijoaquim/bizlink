@@ -21,6 +21,16 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    // Client-side validation
+    const emailRegex = /[^@\s]+@[^@\s]+\.[^@\s]+/;
+    if (!emailRegex.test(email.trim())) {
+      setError("Informe um email válido.");
+      return;
+    }
+    if ((password || '').length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await loginWithPassword(email, password);
@@ -46,7 +56,7 @@ export default function Login() {
         throw new Error("Google Sign-In não carregou. Recarregue a página.");
       }
 
-      const CLIENT_ID = "830630003244-86fmt24vpe3etpsmk3hetsie3g0a2ho9.apps.googleusercontent.com";
+      const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "830630003244-86fmt24vpe3etpsmk3hetsie3g0a2ho9.apps.googleusercontent.com";
 
       // Use OAuth2 popup flow which is more reliable
       const client = google.accounts.oauth2.initTokenClient({

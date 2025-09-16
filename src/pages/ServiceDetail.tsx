@@ -129,11 +129,11 @@ const ServiceDetail = () => {
       </div>
 
       {/* Service Image */}
-      <div className="relative h-64 md:h-80">
+      <div className="relative h-64 md:h-[420px]">
         <img 
-          src={service.image_url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800'} 
+          src={service.image_url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200'} 
           alt={service.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
         <div className="absolute top-4 left-4">
           <Badge variant="secondary" className="bg-background/90 text-foreground">
@@ -143,121 +143,125 @@ const ServiceDetail = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-6">
-        {/* Title and Price */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">{service.title}</h1>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold text-primary">{service.price}</p>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{new Date(service.created_at).toLocaleDateString('pt-PT')}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Business Info */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <Avatar>
-                <AvatarImage src={service.company?.logo_url} />
-                <AvatarFallback>{service.company?.name?.[0] || 'S'}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-semibold text-foreground">{service.company?.name || 'Empresa'}</h3>
-                  <Badge variant="secondary" className="text-xs">Verificado</Badge>
-                </div>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="h-3 w-3" />
-                    <span>{service.company?.location || 'Moçambique'}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <Badge variant="outline" className="text-xs">
-                      {service.status}
-                    </Badge>
-                  </div>
+      <div className="px-4 md:px-6">
+        <div className="max-w-4xl mx-auto space-y-6 py-6">
+          {/* Title and Price */}
+          <div>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{service.title}</h1>
+              <div className="text-right min-w-[160px]">
+                <p className="text-xl md:text-2xl font-bold text-primary">
+                  {service.price ? (Number(service.price).toLocaleString('pt-PT') + ' MT') : 'Sob consulta'}
+                </p>
+                <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{isNaN(Date.parse(service.created_at as any)) ? '' : new Date(service.created_at).toLocaleDateString('pt-PT')}</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Contact Buttons */}
-            <div className="grid grid-cols-1 gap-2">
-              <Button 
-                className="h-10 bg-gradient-primary text-white border-0 hover:opacity-90"
-                onClick={handleStartChat}
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Conversar sobre este serviço
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
+          {/* Business Info */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3 mb-4">
+                <Avatar>
+                  <AvatarImage src={service.company?.logo_url} />
+                  <AvatarFallback>{service.company?.name?.[0] || 'S'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-semibold text-foreground">{service.company?.name || 'Empresa'}</h3>
+                    <Badge variant="secondary" className="text-xs">Verificado</Badge>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <MapPin className="h-3 w-3" />
+                      <span>{service.company?.location || 'Moçambique'}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Badge variant="outline" className="text-xs">
+                        {service.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Buttons */}
+              <div className="grid grid-cols-1 gap-2">
                 <Button 
-                  variant="outline" 
-                  className="h-10"
-                  onClick={() => handleContact('WhatsApp')}
+                  className="h-10 bg-gradient-primary text-white border-0 hover:opacity-90"
+                  onClick={handleStartChat}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  WhatsApp
+                  Conversar sobre este serviço
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="h-10"
-                  onClick={() => handleContact('Telefone')}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Ligar
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="h-10"
+                    onClick={() => handleContact('WhatsApp')}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-10"
+                    onClick={() => handleContact('Telefone')}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Ligar
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Description */}
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Descrição</h2>
-          <p className="text-muted-foreground leading-relaxed">{service.description}</p>
-        </div>
-
-        {/* Category and Tags */}
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">Categoria e Tags</h2>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs">
-              {service.category}
-            </Badge>
-            {service.tags && typeof service.tags === 'string' && service.tags.split(',').map((tag: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                <Tag className="h-3 w-3 mr-1" />
-                {tag.trim()}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Service Image */}
-        {service.image_url && (
+          {/* Description */}
           <div>
-            <h2 className="text-lg font-semibold text-foreground mb-3">Imagem do Serviço</h2>
-            <img 
-              src={service.image_url} 
-              alt={service.title}
-              className="w-full h-48 object-cover rounded-lg"
-            />
+            <h2 className="text-lg font-semibold text-foreground mb-3">Descrição</h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{service.description}</p>
           </div>
-        )}
 
-        {/* Contact CTA */}
-        <div className="sticky bottom-4 bg-background p-4 -mx-4 border-t">
-          <Button 
-            className="w-full bg-gradient-primary text-white border-0 hover:opacity-90 h-12"
-            onClick={() => handleContact('Solicitar Orçamento')}
-          >
-            Solicitar Orçamento
-          </Button>
+          {/* Category and Tags */}
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Categoria e Tags</h2>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {service.category}
+              </Badge>
+              {service.tags && typeof service.tags === 'string' && service.tags.split(',').map((tag: string, index: number) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  <Tag className="h-3 w-3 mr-1" />
+                  {tag.trim()}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Service Image */}
+          {service.image_url && (
+            <div>
+              <h2 className="text-lg font-semibold text-foreground mb-3">Imagem do Serviço</h2>
+              <img 
+                src={service.image_url} 
+                alt={service.title}
+                className="w-full h-56 md:h-72 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
+          {/* Contact CTA (mobile) */}
+          <div className="sticky bottom-4 bg-background p-4 -mx-4 md:hidden border-t">
+            <Button 
+              className="w-full bg-gradient-primary text-white border-0 hover:opacity-90 h-12"
+              onClick={() => handleContact('Solicitar Orçamento')}
+            >
+              Solicitar Orçamento
+            </Button>
+          </div>
         </div>
       </div>
     </div>
