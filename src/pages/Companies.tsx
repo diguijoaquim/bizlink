@@ -52,6 +52,9 @@ export default function Companies() {
     return <Globe className="h-4 w-4" />;
   };
 
+  // Build public profile link via user_id to ensure Profile loads visitor view by ID
+  const companyProfileHref = (c: Company) => `/profile?user_id=${c.owner_id}`;
+
   return (
     <AppLayout>
       <div className="space-y-4">
@@ -108,13 +111,13 @@ export default function Companies() {
                           <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/profile?user_id=${c.owner_id}`)}>Ver perfil</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate(companyProfileHref(c))}>Ver perfil</DropdownMenuItem>
                           <DropdownMenuItem onClick={async () => { try { const conv = await startConversation(c.owner_id); if (conv?.id) navigate(`/messages?open=${conv.id}`); } catch {} }}>Chat</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { try { window.alert('Denúncia recebida. Obrigado.'); } catch {} }}>Denunciar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/profile?user_id=${c.owner_id}`)}>
+                      <Button variant="outline" size="sm" onClick={() => navigate(companyProfileHref(c))}>
                         Ver Perfil
                       </Button>
                     )}

@@ -415,7 +415,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 src={toAbsolute(item.cover_url)}
                 alt={item.name}
                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate(`/profile/${(item as any).username || (item as any).name?.toLowerCase()?.replace(/[^a-z0-9]+/g, '_') || item.id}`)}
+                onClick={() => navigate(`/profile?user_id=${(item as any).owner_id}`)}
               />
             </div>
           )}

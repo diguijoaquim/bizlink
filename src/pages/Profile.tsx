@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import "@/styles/tabs.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,8 @@ import { PortfolioItemCard, JobItemCard, ProfileTabsList, ProfileTabs } from "@/
 export default function Profile() {
   const navigate = useNavigate();
   const { slug } = useParams();
+  const location = useLocation();
+
   const { toast } = useToast();
   const { 
     user, 
@@ -43,8 +46,10 @@ export default function Profile() {
   const [portfolioItems, setPortfolioItems] = useState<CompanyPortfolio[]>([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
 
-  // Verificar se é visão pública (perfil de outra pessoa): quando há slug na rota
-  const isPublicView = !!slug;
+  // Verificar se é visão pública (perfil de outra pessoa): quando há slug na rota ou ?user_id=
+  const params = new URLSearchParams(location.search);
+  const isPublicView = !!slug || params.has('user_id');
+
   const needsProfileSetup = (!user?.user_type || 
     user.user_type === 'simple' && !user.full_name ||
     !user?.province || 
