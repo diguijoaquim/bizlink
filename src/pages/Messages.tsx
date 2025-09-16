@@ -12,7 +12,13 @@ import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, 
 import { Progress } from "@/components/ui/progress";
 import { useHome } from '@/contexts/HomeContext';
 
-const DEFAULT_AVATAR = 'https://www.skyvenda.com/avatar.png';
+// Helper to extract first letter for avatar fallback
+const getInitial = (name?: string, email?: string) => {
+  const base = (name || email || '').trim();
+  if (!base) return '?';
+  const ch = base[0] || '?';
+  return (ch as string).toUpperCase();
+};
 // Resolve backend-relative URLs to absolute
 const resolveUrl = (p?: string) => (p ? (p.startsWith('http') ? p : `${API_BASE_URL}${p}`) : undefined);
 
@@ -355,9 +361,10 @@ export default function Messages() {
   }, [selectedChat, imageViewSrc]);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
-  const { displayAvatar } = useHome() as any;
-  const peerAvatar = resolveUrl(((selectedChatData as any)?.peer?.display_photo_url) || selectedChatData?.peer?.profile_photo_url) || DEFAULT_AVATAR;
-  const myAvatar = resolveUrl(displayAvatar) || DEFAULT_AVATAR;
+  const { displayAvatar, displayName, email: myEmail } = useHome() as any;
+  const peerAvatar = resolveUrl(((selectedChatData as any)?.peer?.display_photo_url) || selectedChatData?.peer?.profile_photo_url);
+  const myAvatar = resolveUrl(displayAvatar);
+  const peerInitial = getInitial((selectedChatData as any)?.peer?.full_name, (selectedChatData as any)?.peer?.email);
   const [peerType, setPeerType] = useState<string | null>(null);
 
   // Load peer user_type to label header (empresa/freelancer/usuário)
@@ -807,12 +814,17 @@ export default function Messages() {
               >
                 <div className="flex items-start space-x-3">
                   <div className="relative">
-                    <img
-                          src={resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url) || DEFAULT_AVATAR}
-                          onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
-                          alt={chat.peer.full_name || chat.peer.email}
-                      className={`w-12 h-12 rounded-full object-cover ${(chat as any).peer?.user_type==='freelancer' ? 'avatar-freelancer' : 'avatar-company'}`}
-                    />
+                    {resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url) ? (
+                      <img
+                        src={resolveUrl((chat as any).peer?.display_photo_url || chat.peer.profile_photo_url)}
+                        alt={chat.peer.full_name || chat.peer.email}
+                        className={`w-12 h-12 rounded-full object-cover ${(chat as any).peer?.user_type==='freelancer' ? 'avatar-freelancer' : 'avatar-company'}`}
+                      />
+                    ) : (
+                      <div className={`w-12 h-12 rounded-full bg-muted grid place-items-center text-lg font-semibold text-muted-foreground ${(chat as any).peer?.user_type==='freelancer' ? 'avatar-freelancer' : 'avatar-company'}`}>
+                        {getInitial(chat.peer.full_name, chat.peer.email)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -948,13 +960,22 @@ export default function Messages() {
                   <ArrowLeft size={24} />
                 </Button>
                 <div className="relative">
-                  <img
-                    onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
-                    src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) || DEFAULT_AVATAR}
-                    onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }}
-                    alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
-                    className={`w-10 h-10 rounded-full object-cover cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
-                  />
+                  {resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) ? (
+                    <img
+                      onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
+                      src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url)}
+                      alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
+                      className={`w-10 h-10 rounded-full object-cover cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
+                    />
+                  ) : (
+                    <div
+                      onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
+                      className={`w-10 h-10 rounded-full bg-muted grid place-items-center text-sm font-semibold text-muted-foreground cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
+                      aria-label={selectedChatData.peer.full_name || selectedChatData.peer.email}
+                    >
+                      {peerInitial}
+                    </div>
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center space-x-1 min-w-0">
@@ -1001,7 +1022,13 @@ export default function Messages() {
                   return (
                 <div key={message.id} className={`flex items-end gap-2 ${message.isMe ? "justify-end" : "justify-start"}`}>
                   {showLeftAvatar && (
-                    <img src={peerAvatar} onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = DEFAULT_AVATAR; }} className="w-6 h-6 rounded-full" />
+                    peerAvatar ? (
+                      <img src={peerAvatar} className="w-6 h-6 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-muted text-xs grid place-items-center font-semibold text-muted-foreground">
+                        {peerInitial}
+                      </div>
+                    )
                   )}
                   <div onDoubleClick={() => onMessageClick(message)} className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${message.isMe ? "bg-gradient-primary text-white" : "bg-muted text-foreground"}`}>
                     {message.reply_to_preview && (
@@ -1035,7 +1062,7 @@ export default function Messages() {
                         if (kind === 'audio') {
                           return (
                             <div className="space-y-1">
-                              <ChatWavePlayer src={resolveUrl(message.text)!} lightText={message.isMe} avatarUrl={message.isMe ? myAvatar : peerAvatar} />
+                              <ChatWavePlayer src={resolveUrl(message.text)!} lightText={message.isMe} avatarUrl={(message.isMe ? myAvatar : peerAvatar) || undefined} />
                             </div>
                           );
                         }
