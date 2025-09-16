@@ -9,7 +9,8 @@ interface ProfileServiceCardProps {
     id: string;
     title: string;
     description: string;
-    price: number;
+    price: number | null;
+
     image: string;
     category: string;
     tags: string[];
@@ -65,7 +66,9 @@ export function ProfileServiceCard({ service, onEdit, onDelete, onPromote, canMa
                       {service.category}
                     </Badge>
                     <span className="text-xs font-medium text-primary">
-                      {service.price.toLocaleString('pt-MZ')} MZN
+                      {Number.isFinite(service.price as number) && service.price !== null
+                        ? `${(service.price as number).toLocaleString('pt-MZ')} MZN`
+                        : 'Sob consulta'}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">

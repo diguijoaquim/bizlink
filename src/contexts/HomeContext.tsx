@@ -91,11 +91,15 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
       let userData: any;
       if (slugMatch && slugMatch[1]) {
         userData = await getUserBySlug(slugMatch[1]);
-      } else if (userIdParam) {
+      } else if (userIdParam && /^\d+$/.test(userIdParam)) {
         userData = await getUserByIdPublic(parseInt(userIdParam, 10));
+      } else if (userIdParam && userIdParam.trim() !== '') {
+        // treat non-numeric user_id as slug
+        userData = await getUserBySlug(userIdParam.trim());
       } else {
         userData = await apiFetch('/users/me');
       }
+
       setUser(userData);
       const owned = Array.isArray(userData?.companies) && userData.companies.length > 0;
       setHasCompany(owned);
@@ -190,7 +194,7 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
   }, []);
 
   useEffect(() => {
-    const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@');
+    const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@') || location.pathname.startsWith('/profile/') || location.pathname.includes('?user_id=');
     // Evitar refetch desnecessário no home ou em rotas comuns; só atualiza em perfil
     if (isProfileRoute) {
       loadUserData();

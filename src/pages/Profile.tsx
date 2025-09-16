@@ -171,7 +171,7 @@ export default function Profile() {
 
   useEffect(() => {
     const loadJobs = async () => {
-      if (user?.user_type === 'company' && hasCompany) {
+      if (!isPublicView && user?.user_type === 'company' && hasCompany) {
         try {
           setJobsLoading(true);
           const jobs = await getMyJobs();
@@ -185,7 +185,7 @@ export default function Profile() {
       }
     };
     loadJobs();
-  }, [user?.user_type, hasCompany]);
+  }, [user?.user_type, hasCompany, isPublicView]);
 
   // Redirecionar para configuração de perfil se necessário
   // Removido redirecionamento automático para configuração de perfil
@@ -672,7 +672,10 @@ export default function Profile() {
                           id: service.id.toString(),
                           title: service.title,
                           description: service.description,
-                          price: typeof service.price === 'string' ? parseFloat(service.price) : service.price,
+                          // Ensure price is either a number or null
+                          price: (service.price === null || service.price === undefined || service.price === '' as any)
+                            ? null
+                            : Number(service.price),
                           image: toAbsolute(service.image_url) || "/placeholder.svg",
                           category: service.category,
                           tags: service.tags ? (typeof service.tags === 'string' ? service.tags.replace(/[{}]/g, '').split(',').map(tag => tag.trim()).filter(Boolean) : []) : [],
