@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { getService, Service, startChatWithServiceRef } from "@/lib/api";
+import { getService, Service, startChatWithServiceRef, API_BASE_URL } from "@/lib/api";
 
 const ServiceDetail = () => {
   const { id, slug } = useParams();
@@ -15,6 +15,11 @@ const ServiceDetail = () => {
   const [service, setService] = useState<Service | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const toAbsolute = (url?: string | null) => {
+    if (!url) return "/placeholder.svg";
+    return url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  };
 
   useEffect(() => {
     const fetchService = async () => {
@@ -131,7 +136,7 @@ const ServiceDetail = () => {
       {/* Service Image */}
       <div className="relative h-64 md:h-[420px]">
         <img 
-          src={service.image_url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200'} 
+          src={service.image_url ? toAbsolute(service.image_url) : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200'} 
           alt={service.title}
           className="w-full h-full object-cover object-center"
         />
@@ -166,7 +171,7 @@ const ServiceDetail = () => {
             <CardContent className="p-4">
               <div className="flex items-center space-x-3 mb-4">
                 <Avatar>
-                  <AvatarImage src={service.company?.logo_url} />
+                  <AvatarImage src={toAbsolute(service.company?.logo_url)} />
                   <AvatarFallback>{service.company?.name?.[0] || 'S'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -246,7 +251,7 @@ const ServiceDetail = () => {
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-3">Imagem do Serviço</h2>
               <img 
-                src={service.image_url} 
+                src={toAbsolute(service.image_url)} 
                 alt={service.title}
                 className="w-full h-56 md:h-72 object-cover rounded-lg"
               />
