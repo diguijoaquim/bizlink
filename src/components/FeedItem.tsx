@@ -415,7 +415,14 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 src={toAbsolute(item.cover_url)}
                 alt={item.name}
                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                onClick={() => navigate(`/profile?user_id=${(item as any).owner_id}`)}
+                onClick={() => {
+                  const uid = (item as any).poster_user_id || (item as any).owner_id;
+                  if (uid) {
+                    navigate(`/profile?user_id=${uid}`);
+                  } else {
+                    toast({ title: 'Perfil indisponível', description: 'Não foi possível abrir o perfil desta empresa.' });
+                  }
+                }}
               />
             </div>
           )}

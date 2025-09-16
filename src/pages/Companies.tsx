@@ -9,6 +9,7 @@ import { Building2, MapPin, Globe, Search, ArrowLeft, MoreVertical, Facebook, Li
 import { startConversation, type Company, API_BASE_URL } from '@/lib/api';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 import { useHome } from '@/contexts/HomeContext';
 
 export default function Companies() {
@@ -18,6 +19,7 @@ export default function Companies() {
   const [q, setQ] = useState('');
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   useEffect(() => { loadCompaniesOnce(); }, [loadCompaniesOnce]);
   useEffect(() => { setFiltered(companies); }, [companies]);
@@ -53,7 +55,7 @@ export default function Companies() {
   };
 
   // Build public profile link via user_id to ensure Profile loads visitor view by ID
-  const companyProfileHref = (c: Company) => `/profile?user_id=${c.owner_id}`;
+  const companyProfileHref = (c: Company) => (c.owner_id ? `/profile?user_id=${c.owner_id}` : undefined);
 
   return (
     <AppLayout>
@@ -111,13 +113,21 @@ export default function Companies() {
                           <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(companyProfileHref(c))}>Ver perfil</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            const href = companyProfileHref(c);
+                            if (href) navigate(href);
+                            else toast({ title: 'Perfil indisponível', description: 'Esta empresa não tem proprietário associado.', variant: 'destructive' });
+                          }}>Ver perfil</DropdownMenuItem>
                           <DropdownMenuItem onClick={async () => { try { const conv = await startConversation(c.owner_id); if (conv?.id) navigate(`/messages?open=${conv.id}`); } catch {} }}>Chat</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => { try { window.alert('Denúncia recebida. Obrigado.'); } catch {} }}>Denunciar</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => navigate(companyProfileHref(c))}>
+                      <Button variant="outline" size="sm" onClick={() => {
+                        const href = companyProfileHref(c);
+                        if (href) navigate(href);
+                        else toast({ title: 'Perfil indisponível', description: 'Esta empresa não tem proprietário associado.', variant: 'destructive' });
+                      }}>
                         Ver Perfil
                       </Button>
                     )}
