@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Building2, User, Briefcase, Heart, Share2, MessageCircle, MapPin, Phone, Mail, Globe, Star, MoreHorizontal, Bookmark, Send } from "lucide-react";
-import { FeedItem, API_BASE_URL, toggleLike, getLikesInfo } from "@/lib/api";
+import { FeedItem, API_BASE_URL, toggleLike, getLikesInfo, resolveUserProfilePath } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -348,7 +348,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const uid = getPosterUserId(); if (uid) navigate(`/profile?user_id=${uid}`); }}>Perfil</DropdownMenuItem>
+                <DropdownMenuItem onClick={async (e)=>{ e.stopPropagation(); const uid = getPosterUserId(); if (uid) { const href = await resolveUserProfilePath(uid); navigate(href); } }}>Perfil</DropdownMenuItem>
                 <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); openChatWithPoster(); }}>Chat</DropdownMenuItem>
                 <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); toast({ title: 'Denúncia indisponível', description: 'Funcionalidade em desenvolvimento.' }); }}>Denunciar</DropdownMenuItem>
               </DropdownMenuContent>
@@ -459,7 +459,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const uid = getPosterUserId(); if (uid) navigate(`/profile?user_id=${uid}`); }}>Perfil</DropdownMenuItem>
+                <DropdownMenuItem onClick={async (e)=>{ e.stopPropagation(); const uid = getPosterUserId(); if (uid) { const href = await resolveUserProfilePath(uid); navigate(href); } }}>Perfil</DropdownMenuItem>
                 <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); openChatWithPoster(); }}>Chat</DropdownMenuItem>
                 <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); toast({ title: 'Denúncia indisponível', description: 'Funcionalidade em desenvolvimento.' }); }}>Denunciar</DropdownMenuItem>
               </DropdownMenuContent>
@@ -480,14 +480,7 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 src={toAbsolute(item.cover_url)}
                 alt={item.name}
                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                onClick={() => {
-                  const uid = (item as any).poster_user_id || (item as any).owner_id;
-                  if (uid) {
-                    navigate(`/profile?user_id=${uid}`);
-                  } else {
-                    toast({ title: 'Perfil indisponível', description: 'Não foi possível abrir o perfil desta empresa.' });
-                  }
-                }}
+                onClick={async ()=>{ const uid = (item as any).poster_user_id || (item as any).owner_id; if (uid) { const href = await resolveUserProfilePath(uid); navigate(href); } else { toast({ title: 'Perfil indisponível', description: 'Não foi possível abrir o perfil desta empresa.' }); } }}
               />
             </div>
           )}

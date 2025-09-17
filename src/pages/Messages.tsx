@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL, getServiceByRef, getJobByRef, generateServiceRef, generateJobRef } from "@/lib/api";
+import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL, getServiceByRef, getJobByRef, generateServiceRef, generateJobRef, resolveUserProfilePath } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
 import { useHome } from '@/contexts/HomeContext';
 
@@ -983,14 +983,14 @@ export default function Messages() {
                 <div className="relative">
                   {resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url) ? (
                     <img
-                      onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
+                      onClick={async ()=>{ const href = await resolveUserProfilePath(selectedChatData.peer.id); navigate(href); }}
                       src={resolveUrl(((selectedChatData as any).peer.display_photo_url) || selectedChatData.peer.profile_photo_url)}
                       alt={selectedChatData.peer.full_name || selectedChatData.peer.email}
                       className={`w-10 h-10 rounded-full object-cover cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
                     />
                   ) : (
                     <div
-                      onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)}
+                      onClick={async ()=>{ const href = await resolveUserProfilePath(selectedChatData.peer.id); navigate(href); }}
                       className={`w-10 h-10 rounded-full bg-muted grid place-items-center text-sm font-semibold text-muted-foreground cursor-pointer ${((selectedChatData as any).peer?.user_type==='freelancer') ? 'avatar-freelancer' : 'avatar-company'}`}
                       aria-label={selectedChatData.peer.full_name || selectedChatData.peer.email}
                     >
@@ -1000,7 +1000,7 @@ export default function Messages() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center space-x-1 min-w-0">
-                    <button onClick={()=>navigate(`/profile?user_id=${selectedChatData.peer.id}`)} className="font-medium text-foreground truncate hover:underline text-left">
+                    <button onClick={async ()=>{ const href = await resolveUserProfilePath(selectedChatData.peer.id); navigate(href); }} className="font-medium text-foreground truncate hover:underline text-left">
                       {(selectedChatData as any).peer.display_name || selectedChatData.peer.full_name || selectedChatData.peer.email}
                     </button>
                   </div>

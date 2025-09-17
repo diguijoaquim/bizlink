@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Building2, MapPin, Globe, Search, ArrowLeft, MoreVertical, Facebook, Linkedin, Instagram } from 'lucide-react';
-import { startConversation, type Company, API_BASE_URL } from '@/lib/api';
+import { startConversation, type Company, API_BASE_URL, getUserByIdPublic } from '@/lib/api';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
@@ -54,8 +54,19 @@ export default function Companies() {
     return <Globe className="h-4 w-4" />;
   };
 
-  // Build public profile link via user_id to ensure Profile loads visitor view by ID
-  const companyProfileHref = (c: Company) => (c.owner_id ? `/profile?user_id=${c.owner_id}` : undefined);
+  // Build public profile path without exposing numeric id: prefer username or email local part
+  const companyProfilePath = async (c: Company): Promise<string | undefined> => {
+    try {
+      if (!c.owner_id) return undefined;
+      const owner = await getUserByIdPublic(c.owner_id);
+      const slug = (owner as any)?.username || (owner?.email ? owner.email.split('@')[0] : null);
+      if (slug && String(slug).trim() !== '') return `/profile/${encodeURIComponent(String(slug))}`;
+      // fallback (rare)
+      return `/profile?user_id=${c.owner_id}`;
+    } catch {
+      return c.owner_id ? `/profile?user_id=${c.owner_id}` : undefined;
+    }
+  };
 
   return (
     <AppLayout>
@@ -113,8 +124,8 @@ export default function Companies() {
                           <Button variant="ghost" size="icon"><MoreVertical className="h-5 w-5" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            const href = companyProfileHref(c);
+                          <DropdownMenuItem onClick={async () => {
+                            const href = await companyProfilePath(c);
                             if (href) navigate(href);
                             else toast({ title: 'Perfil indisponível', description: 'Esta empresa não tem proprietário associado.', variant: 'destructive' });
                           }}>Ver perfil</DropdownMenuItem>
@@ -123,8 +134,8 @@ export default function Companies() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => {
-                        const href = companyProfileHref(c);
+                      <Button variant="outline" size="sm" onClick={async () => {
+                        const href = await companyProfilePath(c);
                         if (href) navigate(href);
                         else toast({ title: 'Perfil indisponível', description: 'Esta empresa não tem proprietário associado.', variant: 'destructive' });
                       }}>

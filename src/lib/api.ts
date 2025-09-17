@@ -572,11 +572,11 @@ export interface FeedResponse {
   };
 }
 
-export async function getFeed(lastId?: number, limit: number = 10, order: 'random' | 'recent' = 'random'): Promise<FeedResponse> {
+export async function getFeed(lastId?: number, limit: number = 10): Promise<FeedResponse> {
   const params = new URLSearchParams();
   if (lastId) params.append('last_id', lastId.toString());
   params.append('limit', limit.toString());
-  params.append('order', order);
+  
   const response = await apiFetch(`/search/feed?${params.toString()}`);
   return response;
 }
@@ -1015,6 +1015,19 @@ export async function getUserProfile(): Promise<User> {
 
 export async function getUserByIdPublic(id: number): Promise<User> {
   return apiFetch(`/users/${id}`);
+}
+
+// Resolve a public profile path for a user without exposing numeric IDs
+// Preference: /profile/:username -> /profile/:emailLocal -> fallback /profile?user_id=ID
+export async function resolveUserProfilePath(userId: number): Promise<string> {
+  try {
+    const u = await getUserByIdPublic(userId);
+    const slug = (u as any)?.username || (u?.email ? u.email.split('@')[0] : null);
+    if (slug && String(slug).trim() !== '') return `/profile/${encodeURIComponent(String(slug))}`;
+    return `/profile?user_id=${userId}`;
+  } catch {
+    return `/profile?user_id=${userId}`;
+  }
 }
 // Chat API
 export type ConversationListItem = {
