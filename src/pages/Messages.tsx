@@ -366,11 +366,14 @@ export default function Messages() {
         setSelectedChat(null);
         // blur any focused input to avoid keyboard issues
         try { (document.activeElement as HTMLElement)?.blur(); } catch {}
+        return;
       }
+      // When no overlays and no chat open, always go to Home
+      try { navigate('/'); } catch {}
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [selectedChat, imageViewSrc]);
+  }, [selectedChat, imageViewSrc, navigate]);
 
   const selectedChatData = chats.find(chat => String(chat.id) === selectedChat);
   const { displayAvatar, displayName, email: myEmail } = useHome() as any;
@@ -775,7 +778,7 @@ export default function Messages() {
           <div className="p-4 border-b border-border sticky top-0 z-10 bg-card">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => { if (window.history.length > 1) { window.history.back(); } else { window.location.assign('/'); } }}>
+                <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => navigate('/') }>
                   <ArrowLeft size={24} />
                 </Button>
                 <h1 className="text-xl font-bold gradient-text">Mensagens</h1>
@@ -974,7 +977,7 @@ export default function Messages() {
             {/* Chat Header */}
             <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" className="mr-1" onClick={() => { if (isMobile && selectedChat) { setSelectedChat(null); } else if (window.history.length > 1) { window.history.back(); } else { navigate('/'); } }}>
+                <Button variant="ghost" size="icon" className="mr-1" onClick={() => { if (isMobile && selectedChat) { setSelectedChat(null); } else { navigate('/'); } }}>
                   <ArrowLeft size={24} />
                 </Button>
                 <div className="relative">
