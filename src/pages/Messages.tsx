@@ -256,13 +256,25 @@ export default function Messages() {
     const v = (value || '').trim();
     if (!v) return { label: '' };
     const lower = v.toLowerCase();
-    if (lower.startsWith('http')) {
-      if (isImageUrl(lower)) return { label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" /> };
-      if (isPdfUrl(lower)) return { label: 'PDF', icon: <FileText className="h-3.5 w-3.5" /> };
-      if (isAudioUrl(lower)) return { label: 'Áudio' };
-      if (isVideoUrl(lower)) return { label: 'Vídeo' };
+    const classify = (target: string) => {
+      if (isImageUrl(target)) return { label: 'Imagem', icon: <ImageIcon className="h-3.5 w-3.5" /> };
+      if (isPdfUrl(target)) return { label: 'PDF', icon: <FileText className="h-3.5 w-3.5" /> };
+      if (isAudioUrl(target)) return { label: 'Áudio' };
+      if (isVideoUrl(target)) return { label: 'Vídeo' };
       return { label: 'Arquivo', icon: <FileIcon className="h-3.5 w-3.5" /> };
-    }
+    };
+    try {
+      if (lower.startsWith('http')) {
+        const u = new URL(lower);
+        return classify(u.pathname);
+      }
+      if (lower.startsWith('/')) {
+        const u = new URL(`${API_BASE_URL}${lower}`);
+        const pathParam = u.searchParams.get('path');
+        const target = (pathParam || u.pathname).toLowerCase();
+        return classify(target);
+      }
+    } catch {}
     return { label: v };
   };
 
@@ -889,7 +901,7 @@ export default function Messages() {
                     companies.map((company)=> (
                       <div key={company.id} onClick={()=>startChatWithCompany(company)} className="p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted">
                         <div className="flex items-center gap-3">
-                          <img src={company.logo_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-12 h-12 rounded-full object-cover" />
+                          <img src={resolveUrl(company.logo_url) || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-12 h-12 rounded-full object-cover" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <h3 className="font-medium text-foreground truncate">{company.name}</h3>
@@ -921,7 +933,7 @@ export default function Messages() {
                       <div className="flex items-center space-x-3">
                         <div className="relative">
                           <img
-                            src={user.profile_photo_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
+                            src={resolveUrl(user.profile_photo_url) || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
                             alt={user.full_name || user.email}
                             className="w-12 h-12 rounded-full object-cover"
                           />
@@ -956,7 +968,7 @@ export default function Messages() {
             {/* Chat Header */}
             <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="icon" className="md:hidden mr-1" onClick={() => setSelectedChat(null)}>
+                <Button variant="ghost" size="icon" className="mr-1" onClick={() => { if (isMobile && selectedChat) { setSelectedChat(null); } else if (window.history.length > 1) { window.history.back(); } else { navigate('/'); } }}>
                   <ArrowLeft size={24} />
                 </Button>
                 <div className="relative">
@@ -1175,7 +1187,7 @@ export default function Messages() {
                 ) : recCompanies.map((c) => (
                   <div key={c.id} onClick={() => { setStartOpen(false); startChatWithCompany(c); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
                     <div className="flex items-center gap-3">
-                      <img src={c.logo_url || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      <img src={resolveUrl(c.logo_url) || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-9 h-9 rounded-full object-cover" />
                       <div className="min-w-0">
                         <div className="font-medium truncate">{c.name}</div>
                         <div className="text-xs text-muted-foreground truncate">{c.description || 'Empresa'}</div>
@@ -1191,7 +1203,7 @@ export default function Messages() {
                 ) : recUsers.map((u) => (
                   <div key={u.id} onClick={() => { setStartOpen(false); startChatWithUser(u); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
                     <div className="flex items-center gap-3">
-                      <img src={u.profile_photo_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      <img src={resolveUrl(u.profile_photo_url) || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-9 h-9 rounded-full object-cover" />
                       <div className="min-w-0">
                         <div className="font-medium truncate">{u.full_name || u.email}</div>
                         <div className="text-xs text-muted-foreground">{u.user_type}</div>
