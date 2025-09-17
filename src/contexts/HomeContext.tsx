@@ -156,22 +156,10 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
 
   // one-time loaders
   const loadFeedOnce = async () => {
-    const alreadyShuffled = ((): boolean => {
-      try { return (typeof window !== 'undefined') && sessionStorage.getItem('feed_shuffled') === '1'; } catch { return false; }
-    })();
-    if (feedLoaded && alreadyShuffled) return;
+    if (feedLoaded) return;
     try {
-      const resp = await getFeed(undefined, 10);
-      const items = (resp.items || []).slice();
-      if (!alreadyShuffled) {
-        // Shuffle only once per session
-        for (let i = items.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [items[i], items[j]] = [items[j], items[i]];
-        }
-        try { if (typeof window !== 'undefined') sessionStorage.setItem('feed_shuffled', '1'); } catch {}
-      }
-      setFeedItems(items);
+      const resp = await getFeed(undefined, 10, 'random');
+      setFeedItems(resp.items || []);
     } finally {
       setFeedLoaded(true);
     }

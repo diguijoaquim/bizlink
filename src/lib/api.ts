@@ -572,11 +572,11 @@ export interface FeedResponse {
   };
 }
 
-export async function getFeed(lastId?: number, limit: number = 10): Promise<FeedResponse> {
+export async function getFeed(lastId?: number, limit: number = 10, order: 'random' | 'recent' = 'random'): Promise<FeedResponse> {
   const params = new URLSearchParams();
   if (lastId) params.append('last_id', lastId.toString());
   params.append('limit', limit.toString());
-  
+  params.append('order', order);
   const response = await apiFetch(`/search/feed?${params.toString()}`);
   return response;
 }
