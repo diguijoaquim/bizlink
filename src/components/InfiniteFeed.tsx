@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FeedItemComponent } from './FeedItem';
 import { FeedSkeletonList } from './FeedSkeleton';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -19,6 +19,8 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
   const [lastId, setLastId] = useState<number | undefined>();
   const [query, setQuery] = useState(initialQuery);
   const navigate = useNavigate();
+  const seenKeysRef = useRef<Set<string>>(new Set());
+  const lastPageTokenRef = useRef<number | undefined>(undefined);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -27,13 +29,31 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
       setLoading(true);
       const response: FeedResponse = await getFeed(lastId, 10);
       
-      if (response.items.length === 0) {
+      if (!response.items || response.items.length === 0) {
         setHasMore(false);
         return;
       }
-
-      setItems(prev => [...prev, ...(response.items || [])]);
-      setLastId(response.next_page_info?.last_id);
+      // Filter out duplicates based on composite key type-id
+      const incoming = response.items.filter(it => {
+        const key = `${it.type}:${it.id}`;
+        if (seenKeysRef.current.has(key)) return false;
+        seenKeysRef.current.add(key);
+        return true;
+      });
+      if (incoming.length === 0) {
+        // No progress; stop further loads
+        setHasMore(false);
+        return;
+      }
+      setItems(prev => [...prev, ...incoming]);
+      const nextToken = response.next_page_info?.last_id;
+      // Stop if token doesn't progress
+      if (nextToken !== undefined && nextToken === lastPageTokenRef.current) {
+        setHasMore(false);
+      } else {
+        lastPageTokenRef.current = nextToken;
+        setLastId(nextToken);
+      }
       setHasMore(response.has_more);
     } catch (error) {
       console.error('Error loading more items:', error);
@@ -68,11 +88,20 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
       try {
         setLoading(true);
         setItems([]);
+        seenKeysRef.current.clear();
+        lastPageTokenRef.current = undefined;
         setLastId(undefined);
         setHasMore(true);
         const response: FeedResponse = await getFeed(undefined, 10);
-        setItems(response.items || []);
-        setLastId(response.next_page_info?.last_id);
+        const first = (response.items || []).filter(it => {
+          const key = `${it.type}:${it.id}`;
+          if (seenKeysRef.current.has(key)) return false;
+          seenKeysRef.current.add(key);
+          return true;
+        });
+        setItems(first);
+        lastPageTokenRef.current = response.next_page_info?.last_id;
+        setLastId(lastPageTokenRef.current);
         setHasMore(response.has_more);
       } catch (error) {
         console.error('Error loading initial data:', error);
