@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Building2, User, Briefcase, Heart, Share2, MessageCircle, MapPin, Phone, Mail, Globe, Star, MoreHorizontal, Bookmark, Send } from "lucide-react";
 import { FeedItem, API_BASE_URL, toggleLike, getLikesInfo } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,19 @@ export function FeedItemComponent({ item }: FeedItemProps) {
   const [loading, setLoading] = useState(false);
 
   const DEFAULT_AVATAR = "https://www.skyvenda.com/avatar.png";
+
+  const getPosterUserId = () => (item as any).poster_user_id || (item as any).owner_id || (item as any).user_id || null;
+  const buildShareUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.bizlinkmz.site';
+    if (item.type === 'service') return `${origin}/services/${item.id}`;
+    if (item.type === 'job') return `${origin}/jobs/${item.id}`;
+    if (item.type === 'company') {
+      const uid = getPosterUserId();
+      return uid ? `${origin}/profile?user_id=${uid}` : origin;
+    }
+    if (item.type === 'user') return `${origin}/profile?user_id=${item.id}`;
+    return origin;
+  };
 
   const openChatWithPoster = async () => {
     try {
@@ -137,12 +151,13 @@ export function FeedItemComponent({ item }: FeedItemProps) {
 
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Implementar compartilhamento
+    // Menu de partilha é aberto pelo DropdownMenuTrigger; não faz nada aqui
   };
 
-  const handleComment = (e: React.MouseEvent) => {
+  const handleComment = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Implementar comentários
+    // Abrir chat com o autor (empresa/usuário)
+    await openChatWithPoster();
   };
 
   if (item.type === 'service') {
@@ -173,9 +188,24 @@ export function FeedItemComponent({ item }: FeedItemProps) {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const uid = getPosterUserId(); if (uid) navigate(`/profile?user_id=${uid}`); }}>
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); openChatWithPoster(); }}>
+                  Chat
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); toast({ title: 'Denúncia indisponível', description: 'Funcionalidade em desenvolvimento.' }); }}>
+                  Denunciar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Content */}
@@ -248,14 +278,22 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               >
                 <MessageCircle className="h-5 w-5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground"
-                onClick={handleShare}
-              >
-                <Send className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground"
+                  >
+                    <Send className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank'); }}>Facebook</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://wa.me/?text=${u}`, '_blank'); }}>WhatsApp</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://twitter.com/intent/tweet?url=${u}`, '_blank'); }}>X</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <Button
               variant="ghost"
@@ -345,9 +383,18 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleComment}>
                 <MessageCircle className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleShare}>
-                <Send className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                    <Send className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://www.facebook.com/sharer/sharer.php?u=${u}`, '_blank'); }}>Facebook</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://wa.me/?text=${u}`, '_blank'); }}>WhatsApp</DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e)=>{ e.stopPropagation(); const u = encodeURIComponent(buildShareUrl()); window.open(`https://twitter.com/intent/tweet?url=${u}`, '_blank'); }}>X</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <Button variant="ghost" size="icon" className={`h-8 w-8 ${isBookmarked ? 'text-blue-500' : 'text-muted-foreground'}`} onClick={handleBookmark}>
               <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
