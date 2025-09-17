@@ -932,11 +932,17 @@ export default function Messages() {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="relative">
-                          <img
-                            src={resolveUrl(user.profile_photo_url) || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
-                            alt={user.full_name || user.email}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
+                          {resolveUrl(user.profile_photo_url) ? (
+                            <img
+                              src={resolveUrl(user.profile_photo_url)}
+                              alt={user.full_name || user.email}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-muted grid place-items-center text-lg font-semibold text-muted-foreground">
+                              {getInitial(user.full_name, user.email)}
+                            </div>
+                          )}
                           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                         </div>
 
@@ -1187,7 +1193,13 @@ export default function Messages() {
                 ) : recCompanies.map((c) => (
                   <div key={c.id} onClick={() => { setStartOpen(false); startChatWithCompany(c); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
                     <div className="flex items-center gap-3">
-                      <img src={resolveUrl(c.logo_url) || 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      {resolveUrl(c.logo_url) ? (
+                        <img src={resolveUrl(c.logo_url)} className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-muted grid place-items-center text-sm font-semibold text-muted-foreground">
+                          {getInitial(c.name)}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <div className="font-medium truncate">{c.name}</div>
                         <div className="text-xs text-muted-foreground truncate">{c.description || 'Empresa'}</div>
@@ -1203,7 +1215,13 @@ export default function Messages() {
                 ) : recUsers.map((u) => (
                   <div key={u.id} onClick={() => { setStartOpen(false); startChatWithUser(u); }} className="p-3 border rounded-lg cursor-pointer hover:bg-muted mb-2">
                     <div className="flex items-center gap-3">
-                      <img src={resolveUrl(u.profile_photo_url) || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'} className="w-9 h-9 rounded-full object-cover" />
+                      {resolveUrl(u.profile_photo_url) ? (
+                        <img src={resolveUrl(u.profile_photo_url)} className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-muted grid place-items-center text-sm font-semibold text-muted-foreground">
+                          {getInitial(u.full_name, u.email)}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <div className="font-medium truncate">{u.full_name || u.email}</div>
                         <div className="text-xs text-muted-foreground">{u.user_type}</div>
