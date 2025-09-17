@@ -783,9 +783,11 @@ export default function Messages() {
                 </Button>
                 <h1 className="text-xl font-bold gradient-text">Mensagens</h1>
               </div>
-              <Button variant="ghost" size="icon" onClick={openStartChat}>
-                <SquarePen className="h-5 w-5" />
-              </Button>
+              <div className="hidden md:flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={openStartChat} title="Iniciar conversa">
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -975,7 +977,7 @@ export default function Messages() {
         {selectedChat && selectedChatData ? (
           <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
             {/* Chat Header */}
-            <div className="fixed top-0 left-0 right-0 z-20 bg-card p-3 border-b border-border flex items-center justify-between">
+            <div className={`${isMobile ? 'fixed top-0 left-0 right-0' : 'sticky top-0'} z-20 bg-card p-3 border-b border-border flex items-center justify-between`}>
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="icon" className="mr-1" onClick={() => { if (isMobile && selectedChat) { setSelectedChat(null); } else { navigate('/'); } }}>
                   <ArrowLeft size={24} />
@@ -1115,7 +1117,7 @@ export default function Messages() {
             </div>
 
             {/* Message Input */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-card p-4 border-t border-border" style={{ position: 'fixed', bottom: 0 }}>
+            <div className={`${isMobile ? 'fixed bottom-0 left-0 right-0' : ''} z-20 bg-card p-4 border-t border-border`} style={isMobile ? { position: 'fixed', bottom: 0 } : undefined}>
               {replyTo && (
                 <div className="mb-2 px-3 py-2 rounded border bg-muted text-xs flex items-center justify-between">
                   <div className="truncate">Respondendo: {replyTo.preview}</div>
