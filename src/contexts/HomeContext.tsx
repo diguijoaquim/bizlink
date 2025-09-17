@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { apiFetch, getCompanyServices, Service, Company, getUserByIdPublic, getUserBySlug, getFeed, type FeedItem, getConversations, type ConversationListItem, getJobs, type Job, getCompanies } from '@/lib/api';
 
@@ -62,6 +62,7 @@ interface HomeProviderProps {
 
 export const HomeProvider = ({ children }: HomeProviderProps) => {
   const location = useLocation();
+  const loadSeqRef = useRef(0);
   const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [hasCompany, setHasCompany] = useState(false);
@@ -84,7 +85,10 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
 
   const loadUserData = async () => {
     try {
+      const seq = ++loadSeqRef.current;
       setUserLoading(true);
+      // Clear services early to avoid showing stale services when switching profiles
+      setServices([]);
       const params = new URLSearchParams(window.location.search);
       const userIdParam = params.get('user_id');
       const slugMatch = window.location.pathname.match(/^\/profile\/([^/]+)$/);
@@ -100,18 +104,30 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
         userData = await apiFetch('/users/me');
       }
 
-      setUser(userData);
-      const owned = Array.isArray(userData?.companies) && userData.companies.length > 0;
-      setHasCompany(owned);
-      if (owned && userData?.companies?.[0]?.id) {
-        await loadServicesInternal(userData.companies[0].id);
+      // Only apply if this is the latest load
+      if (seq === loadSeqRef.current) {
+        setUser(userData);
+        const owned = Array.isArray(userData?.companies) && userData.companies.length > 0;
+        setHasCompany(owned);
+        if (owned && userData?.companies?.[0]?.id) {
+          await loadServicesInternal(userData.companies[0].id);
+        }
       }
     } catch (error) {
       console.error('HomeContext: Error loading user data:', error);
       setUser(null);
       setHasCompany(false);
+      setServices([]);
     } finally {
-      setUserLoading(false);
+      // Only end loading if this is the latest call
+      setUserLoading((prev) => {
+        // If another call has started, keep loading
+        return loadSeqRef.current === 0 ? false : prev;
+      });
+      if (loadSeqRef.current > 0) {
+        // In practice we always want userLoading to reflect latest; just set false unconditionally
+        setUserLoading(false);
+      }
     }
   };
 
@@ -197,6 +213,8 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
     const isProfileRoute = location.pathname === '/profile' || location.pathname.startsWith('/@') || location.pathname.startsWith('/profile/') || location.pathname.includes('?user_id=');
     // Evitar refetch desnecessário no home ou em rotas comuns; só atualiza em perfil
     if (isProfileRoute) {
+      // Clear services immediately when navigating between profile contexts
+      setServices([]);
       loadUserData();
     }
   }, [location.pathname, location.search]);
