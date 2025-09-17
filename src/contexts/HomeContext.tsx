@@ -156,10 +156,17 @@ export const HomeProvider = ({ children }: HomeProviderProps) => {
 
   // one-time loaders
   const loadFeedOnce = async () => {
-    if (feedLoaded) return;
+    const isHome = location.pathname === '/' || location.pathname === '/home';
+    if (!isHome && feedLoaded) return;
     try {
       const resp = await getFeed(undefined, 10);
-      setFeedItems(resp.items || []);
+      const items = (resp.items || []).slice();
+      // Fisher–Yates shuffle for random ordering
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [items[i], items[j]] = [items[j], items[i]];
+      }
+      setFeedItems(items);
     } finally {
       setFeedLoaded(true);
     }
