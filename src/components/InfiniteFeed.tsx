@@ -26,15 +26,13 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
     try {
       setLoading(true);
       const response: FeedResponse = await getFeed(lastId, 10);
-      // shuffle items for random order
-      const shuffled = [...response.items].sort(() => Math.random() - 0.5);
       
       if (response.items.length === 0) {
         setHasMore(false);
         return;
       }
 
-      setItems(prev => [...prev, ...shuffled]);
+      setItems(prev => [...prev, ...(response.items || [])]);
       setLastId(response.next_page_info?.last_id);
       setHasMore(response.has_more);
     } catch (error) {
@@ -73,8 +71,7 @@ export function InfiniteFeed({ initialQuery = '', showSearchAsLink = false }: In
         setLastId(undefined);
         setHasMore(true);
         const response: FeedResponse = await getFeed(undefined, 10);
-        const shuffled = [...response.items].sort(() => Math.random() - 0.5);
-        setItems(shuffled);
+        setItems(response.items || []);
         setLastId(response.next_page_info?.last_id);
         setHasMore(response.has_more);
       } catch (error) {
