@@ -50,22 +50,15 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
 
     try {
       const companyId = user?.companies && user.companies[0]?.id;
-      if (!companyId) {
-        toast({
-          title: "Sem empresa",
-          description: "Associe ou crie uma empresa antes de publicar um serviço.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
+      const isFreelancer = (user?.user_type === 'freelancer');
       await createService({
         title: formData.title,
         description: formData.description,
         price: formData.price || undefined,
         category: formData.category,
         tags: formData.tags,
-        company_id: companyId,
+        // Only send company_id when available. Freelancers can publish without a company.
+        company_id: (companyId ? companyId : undefined),
         image: imageFile || undefined,
         status: "Ativo",
         is_promoted: false,
@@ -73,7 +66,7 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
 
       toast({
         title: "Sucesso!",
-        description: "Serviço publicado com sucesso.",
+        description: isFreelancer && !companyId ? "Projeto publicado com sucesso." : "Serviço publicado com sucesso.",
         className: "bg-gradient-primary text-white border-0",
       });
 
@@ -138,6 +131,13 @@ export const PublishServiceModal = ({ open, onOpenChange }: PublishServiceModalP
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Context note for freelancers without company */}
+          {user?.user_type === 'freelancer' && !(user?.companies && user.companies[0]?.id) && (
+            <div className="p-2 rounded-md bg-amber-50 text-amber-900 border border-amber-200 text-xs">
+              Você está publicando como <strong>freelancer</strong>. É opcional associar uma empresa.
+            </div>
+          )}
+
           {/* Image Upload */}
           <div className="space-y-2">
             <Label htmlFor="image">Imagem do Serviço</Label>

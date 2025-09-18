@@ -391,7 +391,7 @@ export const createService = async (input: {
   price?: string | number;
   category: string;
   tags: string[];
-  company_id: number;
+  company_id?: number;
   image?: File;
   status?: string;
   is_promoted?: boolean;
@@ -405,7 +405,9 @@ export const createService = async (input: {
   }
   formData.append('category', input.category);
   formData.append('tags', `{${input.tags.join(',')}}`);
-  formData.append('company_id', input.company_id.toString());
+  if (typeof input.company_id === 'number') {
+    formData.append('company_id', input.company_id.toString());
+  }
   formData.append('status', input.status || 'Ativo');
   formData.append('is_promoted', input.is_promoted ? '1' : '0');
   
