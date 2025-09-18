@@ -179,6 +179,9 @@ export function FeedItemComponent({ item }: FeedItemProps) {
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-semibold text-foreground">{item.poster_name || 'BizLink'}</h4>
+                  {item.poster_type === 'freelancer' && (
+                    <Badge variant="secondary" className="text-[10px]">Projeto</Badge>
+                  )}
                   {item.is_promoted && (
                     <Star className="h-4 w-4 text-yellow-500 fill-current" />
                   )}
