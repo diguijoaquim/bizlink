@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HomeProvider } from '@/contexts/HomeContext';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { ProfileSetupPrompt } from '@/components/ProfileSetupPrompt';
 import { getAuthToken } from "@/lib/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -156,6 +157,7 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         <InstallPrompt />
+        <ProfileSetupPrompt />
         </HomeProvider>
       </BrowserRouter>
       </TooltipProvider>
