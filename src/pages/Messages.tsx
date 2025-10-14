@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchUsers, type User, getCompanies, type Company, getUserByIdPublic, getConversations, getMessages, sendMessage, startConversation, type ConversationListItem, type ChatMessageItem, getRecipients, connectChatWS, getCurrentUserId, markConversationRead, sendMessageFile, API_BASE_URL, getServiceByRef, getJobByRef, generateServiceRef, generateJobRef, resolveUserProfilePath } from "@/lib/api";
 import { Progress } from "@/components/ui/progress";
+import { requestNotificationPermission, showNotification } from "@/lib/notify";
 import { useHome } from '@/contexts/HomeContext';
 
 // Helper to extract first letter for avatar fallback
@@ -610,6 +611,18 @@ export default function Messages() {
                 return updated.slice().sort((a, b) => (b.last_time ? new Date(b.last_time).getTime() : 0) - (a.last_time ? new Date(a.last_time).getTime() : 0));
               });
               window.dispatchEvent(new Event('chat:clear-unread'));
+
+              // Show browser notification only when page is not visible
+              try {
+                if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+                  const peerName = ((selectedChatData as any)?.peer?.full_name) || ((selectedChatData as any)?.peer?.email) || 'Nova mensagem';
+                  showNotification(String(peerName), {
+                    body: (m.text || 'Nova mensagem'),
+                    onClickUrl: `/messages?open=${chatId}`,
+                    icon: ((selectedChatData as any)?.peer?.profile_photo_url) || undefined,
+                  });
+                }
+              } catch {}
             }
           } else if (msg?.event === 'typing') {
             setIsPeerTyping(true);
@@ -767,6 +780,11 @@ export default function Messages() {
   useEffect(() => {
     // entering messages page clears global chat badge
     window.dispatchEvent(new Event('chat:clear-unread'));
+  }, []);
+
+  // Request notification permission on first visit to Messages
+  useEffect(() => {
+    requestNotificationPermission();
   }, []);
 
   const content = (

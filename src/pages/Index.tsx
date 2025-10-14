@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { InfiniteFeed } from "@/components/InfiniteFeed";
 import { useHome } from "@/contexts/HomeContext";
@@ -9,18 +9,7 @@ export default function Index() {
   const { user, hasCompany, currentCompany } = useHome();
   const navigate = useNavigate();
   const [hideBanner, setHideBanner] = useState(false);
-
-  useEffect(() => {
-    try {
-      const v = sessionStorage.getItem('hideProfileCta');
-      setHideBanner(v === '1');
-    } catch {}
-  }, []);
-
-  const dismiss = () => {
-    setHideBanner(true);
-    try { sessionStorage.setItem('hideProfileCta', '1'); } catch {}
-  };
+  const dismiss = () => setHideBanner(true); // hides only until next mount/visit
 
   const isFreelancer = (user?.user_type === 'freelancer');
   const isCompanyUser = (user?.user_type === 'company');
@@ -56,7 +45,7 @@ export default function Index() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button onClick={() => navigate('/profile')}>Completar perfil</Button>
-                  <Button variant="ghost" onClick={dismiss}>Agora não</Button>
+                  <Button variant="ghost" onClick={dismiss}>Fechar</Button>
                 </div>
               </div>
             ) : isCompanyUser ? (
@@ -67,7 +56,7 @@ export default function Index() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button onClick={() => navigate(!hasCompany ? '/create-company' : '/edit-company')}>{!hasCompany ? 'Criar empresa' : 'Completar empresa'}</Button>
-                  <Button variant="ghost" onClick={dismiss}>Agora não</Button>
+                  <Button variant="ghost" onClick={dismiss}>Fechar</Button>
                 </div>
               </div>
             ) : null}
