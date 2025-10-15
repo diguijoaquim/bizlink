@@ -31,7 +31,8 @@ export default function Index() {
   );
 
   // Contact checks
-  const userContactMissing = isFreelancer && !(user?.whatsapp || (user as any)?.phone);
+  // Prefer the typed field phone; allow whatsapp if present from backend via safe any-cast
+  const userContactMissing = isFreelancer && !((user?.phone && user.phone.trim()) || (user as any)?.whatsapp);
   const companyContactMissing = isCompanyUser && (
     !hasCompany || !(currentCompany?.whatsapp || currentCompany?.email)
   );
